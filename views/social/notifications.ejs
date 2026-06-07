@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — Swapify</title>
+  <meta name="description" content="Your Swapify notifications.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <section class="section" style="padding-top:32px">
+    <div class="container" style="max-width:720px">
+      <div class="flex justify-between items-center" style="margin-bottom:32px;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1 style="font-size:32px;font-weight:700;margin-bottom:4px">Notifications</h1>
+          <p style="color:var(--muted-fg)" id="notifSubtitle">
+            <% var unreadCount = notifications.filter(function(n){ return !n.isRead; }).length; %>
+            <%= unreadCount > 0 ? unreadCount + ' unread notification' + (unreadCount !== 1 ? 's' : '') : 'No unread notifications' %>
+          </p>
+        </div>
+        <button class="btn btn-outline btn-sm" id="markAllReadBtn">Mark all as read</button>
+      </div>
+
+      <div id="notifList">
+        <% if (notifications.length === 0) { %>
+          <div id="notifEmpty">
+            <div class="empty-state">
+              <div class="empty-state-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted-fg)" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+              <h3>All caught up!</h3>
+              <p>You have no notifications right now. Keep swapping!</p>
+              <a href="/" class="btn btn-primary">Back to Home</a>
+            </div>
+          </div>
+        <% } else { %>
+          <% notifications.forEach(function(n) { %>
+            <%
+              var typeIcon = '';
+              if (n.type === 'message') {
+                typeIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>';
+              } else if (n.type === 'swap_request' || n.type === 'swap_accepted' || n.type === 'swap_rejected' || n.type === 'swap_completed') {
+                typeIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg>';
+              } else if (n.type === 'deal_confirmed' || n.type === 'deal_cancelled') {
+                typeIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><circle cx="11" cy="11" r="1"/><circle cx="14" cy="14" r="1"/></svg>';
+              } else {
+                typeIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+              }
+              var linkHref = '';
+              if (n.type === 'message') linkHref = '/messages';
+              else if (n.type.startsWith('swap')) linkHref = '/swap-requests';
+              else if (n.type.startsWith('deal')) linkHref = '/deals';
+            %>
+            <div class="notif-item <%= n.isRead ? '' : 'unread' %>" data-id="<%= n._id %>" style="display:flex;align-items:center;cursor:pointer;transition:all var(--transition)">
+              <a href="<%= linkHref || '#' %>" style="text-decoration:none;color:inherit;display:flex;width:100%;align-items:center" onclick="markRead('<%= n._id %>', this.closest('.notif-item'))">
+                <div class="notif-icon <%= n.type.startsWith('swap') ? 'match' : n.type === 'message' ? 'message' : 'deal' %>"><%- typeIcon %></div>
+                <div style="flex:1">
+                  <p style="font-weight:<%= n.isRead ? '400' : '600' %>;margin-bottom:4px"><%= n.message %></p>
+                  <span class="text-xs" style="color:var(--muted-fg)" data-ts="<%= n.createdAt.getTime() %>"></span>
+                </div>
+              </a>
+            </div>
+          <% }); %>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo" style="margin-bottom:8px" aria-label="Swapify Home">
+            <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></div>
+            <span class="logo-text"><span>Swapify</span></span>
+          </a>
+          <p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.</p>
+        </div>
+        <div class="footer-col"><h4>About Swapify</h4><ul><li><a href="/about">About Swapify</a></li><li><a href="/how-it-works">How it Works</a></li></ul></div>
+        <div class="footer-col"><h4>Community</h4><ul><li><a href="/guidelines">Guidelines</a></li></ul></div>
+        <div class="footer-col"><h4>Help Center</h4><ul><li><a href="/faq">FAQ</a></li><li><a href="/contact">Contact Support</a></li><li><a href="/terms">Terms of Service</a></li></ul></div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+        <div class="footer-tagline"><span>Less waste. More sharing.</span></div>
+      </div>
+    </div>
+  </footer>
+
+  <nav class="bottom-nav"><a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a><a href="/skills"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg><span>Skills</span></a><a href="/add" class="add-btn"><div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div></a><a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg><span>Messages</span></a><a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg><span>Profile</span></a></nav>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+  var _unreadCount = <%= notifications.filter(function(n){ return !n.isRead; }).length %>;
+
+  /* ── Relative timestamps ─────────────────────────── */
+  document.querySelectorAll('[data-ts]').forEach(function(el) {
+    var ts = parseInt(el.getAttribute('data-ts'), 10);
+    if (!ts) return;
+    var ago = Math.round((Date.now() - ts) / 60000);
+    el.textContent = ago < 1 ? 'Just now' : ago < 60 ? ago + 'm ago' : ago < 1440 ? Math.round(ago / 60) + 'h ago' : Math.round(ago / 1440) + 'd ago';
+  });
+
+  /* ── Mark single notification read ─────────────── */
+  function markRead(id, itemEl) {
+    if (itemEl && itemEl.classList.contains('unread')) {
+      fetch('/api/notifications/' + id + '/read', { method: 'POST', credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success) {
+            itemEl.classList.remove('unread');
+            itemEl.querySelector('p') && (itemEl.querySelector('p').style.fontWeight = '400');
+            _unreadCount = Math.max(0, _unreadCount - 1);
+            updateSubtitle();
+          }
+        })
+        .catch(function(){});
+    }
+  }
+
+  /* ── Mark all as read ──────────────────────────── */
+  document.getElementById('markAllReadBtn').addEventListener('click', function() {
+    fetch('/api/notifications/read-all', { method: 'POST', credentials: 'same-origin' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.success) {
+          document.querySelectorAll('.notif-item.unread').forEach(function(el) {
+            el.classList.remove('unread');
+            var p = el.querySelector('p');
+            if (p) p.style.fontWeight = '400';
+          });
+          _unreadCount = 0;
+          updateSubtitle();
+          if (window.SwapifyUI) SwapifyUI.toast('All notifications marked as read', 'success');
+        }
+      })
+      .catch(function(){});
+  });
+
+  function updateSubtitle() {
+    var subtitle = document.getElementById('notifSubtitle');
+    if (subtitle) {
+      subtitle.textContent = _unreadCount > 0
+        ? _unreadCount + ' unread notification' + (_unreadCount !== 1 ? 's' : '')
+        : 'No unread notifications';
+    }
+  }
+
+  /* ── Socket.io: receive new notifications in real-time ── */
+  (function() {
+    var socket = io({ transports: ['websocket', 'polling'] });
+
+    socket.on('notification', function(data) {
+      _unreadCount++;
+      updateSubtitle();
+
+      var icons = {
+        message: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>',
+        swap:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg>',
+        deal:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><circle cx="11" cy="11" r="1"/><circle cx="14" cy="14" r="1"/></svg>'
+      };
+
+      var iconKey = data.type === 'message' ? 'message' : data.type.startsWith('swap') ? 'swap' : 'deal';
+      var linkHref = data.type === 'message' ? '/messages' : data.type.startsWith('swap') ? '/swap-requests' : '/deals';
+
+      // Remove empty state if present
+      var emptyEl = document.getElementById('notifEmpty');
+      if (emptyEl) emptyEl.remove();
+
+      var div = document.createElement('div');
+      div.className = 'notif-item unread';
+      div.setAttribute('data-id', data.id);
+      div.style.cssText = 'display:flex;align-items:center;cursor:pointer;transition:all var(--transition)';
+      div.innerHTML =
+        '<a href="' + linkHref + '" style="text-decoration:none;color:inherit;display:flex;width:100%;align-items:center" ' +
+        'onclick="markRead(\'' + data.id + '\', this.closest(\'.notif-item\'))">' +
+        '<div class="notif-icon ' + iconKey + '">' + icons[iconKey] + '</div>' +
+        '<div style="flex:1"><p style="font-weight:600;margin-bottom:4px">' + escHtml(data.message) + '</p>' +
+        '<span class="text-xs" style="color:var(--muted-fg)">Just now</span>' +
+        '</div></a>';
+
+      var list = document.getElementById('notifList');
+      list.insertBefore(div, list.firstChild);
+
+      var notifKey = data && data.id ? 'swapify_alerted_notif_' + String(data.id) : '';
+      if (!notifKey || !sessionStorage.getItem(notifKey)) {
+        if (notifKey) sessionStorage.setItem(notifKey, '1');
+        if (window.SwapifyUI) SwapifyUI.toast(data.message, 'info');
+      }
+    });
+
+    function escHtml(str) {
+      var d = document.createElement('div');
+      d.textContent = String(str || '');
+      return d.innerHTML;
+    }
+  })();
+  </script>
+</body>
+</html>

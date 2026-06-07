@@ -1,0 +1,138 @@
+  <!-- ========== HEADER ========== -->
+  <header class="header" id="header">
+    <div class="container header-inner">
+      <a href="/" class="logo" aria-label="Swapify Home">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3L4 7l4 4"/>
+            <path d="M4 7h16"/>
+            <path d="M16 21l4-4-4-4"/>
+            <path d="M20 17H4"/>
+          </svg>
+        </div>
+        <span class="logo-text"><span>Swapify</span></span>
+      </a>
+      <nav class="nav" id="desktopNav" aria-label="Main navigation">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/skills" class="nav-link">Swap Skills</a>
+        <a href="/objects" class="nav-link">Swap Objects</a>
+        <a href="/deals" class="nav-link">Half Price Deals</a>
+      </nav>
+      <div class="header-actions">
+        <a href="/messages" class="btn btn-icon btn-ghost" style="position:relative" aria-label="Messages">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>
+          </svg>
+          <span class="notification-dot" aria-hidden="true"></span>
+        </a>
+        <button class="btn btn-icon btn-ghost" id="notifBtn" style="position:relative" aria-label="Notifications">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+          </svg>
+          <span id="notifBadge" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;background:#7C3AED;border-radius:50%;border:2px solid var(--bg,#fff)" aria-hidden="true"></span>
+        </button>
+        <a href="/cart" id="cartIconBtn" class="btn btn-icon btn-ghost" style="position:relative;overflow:visible" aria-label="Shopping Cart">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+          </svg>
+          <span class="cart-badge" style="position:absolute;top:-4px;right:-4px;background:var(--primary);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;" aria-live="polite"></span>
+        </a>
+        <button class="btn btn-ghost btn-sm rounded-full" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
+        <a href="/profile" class="profile-ring" aria-label="View profile">
+          <% if (locals.currentUser && locals.currentUser.profileImage) { %>
+            <img src="<%= locals.currentUser.profileImage %>" id="headerAvatarImg" alt="Your profile">
+          <% } else if (locals.currentUser) { %>
+            <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-weight:700;font-size:14px;background:var(--primary);color:#fff;border-radius:50%"><%= locals.currentUser.username.charAt(0).toUpperCase() %></span>
+          <% } else { %>
+            <img src="/img/stock_pfp.jpg" id="headerAvatarImg" alt="Your profile" style="background:var(--muted)">
+          <% } %>
+        </a>
+        <button class="mobile-menu-btn btn btn-ghost btn-icon" id="menuToggle" onclick="toggleMobileMenu()"
+          aria-label="Open menu" aria-expanded="false">
+          <svg id="menuIconOpen" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" aria-hidden="true">
+            <line x1="4" x2="20" y1="12" y2="12"/>
+            <line x1="4" x2="20" y1="6" y2="6"/>
+            <line x1="4" x2="20" y1="18" y2="18"/>
+          </svg>
+          <svg id="menuIconClose" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" style="display:none" aria-hidden="true">
+            <path d="M18 6 6 18"/>
+            <path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <nav class="mobile-menu" id="mobileMenu" aria-label="Mobile navigation">
+      <a href="/">Home</a>
+      <a href="/skills">Swap Skills</a>
+      <a href="/objects">Swap Objects</a>
+      <a href="/deals">Half Price Deals</a>
+      <a href="/messages">Messages</a>
+      <a href="/profile">Profile</a>
+      <a href="/favorites">Favorites</a>
+      <a href="/cart">Cart</a>
+    </nav>
+  </header>
+  <!-- Logout Confirmation Modal -->
+  <div id="logoutModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.65);backdrop-filter:blur(5px);align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg,#1a1025);border:1px solid rgba(168,85,247,0.25);border-radius:20px;padding:32px 28px;width:90%;max-width:360px;box-shadow:0 24px 60px rgba(0,0,0,0.5);text-align:center;animation:logoutModalIn .25s ease">
+      <div style="width:54px;height:54px;border-radius:50%;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      </div>
+      <h3 style="font-size:1.1rem;font-weight:700;margin:0 0 8px;color:var(--fg,#fff)">Log out of Swapify?</h3>
+      <p style="font-size:0.84rem;color:var(--muted-fg,rgba(255,255,255,0.5));margin:0 0 24px">You'll be returned to the login page.</p>
+      <div style="display:flex;gap:10px">
+        <button id="logoutCancelBtn" style="flex:1;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--fg,#fff);font-size:0.87rem;font-weight:600;cursor:pointer;">Cancel</button>
+        <button id="logoutConfirmBtn" style="flex:1;padding:11px;border-radius:11px;border:none;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;font-size:0.87rem;font-weight:700;cursor:pointer;">Log Out</button>
+      </div>
+    </div>
+  </div>
+  <style>
+    @keyframes logoutModalIn { from { opacity:0; transform:scale(.93) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  </style>
+
+  <script>
+    window.__SERVER_AUTH = <%= locals.currentUser ? 'true' : 'false' %>;
+    (function () {
+      // Set active nav link based on current path
+      var path = window.location.pathname;
+      document.querySelectorAll('#desktopNav .nav-link').forEach(function (link) {
+        var href = link.getAttribute('href');
+        if (href === '/' ? path === '/' : path === href || path.startsWith(href + '/')) {
+          link.classList.add('active');
+        }
+      });
+      // Initialize cart badge from localStorage on every page load
+      try {
+        var items = JSON.parse(localStorage.getItem('swapify_cart') || '[]');
+        var count = items.reduce(function (s, i) { return s + (i.qty || 1); }, 0);
+        document.querySelectorAll('.cart-badge').forEach(function (b) {
+          b.textContent = count;
+          b.style.display = count > 0 ? 'flex' : 'none';
+        });
+      } catch (e) {}
+
+      // Logout modal wiring
+      var logoutModal = document.getElementById('logoutModal');
+      var logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
+      var logoutCancelBtn = document.getElementById('logoutCancelBtn');
+      if (logoutModal) {
+        logoutCancelBtn.addEventListener('click', function () { logoutModal.style.display = 'none'; });
+        logoutModal.addEventListener('click', function (e) { if (e.target === logoutModal) logoutModal.style.display = 'none'; });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') logoutModal.style.display = 'none'; });
+        logoutConfirmBtn.addEventListener('click', function () {
+          logoutConfirmBtn.textContent = 'Logging out…';
+          logoutConfirmBtn.disabled = true;
+          if (typeof Auth !== 'undefined') Auth.logout();
+          else if (typeof SwapifyAuth !== 'undefined') SwapifyAuth.logout();
+        });
+      }
+    })();
+  </script>

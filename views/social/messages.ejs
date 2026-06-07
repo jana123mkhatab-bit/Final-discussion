@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages — Swapify</title>
+  <meta name="description" content="Chat with other swappers and arrange your swaps.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body style="overflow:hidden">
+
+  <%- include('../partials/navbar') %>
+
+  <!-- MESSAGES LAYOUT -->
+  <div class="messages-layout">
+    <!-- SIDEBAR -->
+    <div class="messages-sidebar">
+      <div class="messages-sidebar-header">
+        <h2>Messages</h2>
+        <div style="position:relative"><svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted-fg)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="text" class="input" id="chatSearch" style="padding-left:36px;background:var(--muted);border-color:transparent" placeholder="Search messages..."></div>
+      </div>
+      <div class="chat-list" id="chatListContainer">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <!-- CHAT AREA -->
+    <div class="messages-chat" id="chatArea" style="display:none;flex-direction:column">
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost btn-icon" id="chatBackBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></button>
+          <img src="" alt="User" class="avatar avatar-md" id="chatHeaderAvatar" style="border:1px solid var(--border)">
+          <div>
+            <h3 class="font-semibold text-sm" id="chatHeaderName">User</h3>
+            <p class="text-xs" id="chatStatusLine" style="color:var(--success);font-weight:500">Online</p>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-icon" id="chatReportBtn" aria-label="Report user" title="Report user" style="display:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg></button>
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-messages" id="chatMessages">
+        <!-- Dynamically populated -->
+      </div>
+
+      <!-- Input -->
+      <div class="chat-input" style="padding:0">
+        <div id="attachPreview" style="display:none;flex-wrap:wrap;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--card);align-items:center"></div>
+        <form class="chat-input-form" id="chatForm" style="padding:12px 16px;margin:0">
+          <input type="file" id="attachInput" multiple accept="image/*,.pdf,.doc,.docx,.txt" style="display:none">
+          <button type="button" id="attachBtn" class="btn btn-ghost btn-icon" title="Attach file" style="width:40px;height:40px;flex-shrink:0;border-radius:50%"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+          <input type="text" class="input" id="chatInput" placeholder="Type your message..." style="border-radius:var(--radius-full);height:48px">
+          <button type="submit" class="btn btn-primary btn-icon" style="width:48px;height:48px;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
+        </form>
+      </div>
+    </div>
+
+    <div class="messages-chat empty-chat" id="emptyChat" style="display:flex;align-items:center;justify-content:center;flex-direction:column;color:var(--muted-fg)">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:16px;opacity:0.5"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>
+      <h3>Select a conversation</h3>
+      <p>Choose a message on the left to start chatting.</p>
+    </div>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav"><a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a><a href="/skills"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg><span>Skills</span></a><a href="/add" class="add-btn"><div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div></a><a href="/messages" class="active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg><span>Messages</span></a><a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg><span>Profile</span></a></nav>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/report-user.js"></script>
+  <script>
+  /* ── Server-injected data ─────────────────────────────── */
+  var _currentUserId    = '<%= locals.currentUserId || "" %>';
+  var _initConversations = <%- JSON.stringify(locals.conversations || []) %>;
+
+  document.addEventListener('DOMContentLoaded', function () {
+
+    if (!_currentUserId) { window.location.href = '/login'; return; }
+
+    var listEl     = document.getElementById('chatListContainer');
+    var areaEl     = document.getElementById('chatArea');
+    var emptyEl    = document.getElementById('emptyChat');
+    var msgsEl     = document.getElementById('chatMessages');
+    var chatForm   = document.getElementById('chatForm');
+    var chatInput  = document.getElementById('chatInput');
+    var submitBtn  = chatForm ? chatForm.querySelector('button[type="submit"]') : null;
+    var headerName = document.getElementById('chatHeaderName');
+    var headerAvg  = document.getElementById('chatHeaderAvatar');
+    var statusLine = document.getElementById('chatStatusLine');
+    var notifBadge  = document.getElementById('notifBadge');
+    var attachInput = document.getElementById('attachInput');
+    var attachBtn   = document.getElementById('attachBtn');
+    var attachPrev  = document.getElementById('attachPreview');
+
+    var currentPartnerId   = null;
+    var currentPartnerName = '';
+    var currentPartnerDeleted = false;
+    var conversations      = _initConversations.slice();
+    var typingTimer        = null;
+    var typingTimeout      = null;
+    var _pollTimer         = null;
+    var selectedFiles      = [];
+
+    /* ── Socket.io ─────────────────────────────────── */
+    var socket = io({ transports: ['websocket', 'polling'] });
+    socket.on('connect', function () {
+      socket.emit('enter_chat');
+    });
+
+    /* ── helpers ──────────────────────────────────── */
+    function escH(s) {
+      var d = document.createElement('div');
+      d.textContent = String(s || '');
+      return d.innerHTML;
+    }
+    function timeStr(ts) {
+      return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    function scrollBottom() { msgsEl.scrollTop = msgsEl.scrollHeight; }
+
+    function setPartnerDeleted(isDeleted) {
+      currentPartnerDeleted = !!isDeleted;
+      var disabled = !!isDeleted;
+      if (chatInput) chatInput.disabled = disabled;
+      if (submitBtn) submitBtn.disabled = disabled;
+      if (attachBtn) attachBtn.disabled = disabled;
+      if (attachInput) attachInput.disabled = disabled;
+      if (statusLine) {
+        statusLine.textContent = disabled ? 'Account deleted' : 'Online';
+        statusLine.style.color = disabled ? 'var(--muted-fg)' : 'var(--success)';
+      }
+    }
+
+    /* ── render conversation list ─────────────────── */
+    function renderList() {
+      listEl.innerHTML = '';
+      if (conversations.length === 0) {
+        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted-fg)">No messages yet. Start a swap!</div>';
+        return;
+      }
+      conversations.forEach(function (c) {
+        var div = document.createElement('div');
+        div.className = 'chat-item' + (currentPartnerId === c.partnerId ? ' active' : '');
+        div.dataset.partnerId = c.partnerId;
+        var img  = c.partnerImg || '/img/stock_pfp.jpg';
+        var time = c.lastTime ? timeStr(c.lastTime) : '';
+        var isOnline = !!c.partnerOnline;
+        var name = c.partnerName + (c.partnerDeleted ? ' (deleted)' : '');
+        div.innerHTML =
+          '<div class="chat-item-avatar" style="position:relative">' +
+            '<img src="' + escH(img) + '" class="avatar avatar-md" alt="' + escH(c.partnerName) + '">' +
+            (c.partnerDeleted ? '' : '<span class="status-dot" data-partner-status-id="' + c.partnerId + '" style="position:absolute;top:0;right:0;width:10px;height:10px;background:' + (isOnline ? 'var(--success)' : 'var(--muted-fg)') + ';border-radius:50%;border:2px solid var(--bg)"></span>') +
+            (c.unread ? '<span style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:var(--primary);border-radius:50%;border:2px solid var(--bg)"></span>' : '') +
+          '</div>' +
+          '<div class="chat-item-content">' +
+            '<div class="chat-item-top">' +
+              '<span class="chat-item-name" style="' + (c.unread ? 'font-weight:700' : '') + '">' + escH(name) + '</span>' +
+              '<span class="chat-item-time">'  + escH(time) + '</span>' +
+            '</div>' +
+            '<div class="chat-item-bottom">' +
+              '<span class="chat-item-msg" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' + (c.unread ? 'font-weight:600' : '') + '">' +
+                escH(c.lastText || '') +
+              '</span>' +
+            '</div>' +
+          '</div>';
+        div.addEventListener('click', function () {
+          c.unread = false;
+          openChat(c.partnerId, c.partnerName, c.partnerImg, c.partnerDeleted);
+        });
+        listEl.appendChild(div);
+      });
+    }
+
+    /* ── polling fallback for real-time messages ─── */
+    function stopPolling() {
+      if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+    }
+
+    function startPolling() {
+      stopPolling();
+      _pollTimer = setInterval(function () {
+        if (!currentPartnerId) return;
+        fetch('/api/messages/' + encodeURIComponent(currentPartnerId), { credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (!data.success || !data.messages) return;
+            var existingIds = new Set(
+              Array.from(msgsEl.querySelectorAll('[data-msg-id]')).map(function (el) { return el.dataset.msgId; })
+            );
+            var added = false;
+            data.messages.forEach(function (m) {
+              var id = String(m.id || '');
+              if (id && !existingIds.has(id)) {
+                appendMessageEl(m);
+                added = true;
+              }
+            });
+            if (added) scrollBottom();
+          })
+          .catch(function () {});
+      }, 3000);
+    }
+
+    /* ── attachment preview renderer ─────────────── */
+    function renderAttachPreview() {
+      if (!attachPrev) return;
+      if (selectedFiles.length === 0) {
+        attachPrev.style.display = 'none';
+        attachPrev.innerHTML = '';
+        return;
+      }
+      attachPrev.style.display = 'flex';
+      attachPrev.innerHTML = '';
+      selectedFiles.forEach(function (f, idx) {
+        var chip = document.createElement('div');
+        chip.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--muted);border-radius:6px;padding:4px 8px;font-size:12px;max-width:180px';
+        var isImg = f.type.startsWith('image/');
+        chip.innerHTML =
+          (isImg
+            ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+            : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+          ) +
+          '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escH(f.name) + '</span>' +
+          '<button type="button" data-idx="' + idx + '" style="background:none;border:none;cursor:pointer;color:var(--muted-fg);padding:0 2px;line-height:1;font-size:16px;flex-shrink:0">&times;</button>';
+        chip.querySelector('button').addEventListener('click', function () {
+          selectedFiles.splice(Number(this.dataset.idx), 1);
+          renderAttachPreview();
+        });
+        attachPrev.appendChild(chip);
+      });
+    }
+
+    /* ── open a chat with a partner ──────────────── */
+    function openChat(partnerId, partnerName, partnerImg, partnerDeleted) {
+      stopPolling();
+      selectedFiles = [];
+      renderAttachPreview();
+      setPartnerDeleted(false);
+      currentPartnerId   = partnerId;
+      currentPartnerName = partnerName || 'User';
+
+      var existing = conversations.find(function (c) { return c.partnerId === partnerId; });
+      var isOnline = existing ? !!existing.partnerOnline : false;
+
+      renderList();
+
+      emptyEl.style.display = 'none';
+      areaEl.style.display  = 'flex';
+
+      headerName.textContent = currentPartnerName;
+      headerAvg.src          = partnerImg || '/img/stock_pfp.jpg';
+      headerAvg.alt          = currentPartnerName;
+      
+      if (statusLine) {
+        if (partnerDeleted) {
+          statusLine.textContent = 'Account deleted';
+          statusLine.style.color = 'var(--muted-fg)';
+        } else {
+          statusLine.textContent = isOnline ? 'Online' : 'Offline';
+          statusLine.style.color = isOnline ? 'var(--success)' : 'var(--muted-fg)';
+        }
+      }
+      if (partnerDeleted) setPartnerDeleted(true);
+
+      var reportBtn = document.getElementById('chatReportBtn');
+      if (reportBtn) {
+        reportBtn.style.display = 'flex';
+        reportBtn.onclick = function () {
+          if (window.SwapifyReport) {
+            SwapifyReport.open({ reportedUserId: partnerId, reportedUserName: partnerName, currentUserId: _currentUserId, context: 'chat' });
+          }
+        };
+      }
+
+      msgsEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted-fg);font-size:13px">Loading…</div>';
+
+      fetch('/api/messages/' + encodeURIComponent(partnerId), { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          msgsEl.innerHTML = '';
+          if (data && data.partner) {
+            headerName.textContent = data.partner.name || currentPartnerName;
+            headerAvg.src = data.partner.img || '/img/stock_pfp.jpg';
+            headerAvg.alt = data.partner.name || currentPartnerName;
+
+            var isOnline = !!data.partner.isOnline;
+            var cIdx = conversations.findIndex(function (c) { return c.partnerId === partnerId; });
+            if (cIdx > -1) {
+              conversations[cIdx].partnerOnline = isOnline;
+            }
+            if (statusLine && !currentPartnerDeleted) {
+              statusLine.textContent = isOnline ? 'Online' : 'Offline';
+              statusLine.style.color = isOnline ? 'var(--success)' : 'var(--muted-fg)';
+            }
+            var dot = document.querySelector('[data-partner-status-id="' + partnerId + '"]');
+            if (dot) {
+              dot.style.background = isOnline ? 'var(--success)' : 'var(--muted-fg)';
+            }
+          }
+          if (data && data.partnerDeleted) {
+            setPartnerDeleted(true);
+          }
+          if (!data.success || data.messages.length === 0) {
+            msgsEl.innerHTML = '<div style="text-align:center;color:var(--muted-fg);padding:32px 16px;font-size:14px">No messages yet. Say hi! 👋</div>';
+          } else {
+            data.messages.forEach(function (m) { appendMessageEl(m); });
+          }
+          scrollBottom();
+          startPolling();
+        })
+        .catch(function () {
+          msgsEl.innerHTML = '<div style="text-align:center;color:#ef4444;padding:24px">Failed to load messages.</div>';
+          startPolling();
+        });
+
+      if (window.innerWidth <= 768) {
+        document.querySelector('.messages-sidebar').style.display = 'none';
+      }
+    }
+
+    /* ── append one message bubble ────────────────── */
+    function appendMessageEl(m) {
+      var isSent = String(m.senderId) === _currentUserId;
+      var placeholder = msgsEl.querySelector('[style*="No messages"]') || msgsEl.querySelector('[style*="Say hi"]');
+      if (placeholder) placeholder.remove();
+
+      var div = document.createElement('div');
+      div.className = 'message ' + (isSent ? 'sent' : 'received');
+      if (m.id) div.dataset.msgId = String(m.id);
+
+      var bubbleContent = '';
+      if (m.text) bubbleContent += '<p style="margin:0;word-break:break-word">' + escH(m.text) + '</p>';
+      var atts = m.attachments || [];
+      atts.forEach(function (att, i) {
+        var mt         = (m.text || i > 0) ? 'margin-top:6px;' : '';
+        var serverFile = encodeURIComponent((att.url || '').split('/').pop());
+        var dlUrl      = '/api/messages/file/' + serverFile;
+        if (att.mimeType && att.mimeType.startsWith('image/')) {
+          bubbleContent +=
+            '<div style="display:block;' + mt + '">' +
+              '<a href="' + escH(att.url) + '" target="_blank" rel="noopener" style="display:block">' +
+                '<img src="' + escH(att.url) + '" alt="' + escH(att.originalName) + '" ' +
+                  'style="max-width:220px;max-height:220px;border-radius:6px;display:block;cursor:pointer">' +
+              '</a>' +
+              '<a href="' + dlUrl + '" download="' + escH(att.originalName) + '" ' +
+                'style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:11px;text-decoration:none;color:inherit;opacity:0.75">' +
+                '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                  '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>' +
+                  '<polyline points="7 10 12 15 17 10"/>' +
+                  '<line x1="12" x2="12" y1="15" y2="3"/>' +
+                '</svg>' +
+                escH(att.originalName) +
+              '</a>' +
+            '</div>';
+        } else {
+          bubbleContent +=
+            '<a href="' + dlUrl + '" download="' + escH(att.originalName) + '" ' +
+              'style="display:flex;align-items:center;gap:6px;' + mt +
+              'background:rgba(0,0,0,0.12);border-radius:6px;padding:6px 10px;text-decoration:none;color:inherit;font-size:13px">' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>' +
+                '<polyline points="14 2 14 8 20 8"/>' +
+              '</svg>' +
+              '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">' + escH(att.originalName) + '</span>' +
+            '</a>';
+        }
+      });
+
+      div.innerHTML =
+        '<div>' +
+          '<div class="message-bubble">' + (bubbleContent || '&nbsp;') + '</div>' +
+          '<div class="message-time">' + timeStr(m.createdAt) +
+            (isSent ? ' <span class="msg-status sent-tick">✓</span>' : '') +
+          '</div>' +
+        '</div>';
+      msgsEl.appendChild(div);
+    }
+
+    /* ── attachment button ───────────────────────── */
+    if (attachBtn && attachInput) {
+      attachBtn.addEventListener('click', function () { attachInput.click(); });
+      attachInput.addEventListener('change', function () {
+        Array.from(attachInput.files).forEach(function (f) {
+          if (selectedFiles.length < 5) selectedFiles.push(f);
+        });
+        attachInput.value = '';
+        renderAttachPreview();
+      });
+    }
+
+    /* ── send message ─────────────────────────────── */
+    if (chatForm) {
+      chatForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var txt = chatInput.value.trim();
+        if (!txt && selectedFiles.length === 0) return;
+        if (!currentPartnerId) return;
+        if (currentPartnerDeleted) {
+          if (window.SwapifyUI) SwapifyUI.toast('This account was deleted. You cannot send new messages.', 'warning');
+          return;
+        }
+
+        socket.emit('stop_typing', { toUserId: currentPartnerId });
+        clearTimeout(typingTimer);
+        if (submitBtn) submitBtn.disabled = true;
+
+        var fd = new FormData();
+        fd.append('receiverId', currentPartnerId);
+        if (txt) fd.append('text', txt);
+        selectedFiles.forEach(function (f) { fd.append('attachments', f); });
+
+        fetch('/api/messages/send', {
+          method:      'POST',
+          credentials: 'same-origin',
+          body:        fd
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data.success) {
+              chatInput.value = '';
+              selectedFiles = [];
+              renderAttachPreview();
+              appendMessageEl(data.message);
+              scrollBottom();
+
+              var lastTxt = data.message.text || (data.message.attachments && data.message.attachments.length > 0 ? '📎 Attachment' : '');
+              var idx = conversations.findIndex(function (c) { return c.partnerId === currentPartnerId; });
+              if (idx > -1) {
+                conversations[idx].lastText = lastTxt;
+                conversations[idx].lastTime = data.message.createdAt;
+                var updated = conversations.splice(idx, 1)[0];
+                conversations.unshift(updated);
+              } else {
+                conversations.unshift({
+                  partnerId:   currentPartnerId,
+                  partnerName: currentPartnerName,
+                  partnerImg:  headerAvg.src,
+                  lastText:    lastTxt,
+                  lastTime:    data.message.createdAt
+                });
+              }
+              renderList();
+            } else {
+              if (data.code === 'ACCOUNT_DELETED') {
+                setPartnerDeleted(true);
+              }
+              if (window.SwapifyUI) SwapifyUI.toast(data.error || 'Send failed.', 'error');
+            }
+          })
+          .catch(function () {
+            if (window.SwapifyUI) SwapifyUI.toast('Network error. Try again.', 'error');
+          })
+          .finally(function () {
+            if (submitBtn) submitBtn.disabled = false;
+            chatInput.focus();
+          });
+      });
+    }
+
+    /* ── typing indicator (send via socket) ─────── */
+    if (chatInput) {
+      chatInput.addEventListener('input', function () {
+        if (!currentPartnerId) return;
+        socket.emit('typing', { toUserId: currentPartnerId });
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(function () {
+          socket.emit('stop_typing', { toUserId: currentPartnerId });
+        }, 2000);
+      });
+    }
+
+    /* ── socket: receive real-time messages ─────── */
+    socket.on('new_message', function (data) {
+      var fromId  = String(data.senderId);
+      var lastTxt = data.text || (data.attachments && data.attachments.length > 0 ? '📎 Attachment' : '');
+
+      var idx = conversations.findIndex(function (c) { return c.partnerId === fromId; });
+      if (idx > -1) {
+        conversations[idx].lastText = lastTxt;
+        conversations[idx].lastTime = data.createdAt;
+        if (currentPartnerId !== fromId) conversations[idx].unread = true;
+        var updated = conversations.splice(idx, 1)[0];
+        conversations.unshift(updated);
+      } else {
+        conversations.unshift({
+          partnerId:   fromId,
+          partnerName: data.senderName || 'User',
+          partnerImg:  data.senderImg  || '',
+          lastText:    lastTxt,
+          lastTime:    data.createdAt,
+          unread:      currentPartnerId !== fromId
+        });
+      }
+      renderList();
+
+      if (currentPartnerId === fromId) {
+        appendMessageEl({ id: data.id, text: data.text, senderId: fromId, attachments: data.attachments || [], createdAt: data.createdAt });
+        scrollBottom();
+        fetch('/api/messages/' + encodeURIComponent(fromId), { credentials: 'same-origin' }).catch(function(){});
+      } else {
+        var _alertKey = 'swapify_alerted_msg_' + String(data.id || (fromId + '_' + String(data.createdAt || Date.now())));
+        if (!sessionStorage.getItem(_alertKey)) {
+          sessionStorage.setItem(_alertKey, '1');
+          alert('New message from ' + (data.senderName || 'someone') + (data.text ? ':\n' + data.text : ''));
+        } else if (window.SwapifyUI) {
+          SwapifyUI.toast('New message from ' + escH(data.senderName || 'someone'), 'info');
+        }
+      }
+    });
+
+    /* ── socket: typing indicator from partner ── */
+    socket.on('typing', function (data) {
+      if (currentPartnerId && String(data.fromUserId) === currentPartnerId) {
+        if (statusLine) { statusLine.textContent = 'typing…'; statusLine.style.color = 'var(--muted-fg)'; }
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(function () {
+          var existing = conversations.find(function (c) { return c.partnerId === currentPartnerId; });
+          var isOnline = existing ? !!existing.partnerOnline : false;
+          if (statusLine) {
+            statusLine.textContent = isOnline ? 'Online' : 'Offline';
+            statusLine.style.color = isOnline ? 'var(--success)' : 'var(--muted-fg)';
+          }
+        }, 3000);
+      }
+    });
+
+    socket.on('stop_typing', function (data) {
+      if (currentPartnerId && String(data.fromUserId) === currentPartnerId) {
+        clearTimeout(typingTimeout);
+        var existing = conversations.find(function (c) { return c.partnerId === currentPartnerId; });
+        var isOnline = existing ? !!existing.partnerOnline : false;
+        if (statusLine) {
+          statusLine.textContent = isOnline ? 'Online' : 'Offline';
+          statusLine.style.color = isOnline ? 'var(--success)' : 'var(--muted-fg)';
+        }
+      }
+    });
+
+    /* ── socket: user status online/offline changes ── */
+    socket.on('user_status', function (data) {
+      console.log('Client received user_status event:', data);
+      var userId = String(data.userId);
+      var status = data.status;
+      var isOnline = (status === 'online');
+
+      var idx = conversations.findIndex(function (c) { return c.partnerId === userId; });
+      if (idx > -1) {
+        conversations[idx].partnerOnline = isOnline;
+      }
+
+      renderList();
+
+      if (currentPartnerId === userId && !currentPartnerDeleted) {
+        if (statusLine) {
+          statusLine.textContent = isOnline ? 'Online' : 'Offline';
+          statusLine.style.color = isOnline ? 'var(--success)' : 'var(--muted-fg)';
+        }
+      }
+    });
+
+    /* ── socket: notification badge for bell ─── */
+    socket.on('notification', function () {
+      if (notifBadge) notifBadge.style.display = 'block';
+    });
+
+    /* ── back button (mobile) ─────────────────────── */
+    var backBtn = document.getElementById('chatBackBtn');
+    if (backBtn) {
+      backBtn.addEventListener('click', function () {
+        stopPolling();
+        selectedFiles = [];
+        renderAttachPreview();
+        document.querySelector('.messages-sidebar').style.display = 'flex';
+        areaEl.style.display  = 'none';
+        emptyEl.style.display = 'flex';
+        currentPartnerId = null;
+        renderList();
+      });
+    }
+
+    /* ── search filter ───────────────────────────── */
+    var searchInput = document.getElementById('chatSearch');
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        var q = searchInput.value.toLowerCase();
+        document.querySelectorAll('.chat-item').forEach(function (item) {
+          var name = (item.querySelector('.chat-item-name') || {}).textContent || '';
+          item.style.display = name.toLowerCase().includes(q) ? '' : 'none';
+        });
+      });
+    }
+
+    /* ── init ─────────────────────────────────────── */
+    renderList();
+
+    // Fetch real notification count and show badge
+    fetch('/api/notifications/count', { credentials: 'same-origin' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (notifBadge && d.count > 0) notifBadge.style.display = 'block';
+      })
+      .catch(function(){});
+
+    // Auto-open chat when ?partner= is in the URL
+    var partnerParam = new URLSearchParams(window.location.search).get('partner');
+    if (partnerParam) {
+      var existing = conversations.find(function (c) { return c.partnerId === partnerParam; });
+      openChat(
+        partnerParam,
+        existing ? existing.partnerName : 'User',
+        existing ? existing.partnerImg : '',
+        existing ? existing.partnerDeleted : false
+      );
+    }
+  });
+  </script>
+</body>
+</html>
