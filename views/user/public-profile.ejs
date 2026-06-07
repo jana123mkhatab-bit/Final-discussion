@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= profileUser.username %> — Profile | Swapify</title>
+  <meta name="description" content="View <%= profileUser.username %>'s profile on Swapify. Check out their skills, items, and swap history.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+  <style>
+    /* ── My Skills Table ── */
+    .ms-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .ms-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted-fg);
+      border-bottom: 2px solid var(--border);
+    }
+
+    .ms-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .ms-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .ms-table tr:hover td {
+      background: var(--muted);
+      transition: background .15s;
+    }
+
+    /* ── Trust Progress Bar ── */
+    .trust-progress {
+      margin-top: 14px;
+    }
+
+    .trust-bar-wrap {
+      background: var(--border);
+      border-radius: 20px;
+      height: 8px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .trust-bar-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: linear-gradient(90deg, var(--primary), #a78bfa);
+      transition: width .7s ease;
+    }
+
+    .rating-star-filled {
+      color: #f59e0b;
+    }
+
+    .rating-star-empty {
+      color: var(--border);
+    }
+  </style>
+</head>
+
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <!-- COVER PHOTO -->
+  <div class="profile-cover"></div>
+
+  <!-- PROFILE CONTENT -->
+  <div class="container" style="padding-bottom:120px">
+
+    <!-- Profile Card -->
+    <div class="profile-card fade-in" style="margin-bottom:48px">
+      <div class="profile-avatar">
+        <img src="<%= profileUser.profileImage || '/img/stock_pfp.jpg' %>" alt="<%= profileUser.username %>" class="avatar-xl"
+          style="width:160px;height:160px;border-radius:50%;border:4px solid var(--bg);object-fit:cover;box-shadow:var(--shadow-lg);background:var(--muted)"
+          onerror="this.src='/img/stock_pfp.jpg'">
+        <% if (swapCount >= 50) { %>
+          <div class="profile-verified" style="display:flex"><svg width="20" height="20"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path d="m9 12 2 2 4-4" />
+            </svg></div>
+        <% } %>
+      </div>
+      <div class="profile-info">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:16px">
+          <div>
+            <h1 class="profile-name"><%= profileUser.username %></h1>
+            <% if (profileUser.isBanned) { %>
+              <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);border-radius:20px;padding:4px 12px;font-size:13px;font-weight:600;color:#ef4444;margin-top:6px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                Account Suspended
+              </div>
+            <% } %>
+            <p class="profile-handle">
+              @<%= profileUser.username.replace(/\s+/g, '').toLowerCase() %>
+              <% if (profileUser.profileVisibility !== false) { %>
+                <span class="item-card-rating" style="font-size:14px">
+                  <svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <%= ratingCount > 0 ? averageRating.toFixed(1) : 'New' %>
+                </span>
+              <% } %>
+            </p>
+          </div>
+          <% if (profileUser.profileVisibility !== false && !profileUser.isBanned) { %>
+            <div class="flex gap-3">
+              <a href="/messages?partner=<%= profileUser._id %>" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg> Message</a>
+              <button class="btn btn-ghost btn-sm" id="profileReportBtn" style="color:var(--muted-fg)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>
+                </svg> Report</button>
+            </div>
+          <% } %>
+        </div>
+        <% if (profileUser.profileVisibility !== false) { %>
+          <p class="profile-bio"><%= profileUser.bio || 'This user hasn\'t written a bio yet.' %></p>
+          <div class="profile-details">
+            <% if (profileUser.showLocation !== false && profileUser.location) { %>
+              <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg> <%= profileUser.location %></span>
+            <% } else if (profileUser.showLocation === false) { %>
+              <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg> Location Private</span>
+            <% } %>
+            <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                <line x1="16" x2="16" y1="2" y2="6" />
+                <line x1="8" x2="8" y1="2" y2="6" />
+                <line x1="3" x2="21" y1="10" y2="10" />
+              </svg> Joined <%= (function() {
+                if (!profileUser.createdAt) return '';
+                var d = new Date(profileUser.createdAt);
+                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return months[d.getMonth()] + ' ' + d.getFullYear();
+              })() %></span>
+            <% if (swapCount >= 50) { %>
+              <span style="color:var(--success);font-weight:500"><svg width="16"
+                  height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <path d="m9 11 3 3L22 4" />
+                </svg> Trusted Swapper</span>
+            <% } %>
+          </div>
+
+          <!-- Trust Progress Bar -->
+          <% if (swapCount < 50) { %>
+            <div class="trust-progress">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted-fg)">
+                <span>🏅 Progress to <strong style="color:var(--fg)">Trusted Swapper</strong></span>
+                <span><%= swapCount %> / 50 swaps</span>
+              </div>
+              <div class="trust-bar-wrap">
+                <div class="trust-bar-fill" style="width:<%= Math.min(100, Math.round((swapCount / 50) * 100)) %>%"></div>
+              </div>
+            </div>
+          <% } %>
+        <% } else { %>
+          <div style="margin-top: 12px; display: flex; align-items: center; gap: 6px; color: var(--muted-fg); font-size: 14px;">
+            <span>🔒 Profile Private</span>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <% if (profileUser.profileVisibility !== false) { %>
+      <!-- TABS -->
+      <div class="tabs hide-scrollbar">
+        <button class="tab active" data-tab="skills">Skills</button>
+        <button class="tab" data-tab="items">Items</button>
+        <button class="tab" data-tab="swaps">Swap History</button>
+        <button class="tab" data-tab="ratings">Reviews (<%= ratingCount %>)</button>
+      </div>
+
+      <!-- TAB CONTENT: SKILLS -->
+      <div class="tab-content active" id="tab-skills">
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:24px">Skills Offered</h2>
+        <% if (userSkills.length === 0) { %>
+          <div class="empty-state">
+            <div class="empty-state-icon">🛠️</div>
+            <h3>No skills listed</h3>
+            <p>This user hasn't listed any skills yet.</p>
+          </div>
+        <% } else { %>
+          <div class="grid grid-3 gap-6">
+            <% userSkills.forEach(function(s) { %>
+              <div class="card" style="cursor:pointer" onclick="window.location.href='/skill-details?id=<%= s._id %>'">
+                <div style="height:160px;overflow:hidden">
+                  <img src="<%= (s.images && s.images[0]) ? s.images[0] : '/img/placeholder.jpg' %>" alt="<%= s.title %>" style="width:100%;height:100%;object-fit:cover" onerror="this.src='/img/placeholder.jpg'">
+                </div>
+                <div class="card-body">
+                  <h3 style="font-weight:700;margin-bottom:4px"><%= s.title %></h3>
+                  <p class="text-xs" style="color:var(--muted-fg);text-transform:capitalize;margin-bottom:8px">
+                    Level: <%= s.level || 'Expert' %> · Category: <%= s.category || 'Other' %>
+                  </p>
+                  <p style="font-size:13px;color:var(--muted-fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5">
+                    <%= s.description %>
+                  </p>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- TAB CONTENT: ITEMS -->
+      <div class="tab-content" id="tab-items">
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:24px">Items Available</h2>
+        <% if (userItems.length === 0) { %>
+          <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <h3>No items listed</h3>
+            <p>This user hasn't listed any items yet.</p>
+          </div>
+        <% } else { %>
+          <div class="grid grid-3 gap-6">
+            <% userItems.forEach(function(item) { %>
+              <div class="card" style="cursor:pointer" onclick="window.location.href='/item-details/<%= item._id %>'">
+                <div style="height:160px;overflow:hidden">
+                  <img src="<%= (item.images && item.images[0]) ? item.images[0] : '/img/placeholder.jpg' %>" alt="<%= item.title %>" style="width:100%;height:100%;object-fit:cover" onerror="this.src='/img/placeholder.jpg'">
+                </div>
+                <div class="card-body">
+                  <h3 style="font-weight:700;margin-bottom:4px"><%= item.title %></h3>
+                  <p class="text-xs" style="color:var(--muted-fg);text-transform:capitalize;margin-bottom:8px">
+                    Category: <%= item.category || 'Object' %>
+                  </p>
+                  <p style="font-size:13px;color:var(--muted-fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5">
+                    <%= item.description %>
+                  </p>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- TAB CONTENT: SWAP HISTORY -->
+      <div class="tab-content" id="tab-swaps">
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:24px">Swap History</h2>
+        <% if (completedSwaps.length === 0) { %>
+          <div class="empty-state">
+            <div class="empty-state-icon">🔄</div>
+            <h3>No swaps completed yet</h3>
+            <p>This user has not completed any swaps yet.</p>
+          </div>
+        <% } else { %>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <% completedSwaps.forEach(function(sw) { %>
+              <% 
+                if (!sw.requester || !sw.receiver) return;
+                const isRequester = String(sw.requester._id) === String(profileUser._id);
+                const partnerName = isRequester ? sw.receiver.username : sw.requester.username;
+                const partnerAvatar = isRequester ? (sw.receiver.profileImage || '/img/stock_pfp.jpg') : (sw.requester.profileImage || '/img/stock_pfp.jpg');
+                const partnerId = isRequester ? sw.receiver._id : sw.requester._id;
+
+                let offeredLabel = '';
+                let receivedLabel = '';
+
+                if (sw.swapType === 'skill') {
+                  offeredLabel = isRequester ? (sw.offeredSkill ? sw.offeredSkill.title : 'Deleted Skill') : (sw.requestedSkill ? sw.requestedSkill.title : 'Deleted Skill');
+                  receivedLabel = isRequester ? (sw.requestedSkill ? sw.requestedSkill.title : 'Deleted Skill') : (sw.offeredSkill ? sw.offeredSkill.title : 'Deleted Skill');
+                } else {
+                  offeredLabel = isRequester ? (sw.offeredItem ? sw.offeredItem.title : 'Deleted Item') : (sw.requestedItem ? sw.requestedItem.title : 'Deleted Item');
+                  receivedLabel = isRequester ? (sw.requestedItem ? sw.requestedItem.title : 'Deleted Item') : (sw.offeredItem ? sw.offeredItem.title : 'Deleted Item');
+                }
+              %>
+              <div class="card card-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                <a href="/users/<%= partnerId %>" style="display:block;width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0">
+                  <img src="<%= partnerAvatar %>" alt="<%= partnerName %>" style="width:100%;height:100%;object-fit:cover" onerror="this.src='/img/stock_pfp.jpg'">
+                </a>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:600;margin-bottom:2px;color:var(--fg)">
+                    Swapped with <a href="/users/<%= partnerId %>" style="color:var(--primary);text-decoration:none;font-weight:600"><%= partnerName %></a>
+                  </div>
+                  <div style="font-size:13px;color:var(--muted-fg)">
+                    Provided: <strong style="color:var(--fg)"><%= offeredLabel %></strong> · Received: <strong style="color:var(--fg)"><%= receivedLabel %></strong>
+                  </div>
+                </div>
+                <div class="badge" style="background:rgba(16,185,129,.1);color:var(--success);border:1px solid var(--success)">
+                  Completed
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- TAB CONTENT: RATINGS -->
+      <div class="tab-content" id="tab-ratings">
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:24px">Reviews &amp; Ratings</h2>
+        <% if (userRatings.length === 0) { %>
+          <div class="empty-state">
+            <div class="empty-state-icon">⭐</div>
+            <h3>No reviews yet</h3>
+            <p>This user hasn't received any reviews yet.</p>
+          </div>
+        <% } else { %>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <% userRatings.forEach(function(r) { %>
+              <% if (!r.reviewer) return; %>
+              <div class="card card-body" style="display:flex;gap:16px;flex-direction:column">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <a href="/users/<%= r.reviewer._id %>" style="display:block;width:40px;height:40px;border-radius:50%;overflow:hidden">
+                      <img src="<%= r.reviewer.profileImage || '/img/stock_pfp.jpg' %>" alt="<%= r.reviewer.username %>" style="width:100%;height:100%;object-fit:cover" onerror="this.src='/img/stock_pfp.jpg'">
+                    </a>
+                    <div>
+                      <div style="font-weight:600"><a href="/users/<%= r.reviewer._id %>" style="color:var(--fg);text-decoration:none;font-weight:600"><%= r.reviewer.username %></a></div>
+                      <div style="font-size:12px;color:var(--muted-fg)"><%= new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:2px">
+                    <% for (let i = 1; i <= 5; i++) { %>
+                      <span class="<%= i <= r.score ? 'rating-star-filled' : 'rating-star-empty' %>" style="font-size:18px">★</span>
+                    <% } %>
+                  </div>
+                </div>
+                <div>
+                  <% if (r.target) { %>
+                    <div style="font-size:12px;color:var(--muted-fg);margin-bottom:6px">
+                      Reviewed: <strong style="color:var(--fg)"><%= r.target.title %></strong>
+                    </div>
+                  <% } %>
+                  <p style="font-size:14px;line-height:1.6;color:var(--muted-fg)"><%= r.comment || 'No comment left.' %></p>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+    <% } else { %>
+      <!-- Private Profile Info Box -->
+      <div class="card" style="padding:48px 24px;text-align:center;margin-top:24px">
+        <div style="font-size:48px;margin-bottom:16px">🔒</div>
+        <h2 style="font-weight:700;margin-bottom:8px">This profile is private</h2>
+        <p style="color:var(--muted-fg);font-size:15px;margin-bottom:24px">You cannot view this user's skills, items, swap history, or reviews.</p>
+        <button class="btn btn-ghost btn-sm" id="profileReportBtn" style="color:var(--muted-fg);margin:0 auto;display:inline-flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>
+          </svg> Report this user
+        </button>
+      </div>
+    <% } %>
+
+  </div><!-- /container -->
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo" style="margin-bottom:8px" aria-label="Swapify Home">
+            <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" aria-hidden="true">
+                <path d="M8 3L4 7l4 4" />
+                <path d="M4 7h16" />
+                <path d="M16 21l4-4-4-4" />
+                <path d="M20 17H4" />
+              </svg></div><span class="logo-text"><span>Swapify</span></span>
+          </a>
+          <p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.
+          </p>
+          <div class="footer-social">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
+              aria-label="Follow Swapify on Facebook" class="social-link"><svg width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+              </svg></a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on X"
+              class="social-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" aria-hidden="true">
+                <path d="M18 6L6 18" />
+                <path d="M6 6L18 18" />
+              </svg></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+              aria-label="Follow Swapify on Instagram" class="social-link"><svg width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg></a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
+              aria-label="Follow Swapify on LinkedIn" class="social-link"><svg width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                <rect width="4" height="12" x="2" y="9" />
+                <circle cx="4" cy="4" r="2" />
+              </svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>About Swapify</h4>
+          <ul>
+            <li><a href="/about">About Swapify</a></li>
+            <li><a href="/our-story">Our Story</a></li>
+            <li><a href="/how-it-works">How it Works</a></li>
+            <li><a href="/sustainability">Sustainability</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="/guidelines">Guidelines</a></li>
+            <li><a href="/success-stories">Success Stories</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help Center</h4>
+          <ul>
+            <li><a href="/help-center">Help Center</a></li>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/contact">Contact Support</a></li>
+            <li><a href="/trust-safety">Trust &amp; Safety</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+        <div class="footer-tagline"><span>Less waste. More sharing.</span><svg width="16" height="16"
+            viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" aria-hidden="true">
+            <path
+              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          </svg></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav"><a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg><span>Home</span></a><a href="/skills"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <path d="M8 3L4 7l4 4" />
+        <path d="M4 7h16" />
+        <path d="M16 21l4-4-4-4" />
+        <path d="M20 17H4" />
+      </svg><span>Skills</span></a><a href="/add" class="add-btn">
+      <div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M5 12h14" />
+          <path d="M12 5v14" />
+        </svg></div>
+    </a><a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z" />
+      </svg><span>Messages</span></a><a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="5" />
+        <path d="M20 21a8 8 0 1 0-16 0" />
+      </svg><span>Profile</span></a></nav>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/report-user.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Tab switching logic
+      var tabs = document.querySelectorAll('.tab');
+      var tabContents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          var targetTab = tab.dataset.tab;
+
+          tabs.forEach(function(t) { t.classList.remove('active'); });
+          tabContents.forEach(function(tc) { tc.classList.remove('active'); });
+
+          tab.classList.add('active');
+          var targetEl = document.getElementById('tab-' + targetTab);
+          if (targetEl) targetEl.classList.add('active');
+        });
+      });
+
+      // Report Button initialization
+      var reportBtn = document.getElementById('profileReportBtn');
+      if (reportBtn) {
+        reportBtn.addEventListener('click', function() {
+          SwapifyReport.open({
+            reportedUserId: '<%= profileUser._id %>',
+            reportedUserName: '<%= profileUser.username %>',
+            context: 'profile'
+          });
+        });
+      }
+    });
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — Swapify</title>
+  <meta name="description" content="Your Swapify profile. Manage your skills, items, deals, and swap requests.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+  <style>
+    /* ── My Skills Table ── */
+    .ms-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .ms-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted-fg);
+      border-bottom: 2px solid var(--border);
+    }
+
+    .ms-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .ms-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .ms-table tr:hover td {
+      background: var(--muted);
+      transition: background .15s;
+    }
+
+    .cert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(76, 175, 122, .12);
+      color: var(--success);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ── Trust Progress Bar ── */
+    .trust-progress {
+      margin-top: 14px;
+    }
+
+    .trust-bar-wrap {
+      background: var(--border);
+      border-radius: 20px;
+      height: 8px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .trust-bar-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: linear-gradient(90deg, var(--primary), #a78bfa);
+      transition: width .7s ease;
+    }
+
+    /* ── Overlays / Modals ── */
+    .sk-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      backdrop-filter: blur(5px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .sk-overlay.open {
+      display: flex;
+    }
+
+    .sk-modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      animation: modalIn .25s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(.97)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .sk-modal h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .sk-modal .sub {
+      font-size: 14px;
+      color: var(--muted-fg);
+      margin-bottom: 20px;
+    }
+
+    .sk-modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted-fg);
+      font-size: 24px;
+      line-height: 1;
+      padding: 4px;
+    }
+
+    .sk-modal-close:hover {
+      color: var(--fg);
+    }
+
+    /* ── Star Rating Input ── */
+    .star-row {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+      gap: 4px;
+      margin: 8px 0 4px;
+    }
+
+    .star-row input[type=radio] {
+      display: none;
+    }
+
+    .star-row label {
+      font-size: 26px;
+      cursor: pointer;
+      color: var(--border);
+      transition: color .12s;
+    }
+
+    .star-row input:checked~label,
+    .star-row label:hover,
+    .star-row label:hover~label {
+      color: #f59e0b;
+    }
+
+    /* ── Form helpers ── */
+    .field-err {
+      display: block;
+      font-size: 12px;
+      color: #ef4444;
+      margin-top: 4px;
+      min-height: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <!-- COVER PHOTO -->
+  <div class="profile-cover"></div>
+
+  <!-- PROFILE CONTENT -->
+  <div class="container" style="padding-bottom:120px">
+
+    <!-- Profile Card -->
+    <div class="profile-card fade-in" style="margin-bottom:48px">
+      <div class="profile-avatar">
+        <img src="" id="profileMainAvatar" alt="Profile" class="avatar-xl"
+          style="width:160px;height:160px;border-radius:50%;border:4px solid var(--bg);object-fit:cover;box-shadow:var(--shadow-lg);background:var(--muted)">
+        <!-- Verified shield — hidden by default; JS shows after 50 swaps -->
+        <div class="profile-verified" id="profileVerifiedBadge" style="display:none"><svg width="20" height="20"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="m9 12 2 2 4-4" />
+          </svg></div>
+      </div>
+      <div class="profile-info">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:16px">
+          <div>
+            <h1 class="profile-name" id="profileName">Loading...</h1>
+            <p class="profile-handle" id="profileHandle"></p>
+          </div>
+          <div class="flex gap-3">
+            <a href="/settings" class="btn btn-outline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path
+                  d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg> Edit Profile</a>
+            <a href="/favorites" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path
+                  d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg> My Favorites</a>
+          </div>
+        </div>
+        <p class="profile-bio">Sustainability enthusiast, amateur photographer, and language learner. Always looking to
+          swap knowledge and cool vintage finds! 🌿📸</p>
+        <div class="profile-details">
+          <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg> Brooklyn, NY</span>
+          <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+              <line x1="16" x2="16" y1="2" y2="6" />
+              <line x1="8" x2="8" y1="2" y2="6" />
+              <line x1="3" x2="21" y1="10" y2="10" />
+            </svg> Joined Mar 2023</span>
+          <!-- Trusted Swapper — shown by JS only when swap count >= 50 -->
+          <span id="trustedSwapperBadge" style="display:none;color:var(--success);font-weight:500"><svg width="16"
+              height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <path d="m9 11 3 3L22 4" />
+            </svg> Trusted Swapper</span>
+        </div>
+        <% if (currentUser && currentUser.isBanned) { %>
+          <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:14px 18px;margin-top:16px;display:flex;align-items:flex-start;gap:12px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            <div>
+              <div style="font-weight:700;color:#ef4444;font-size:14px">Account Suspended</div>
+              <div style="font-size:13px;color:var(--muted-fg);margin-top:2px">Your account has been suspended. Contact support for assistance.</div>
+            </div>
+          </div>
+        <% } %>
+        <!-- Trust Progress Bar (hidden when trusted) -->
+        <div class="trust-progress" id="trustProgressWrap">
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted-fg)">
+            <span>🏅 Progress to <strong style="color:var(--fg)">Trusted Swapper</strong></span>
+            <span id="trustProgressLabel">0 / 50 swaps</span>
+          </div>
+          <div class="trust-bar-wrap">
+            <div class="trust-bar-fill" id="trustBarFill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs hide-scrollbar">
+      <button class="tab active" data-tab="myskills">My Skills</button>
+      <button class="tab" data-tab="items">My Items</button>
+      <button class="tab owner-tab" data-tab="deals">My Deals</button>
+      <button class="tab owner-tab" data-tab="history">Purchase History</button>
+      <button class="tab owner-tab" data-tab="wallet">Wallet</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         TAB: MY SKILLS (new — personal skill registry)
+    ═══════════════════════════════════════════ -->
+    <div class="tab-content active" id="tab-myskills">
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <h2 style="font-size:24px;font-weight:700">My Skills</h2>
+        <button class="btn btn-primary owner-action" id="addMySkillBtn" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
+          </svg>
+          Add Skill
+        </button>
+      </div>
+      <div id="mySkillsContent"><!-- filled by JS --></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         TAB: MY ITEMS (no default items)
+    ═══════════════════════════════════════════ -->
+    <div class="tab-content" id="tab-items">
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <h2 style="font-size:24px;font-weight:700">My Items</h2>
+        <a href="/add" class="btn btn-primary owner-action" id="listItemBtn" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
+          </svg>
+          List an Item
+        </a>
+      </div>
+      <div id="myItemsContent"><!-- filled by JS --></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         TAB: MY DEALS (owner only)
+    ═══════════════════════════════════════════ -->
+    <div class="tab-content owner-tab" id="tab-deals">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <h2 style="font-size:24px;font-weight:700">My Deals</h2>
+        <a href="/add?type=deal" class="btn btn-primary owner-action" id="listDealBtn" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
+          </svg>
+          List a Deal
+        </a>
+      </div>
+      <div id="myDealsContent"><!-- filled by JS --></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         TAB: PURCHASE HISTORY (owner only)
+    ═══════════════════════════════════════════ -->
+    <div class="tab-content owner-tab" id="tab-history">
+      <div class="empty-state">
+        <div class="empty-state-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+            stroke="var(--muted-fg)" stroke-width="2">
+            <rect width="20" height="16" x="2" y="4" rx="2" />
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+          </svg></div>
+        <h3>No history yet</h3>
+        <p>When you have activity here, it will show up.</p><a href="/" class="btn btn-primary">Explore Community</a>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         TAB: WALLET (owner only)
+    ═══════════════════════════════════════════ -->
+    <div class="tab-content owner-tab" id="tab-wallet">
+      <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;font-family:var(--font-heading)">My Wallet</h2>
+      <div class="grid grid-2 gap-6" style="margin-bottom:32px">
+        <div class="card"
+          style="padding:24px;background:linear-gradient(135deg,rgba(124,58,237,.05),rgba(37,99,235,.05));border:1px solid rgba(124,58,237,.2);position:relative;overflow:hidden">
+          <div
+            style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(124,58,237,.1) 0%,transparent 70%);border-radius:50%">
+          </div>
+          <div class="font-bold text-muted-fg mb-2" style="position:relative;z-index:1">Available Points</div>
+          <div class="flex items-center gap-2"
+            style="font-size:36px;font-weight:800;color:var(--primary);position:relative;z-index:1;font-family:var(--font-heading)">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <span id="walletPointsVal">0</span>
+          </div>
+          <p class="text-sm mt-2 text-muted-fg" style="position:relative;z-index:1;font-weight:500">Equivalent to $<span
+              id="walletPointsCash">0.00</span> in store credit</p>
+          <div style="margin-top:20px;position:relative;z-index:1"><button class="btn btn-primary w-full"
+              onclick="window.location= '/deals'">Shop Deals &amp; Earn Points</button></div>
+        </div>
+        <div id="walletCardsContainer">
+          <div style="color:var(--muted-fg);font-size:14px;text-align:center;padding:16px">Loading saved cards…</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:24px">
+        <button class="btn btn-outline" onclick="document.getElementById('addCardModal').classList.add('open')" style="display:flex;align-items:center;gap:6px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Card
+        </button>
+      </div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:16px;font-family:var(--font-heading)">Recent Transactions
+      </h3>
+      <div id="walletRecentTransactions"></div>
+    </div>
+
+  </div><!-- /container -->
+
+  <!-- ═══════════════════════════════════════════
+       MODAL: ADD / EDIT MY SKILL
+  ═══════════════════════════════════════════ -->
+  <div class="sk-overlay" id="mySkillModal">
+    <div class="sk-modal">
+      <button class="sk-modal-close" onclick="closeModal('mySkillModal')">&times;</button>
+      <h3 id="mySkillModalTitle">Add Skill</h3>
+      <p class="sub">Tell us about a skill you have.</p>
+      <input type="hidden" id="editSkillId">
+
+      <div class="form-group">
+        <label class="form-label">Skill Name *</label>
+        <input type="text" class="input" id="skillNameInput" placeholder="e.g. Photography, Spanish, Web Design">
+        <span class="field-err" id="skillNameErr"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Self-Rating (1–5 stars) *</label>
+        <div class="star-row" id="starRatingInput">
+          <input type="radio" name="skillRating" id="sr5" value="5"><label for="sr5" title="5 stars">★</label>
+          <input type="radio" name="skillRating" id="sr4" value="4"><label for="sr4" title="4 stars">★</label>
+          <input type="radio" name="skillRating" id="sr3" value="3"><label for="sr3" title="3 stars">★</label>
+          <input type="radio" name="skillRating" id="sr2" value="2"><label for="sr2" title="2 stars">★</label>
+          <input type="radio" name="skillRating" id="sr1" value="1"><label for="sr1" title="1 star">★</label>
+        </div>
+        <span class="field-err" id="skillRatingErr"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Certification <span
+            style="color:var(--muted-fg);font-weight:400">(optional)</span></label>
+        <input type="text" class="input" id="skillCertInput" placeholder="Certificate name or link to proof">
+        <p style="font-size:12px;color:var(--muted-fg);margin-top:4px">Add a certification title or URL to show proof of
+          your skill</p>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button class="btn btn-primary" style="flex:1" id="saveMySkillBtn">Save Skill</button>
+        <button class="btn btn-ghost" onclick="closeModal('mySkillModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MODAL: ADD CARD TO WALLET
+  ═══════════════════════════════════════════ -->
+  <div class="sk-overlay" id="addCardModal">
+    <div class="sk-modal">
+      <button class="sk-modal-close" onclick="document.getElementById('addCardModal').classList.remove('open')">&times;</button>
+      <h3>Add a Card</h3>
+      <p class="sub">Your card number is encrypted and stored securely.</p>
+
+      <div class="form-group">
+        <label class="form-label">Cardholder Name *</label>
+        <input type="text" class="input" id="acCardName" placeholder="e.g. Jane Doe" oninput="document.getElementById('acCardNameErr').textContent=''"  autocomplete="cc-name">
+        <span class="field-err" id="acCardNameErr"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Card Number *</label>
+        <input type="text" class="input" id="acCardNumber" placeholder="0000 0000 0000 0000" maxlength="23" oninput="acFormatCardNumber(this)">
+        <span class="field-err" id="acCardNumberErr"></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Expiry *</label>
+          <input type="text" class="input" id="acCardExpiry" placeholder="MM/YY" maxlength="5" oninput="acFormatExpiry(this)">
+          <span class="field-err" id="acCardExpiryErr"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CVV *</label>
+          <input type="password" class="input" id="acCardCvv" placeholder="123" maxlength="4" inputmode="numeric" oninput="acFormatCvv(this)">
+          <span class="field-err" id="acCardCvvErr"></span>
+        </div>
+      </div>
+
+      <div id="acCardError" style="display:none;color:var(--error);font-size:13px;margin-bottom:8px"></div>
+
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button class="btn btn-primary" style="flex:1" id="saveCardBtn" onclick="submitAddCard()">Save Card</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('addCardModal').classList.remove('open')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       OVERLAY: CONFIRM CARD REMOVAL
+  ═══════════════════════════════════════════ -->
+  <div id="walletDeleteOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:3000;align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px 28px;width:100%;max-width:360px;text-align:center;animation:modalIn .22s ease">
+      <div style="width:52px;height:52px;background:rgba(239,68,68,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px">Remove Card?</h3>
+      <p id="walletDeleteMsg" style="font-size:14px;color:var(--muted-fg);margin-bottom:24px;line-height:1.5"></p>
+      <div style="display:flex;gap:12px">
+        <button onclick="window._wConfirmDelete()" class="btn btn-primary" style="flex:1;background:#ef4444;border-color:#ef4444">Yes, Remove</button>
+        <button onclick="document.getElementById('walletDeleteOverlay').style.display='none'" class="btn btn-ghost" style="flex:1">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo" style="margin-bottom:8px" aria-label="Swapify Home">
+            <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" aria-hidden="true">
+                <path d="M8 3L4 7l4 4" />
+                <path d="M4 7h16" />
+                <path d="M16 21l4-4-4-4" />
+                <path d="M20 17H4" />
+              </svg></div><span class="logo-text"><span>Swapify</span></span>
+          </a>
+          <p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.
+          </p>
+          <div class="footer-social">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
+              aria-label="Follow Swapify on Facebook" class="social-link"><svg width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+              </svg></a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on X"
+              class="social-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" aria-hidden="true">
+                <path d="M18 6L6 18" />
+                <path d="M6 6L18 18" />
+              </svg></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+              aria-label="Follow Swapify on Instagram" class="social-link"><svg width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg></a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
+              aria-label="Follow Swapify on LinkedIn" class="social-link"><svg width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                <rect width="4" height="12" x="2" y="9" />
+                <circle cx="4" cy="4" r="2" />
+              </svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>About Swapify</h4>
+          <ul>
+            <li><a href="/about">About Swapify</a></li>
+            <li><a href="/our-story">Our Story</a></li>
+            <li><a href="/how-it-works">How it Works</a></li>
+            <li><a href="/sustainability">Sustainability</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="/guidelines">Guidelines</a></li>
+            <li><a href="/success-stories">Success Stories</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help Center</h4>
+          <ul>
+            <li><a href="/help-center">Help Center</a></li>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/contact">Contact Support</a></li>
+            <li><a href="/trust-safety">Trust &amp; Safety</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+        <div class="footer-tagline"><span>Less waste. More sharing.</span><svg width="16" height="16"
+            viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" aria-hidden="true">
+            <path
+              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          </svg></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav"><a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg><span>Home</span></a><a href="/skills"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <path d="M8 3L4 7l4 4" />
+        <path d="M4 7h16" />
+        <path d="M16 21l4-4-4-4" />
+        <path d="M20 17H4" />
+      </svg><span>Skills</span></a><a href="/add" class="add-btn">
+      <div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M5 12h14" />
+          <path d="M12 5v14" />
+        </svg></div>
+    </a><a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z" />
+      </svg><span>Messages</span></a><a href="/profile" class="active"><svg width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="5" />
+        <path d="M20 21a8 8 0 1 0-16 0" />
+      </svg><span>Profile</span></a></nav>
+
+  <script type="application/json" id="__serverProfileData"><%- JSON.stringify({
+    avatar:    profileUser.profileImage || '',
+    points:    profileUser.points || 0,
+    items: (userItems || []).map(function(it){ return {
+      id:          String(it._id),
+      title:       it.title,
+      image:       (it.images && it.images[0]) ? it.images[0] : '/img/placeholder.jpg',
+      category:    it.category,
+      isAvailable: it.isAvailable
+    }}),
+    deals: (userDeals || []).map(function(it){ return {
+      id:            String(it._id),
+      title:         it.title,
+      image:         (it.images && it.images[0]) ? it.images[0] : '/img/placeholder.jpg',
+      isAvailable:   it.isAvailable,
+      price:         it.price,
+      originalPrice: it.originalPrice
+    }}),
+    skills: (userSkills || []).map(function(sk){ return {
+      id:             String(sk._id),
+      title:          sk.title,
+      level:          sk.level || '',
+      category:       sk.category || '',
+      image:          (sk.images && sk.images[0]) ? sk.images[0] : '',
+      description:    sk.description || '',
+      approvalStatus: sk.approvalStatus
+    }}),
+    purchases: (purchaseHistory || []).map(function(d){ return {
+      id:            String(d._id),
+      itemName:      d.item ? d.item.title : 'Deleted item',
+      itemImg:       (d.item && d.item.images && d.item.images[0]) ? d.item.images[0] : '/img/placeholder.jpg',
+      amount:        d.amount,
+      paymentMethod: d.paymentMethod,
+      status:        d.status,
+      createdAt:     d.createdAt
+    }})
+  }) %></script>
+  <script>
+    window.__SERVER_PROFILE = JSON.parse(document.getElementById('__serverProfileData').textContent);
+  </script>
+  <script src="/js/app.js"></script>
+  <script src="/js/report-user.js"></script>
+  <!-- Server user data island — type="application/json" is invisible to the JS linter -->
+  <script type="application/json" id="__serverUserData"><%- JSON.stringify({
+    id:       profileUser._id ? String(profileUser._id) : '',
+    name:     profileUser.username || '',
+    location: profileUser.location || '',
+    bio:      profileUser.bio || '',
+    joined:   (function() {
+                if (!profileUser.createdAt) return '';
+                var d = new Date(profileUser.createdAt);
+                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return months[d.getMonth()] + ' ' + d.getFullYear();
+              })()
+  }) %></script>
+  <script>
+    /* ── Utility ── */
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    window.closeModal = closeModal;
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+      var urlParams = new URLSearchParams(window.location.search);
+      var userId = urlParams.get('id');
+      var isHeroPreview = urlParams.get('source') === 'hero';
+      var profileCard = document.querySelector('.profile-card');
+
+      // Server-provided user data (always available on /profile)
+      var _serverUser = JSON.parse(document.getElementById('__serverUserData').textContent);
+
+      var uid, user, isMe;
+      if (!userId) {
+        // Own profile — use server data; no client-side auth check needed
+        uid = _serverUser.id;
+        isMe = true;
+        var _lsUsers = SwapifyStore.get('users') || [];
+        user = _lsUsers.find(function (u) { return u.id === uid; }) ||
+          { id: _serverUser.id, name: _serverUser.name, location: _serverUser.location, bio: _serverUser.bio, joined: _serverUser.joined };
+      } else {
+        // Public profile — load from localStorage seed data
+        uid = userId;
+        var _lsUsers2 = SwapifyStore.get('users') || [];
+        user = _lsUsers2.find(function (u) { return u.id === uid; });
+        isMe = SwapifyAuth.isLoggedIn() && SwapifyAuth.currentUser().id === uid;
+      }
+
+      /* ── Hide owner-only tabs & actions on public profiles ── */
+      if (!isMe) {
+        document.querySelectorAll('.owner-tab').forEach(function (el) { el.style.display = 'none'; });
+        document.querySelectorAll('.owner-action').forEach(function (el) { el.style.display = 'none !important'; });
+      }
+
+      if (!user) {
+        if (profileCard) profileCard.innerHTML = '<div style="text-align:center;padding:48px 24px;width:100%"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted-fg)" stroke-width="2" style="margin:0 auto 16px"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><h2 style="margin-bottom:8px">User Not Found</h2><p style="color:var(--muted-fg);margin-bottom:24px">This profile doesn\'t exist or has been removed.</p><a href="/" class="btn btn-primary">Return Home</a></div>';
+        var tabsEl = document.querySelector('.tabs');
+        if (tabsEl) tabsEl.style.display = 'none';
+        document.querySelectorAll('.tab-content').forEach(function (el) { el.style.display = 'none'; });
+        return;
+      }
+
+      /* ── Populate basic info ── */
+      var DEFAULT_AVATAR = (window.SwapifyDefaultAvatar) || "/img/stock_pfp.jpg";
+
+      var nameEl = document.querySelector('.profile-name');
+      if (nameEl) nameEl.textContent = user.name || 'Unknown';
+
+      var handleEl = document.querySelector('.profile-handle');
+      if (handleEl) {
+        var dot = user.online
+          ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;margin-right:4px" title="Online"></span>'
+          : '<span style="width:8px;height:8px;border-radius:50%;background:var(--muted-fg);display:inline-block;margin-right:4px" title="Offline"></span>';
+        handleEl.innerHTML = '@' + (user.name || 'user').replace(/\s+/g, '').toLowerCase() + ' ' + dot +
+          '<span class="item-card-rating" style="font-size:14px"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ' +
+          (user.cachedRating ? user.cachedRating.toFixed(1) : 'New') + '</span>';
+      }
+
+      var avatarSrc = (window.__SERVER_PROFILE && window.__SERVER_PROFILE.avatar)
+        ? window.__SERVER_PROFILE.avatar : DEFAULT_AVATAR;
+      var imgEl = document.querySelector('.profile-avatar img');
+      if (imgEl) { imgEl.src = avatarSrc; imgEl.alt = _serverUser.name; }
+      var headerImg = document.getElementById('headerAvatarImg');
+      if (headerImg) { headerImg.src = avatarSrc; headerImg.alt = _serverUser.name; }
+
+      var bioEl = document.querySelector('.profile-bio');
+      if (bioEl) bioEl.textContent = _serverUser.bio || (user && user.bio) || '';
+
+      var spans = document.querySelectorAll('.profile-details span');
+      if (spans[0]) spans[0].innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ' + (user.location || 'Not set');
+      if (spans[1]) spans[1].innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> Joined ' + (user.joined || '');
+
+      /* ── Action buttons ── */
+      var actionBtns = document.querySelector('.profile-info .flex.gap-3');
+      if (actionBtns) {
+        if (isMe) {
+          actionBtns.innerHTML =
+            '<a href="/settings" class="btn btn-outline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Edit Profile</a>' +
+            '<a href="/swap-requests" class="btn btn-outline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg> Swap Requests</a>' +
+            '<a href="/favorites" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg> My Favorites</a>';
+        } else {
+          var followBtnHtml = isHeroPreview ? '' : '<button class="btn btn-outline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg> Follow</button>';
+          actionBtns.innerHTML =
+            '<a href="/messages?partner=' + uid + '" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</a>' +
+            followBtnHtml +
+            '<button class="btn btn-ghost btn-sm" id="profileReportBtn" style="color:var(--muted-fg)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg> Report</button>';
+          setTimeout(function () {
+            var rb = document.getElementById('profileReportBtn');
+            if (rb) rb.addEventListener('click', function () {
+              SwapifyReport.open({ reportedUserId: uid, reportedUserName: user.name, context: 'profile' });
+            });
+          }, 0);
+        }
+      }
+
+      document.title = user.name + ' - Profile | Swapify';
+
+      /* ════════════════════════════════════════════════════
+         TRUSTED SWAPPER PROGRESS BAR
+      ════════════════════════════════════════════════════ */
+      var allSwaps = SwapifyStore.get('swaps') || [];
+      var swapCount = allSwaps.filter(function (sw) {
+        return sw.fromUserId === uid || sw.toUserId === uid;
+      }).length;
+      var THRESHOLD = 50;
+      var pct = Math.min(100, Math.round((swapCount / THRESHOLD) * 100));
+
+      var verifiedEl = document.getElementById('profileVerifiedBadge');
+      var trustedEl = document.getElementById('trustedSwapperBadge');
+      var progressWrap = document.getElementById('trustProgressWrap');
+      var progressLbl = document.getElementById('trustProgressLabel');
+      var barFill = document.getElementById('trustBarFill');
+
+      if (swapCount >= THRESHOLD) {
+        if (verifiedEl) verifiedEl.style.display = '';
+        if (trustedEl) trustedEl.style.display = '';
+        if (progressWrap) progressWrap.style.display = 'none';
+      } else {
+        if (verifiedEl) verifiedEl.style.display = 'none';
+        if (trustedEl) trustedEl.style.display = 'none';
+        if (progressWrap) progressWrap.style.display = '';
+        if (progressLbl) progressLbl.textContent = swapCount + ' / ' + THRESHOLD + ' swaps';
+        if (barFill) setTimeout(function () { barFill.style.width = pct + '%'; }, 120);
+      }
+
+      /* ════════════════════════════════════════════════════
+         MY SKILLS TAB — reads from DB via __SERVER_PROFILE
+      ════════════════════════════════════════════════════ */
+      function statusBadge(s) {
+        var cfg = { approved: ['var(--success)', 'Approved'], rejected: ['#ef4444', 'Rejected'], pending: ['#D97706', 'Pending'] };
+        var c = cfg[s] || ['var(--muted-fg)', s];
+        return '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid ' + c[0] + ';color:' + c[0] + '">' + c[1] + '</span>';
+      }
+
+      function renderMySkills() {
+        var skills = (window.__SERVER_PROFILE && window.__SERVER_PROFILE.skills) || [];
+        var content = document.getElementById('mySkillsContent');
+        if (!content) return;
+
+        if (skills.length === 0) {
+          content.innerHTML =
+            '<div class="empty-state"><div class="empty-state-icon">🛠️</div>' +
+            '<h3>No skills listed yet</h3>' +
+            '<p>' + (isMe ? 'List a skill to start swapping with the community.' : 'This user has not listed any skills yet.') + '</p>' +
+            (isMe ? '<a href="/add" class="btn btn-primary">List a Skill</a>' : '') +
+            '</div>';
+          return;
+        }
+
+        var html =
+          '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">' +
+          '<table class="ms-table"><thead><tr>' +
+          '<th>Skill</th><th>Level</th><th>Category</th><th>Status</th>' +
+          (isMe ? '<th>Actions</th>' : '') +
+          '</tr></thead><tbody>';
+
+        skills.forEach(function (sk) {
+          html += '<tr>' +
+            '<td style="font-weight:600">' + escapeHtml(sk.title) + '</td>' +
+            '<td style="text-transform:capitalize">' + escapeHtml(sk.level || '—') + '</td>' +
+            '<td style="text-transform:capitalize">' + escapeHtml(sk.category || '—') + '</td>' +
+            '<td>' + statusBadge(sk.approvalStatus) + '</td>';
+          if (isMe) {
+            html += '<td>' +
+              '<form method="POST" action="/skill/' + escapeHtml(sk.id) + '/delete" style="display:inline" onsubmit="return confirm(\'Remove this skill?\');">' +
+              '<button type="submit" class="btn btn-ghost btn-sm" style="color:#ef4444">Remove</button>' +
+              '</form>' +
+              '</td>';
+          }
+          html += '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+        content.innerHTML = html;
+      }
+
+      if (isMe) {
+        var addBtn = document.getElementById('addMySkillBtn');
+        if (addBtn) {
+          addBtn.style.display = '';
+          addBtn.addEventListener('click', function () { window.location.href = '/add'; });
+        }
+      }
+
+      renderMySkills();
+
+      /* ════════════════════════════════════════════════════
+         MY ITEMS TAB — reads from DB via __SERVER_PROFILE
+      ════════════════════════════════════════════════════ */
+      var userItems = (window.__SERVER_PROFILE && window.__SERVER_PROFILE.items) || [];
+      var itemsCont = document.getElementById('myItemsContent');
+      var listBtn = document.getElementById('listItemBtn');
+      if (isMe && listBtn) listBtn.style.display = '';
+
+      if (itemsCont) {
+        if (userItems.length === 0) {
+          itemsCont.innerHTML =
+            '<div class="empty-state"><div class="empty-state-icon">📦</div>' +
+            '<h3>No items listed yet</h3>' +
+            '<p>' + (isMe ? 'List your first item and start swapping with the community!' : 'This user has no items listed.') + '</p>' +
+            (isMe ? '<a href="/add" class="btn btn-primary" style="margin-top:8px">List an Item</a>' : '') +
+            '</div>';
+        } else {
+          var iHtml = '<div class="grid grid-3 gap-6">';
+          userItems.forEach(function (item) {
+            var catLabel = item.category === 'deal' ? 'Deal' : 'Object';
+            iHtml += '<div class="card" data-item-id="' + item.id + '">' +
+              '<div style="height:160px;overflow:hidden"><img src="' + item.image + '" alt="' + escapeHtml(item.title) + '" style="width:100%;height:100%;object-fit:cover"></div>' +
+              '<div class="card-body"><h3 style="font-weight:700;margin-bottom:4px">' + escapeHtml(item.title) + '</h3>' +
+              '<p class="text-xs" style="color:var(--muted-fg);margin-bottom:8px">' + catLabel + (item.isAvailable ? ' · Available' : ' · Unavailable') + '</p>' +
+              (isMe ? '<div style="display:flex;gap:8px"><a href="/item/' + item.id + '/edit" class="btn btn-outline btn-sm">Edit</a>' +
+                '<form method="POST" action="/item/' + item.id + '/delete" style="display:inline" onsubmit="return confirm(\'Delete this listing?\');">' +
+                '<button type="submit" class="btn btn-ghost btn-sm" style="color:#ef4444">Delete</button></form></div>' : '') +
+              '</div></div>';
+          });
+          iHtml += '</div>';
+          itemsCont.innerHTML = iHtml;
+        }
+      }
+
+      /* ════════════════════════════════════════════════════
+         MY DEALS TAB — reads from DB via __SERVER_PROFILE
+      ════════════════════════════════════════════════════ */
+      (function renderMyDeals() {
+        var deals   = (window.__SERVER_PROFILE && window.__SERVER_PROFILE.deals) || [];
+        var cont    = document.getElementById('myDealsContent');
+        var dealBtn = document.getElementById('listDealBtn');
+        if (isMe && dealBtn) dealBtn.style.display = '';
+        if (!cont) return;
+
+        if (deals.length === 0) {
+          cont.innerHTML =
+            '<div class="empty-state"><div class="empty-state-icon">🏷️</div>' +
+            '<h3>No deals listed yet</h3>' +
+            '<p>' + (isMe ? 'List your first deal and start selling to the community!' : 'This user has no deals listed.') + '</p>' +
+            (isMe ? '<a href="/add?type=deal" class="btn btn-primary" style="margin-top:8px">List a Deal</a>' : '') +
+            '</div>';
+          return;
+        }
+
+        var dHtml = '<div class="grid grid-3 gap-6">';
+        deals.forEach(function (item) {
+          var priceTag = item.price != null
+            ? '<p class="text-xs" style="color:var(--primary);font-weight:700;margin-bottom:4px">' +
+              (item.originalPrice ? '<s style="color:var(--muted-fg);font-weight:400">$' + Number(item.originalPrice).toFixed(2) + '</s> ' : '') +
+              '$' + Number(item.price).toFixed(2) + '</p>'
+            : '';
+          dHtml += '<div class="card" data-item-id="' + item.id + '">' +
+            '<div style="height:160px;overflow:hidden"><img src="' + item.image + '" alt="' + escapeHtml(item.title) + '" style="width:100%;height:100%;object-fit:cover"></div>' +
+            '<div class="card-body"><h3 style="font-weight:700;margin-bottom:4px">' + escapeHtml(item.title) + '</h3>' +
+            priceTag +
+            '<p class="text-xs" style="color:var(--muted-fg);margin-bottom:8px">Deal' + (item.isAvailable ? ' · Available' : ' · Unavailable') + '</p>' +
+            (isMe
+              ? '<div style="display:flex;gap:8px">' +
+                '<a href="/item/' + item.id + '/edit" class="btn btn-outline btn-sm">Edit</a>' +
+                '<form method="POST" action="/item/' + item.id + '/delete" style="display:inline" onsubmit="return confirm(\'Delete this deal?\');">' +
+                '<button type="submit" class="btn btn-ghost btn-sm" style="color:#ef4444">Delete</button></form>' +
+                '</div>'
+              : '') +
+            '</div></div>';
+        });
+        dHtml += '</div>';
+        cont.innerHTML = dHtml;
+      }());
+
+      /* ════════════════════════════════════════════════════
+         PURCHASE HISTORY & WALLET (owner only)
+      ════════════════════════════════════════════════════ */
+      if (isMe) {
+        var history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
+
+        var histTab = document.getElementById('tab-history');
+        if (histTab) {
+          if (history.length === 0) {
+            histTab.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted-fg)" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div><h3>No history yet</h3><p>Start exploring the community to find your next great deal!</p><a href="/deals" class="btn btn-primary">Explore Deals</a></div>';
+          } else {
+            var hHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><h2 style="font-size:24px;font-weight:700">Purchase History</h2><div style="font-size:14px;color:var(--muted-fg)">Showing all orders</div></div><div style="display:flex;flex-direction:column;gap:16px">';
+            history.slice().reverse().forEach(function (order) {
+              var d = new Date(order.date).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+              var m = order.paymentMethod === 'card' ? 'Credit/Debit Card' : (order.paymentMethod === 'points' ? 'Swapify Points' : 'Cash on Delivery');
+              var pl = order.paymentPlan === 'split' ? '50% Split' : 'Full Payment';
+
+              var itemsListHtml = '';
+              if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+                itemsListHtml = '<div style="margin-top:16px; padding:16px; background:var(--muted); border-radius:var(--radius-sm); border:1px solid var(--border); display:flex; flex-direction:column; gap:12px">';
+                order.items.forEach(function (item) {
+                  itemsListHtml += '<div style="display:flex; align-items:center; gap:16px">' +
+                    '<img src="' + item.img + '" alt="' + escapeHtml(item.name) + '" style="width:48px; height:48px; border-radius:var(--radius-sm); object-fit:cover; border:1px solid var(--border);">' +
+                    '<div style="flex:1; font-size:13px;">' +
+                    '<div style="font-weight:700; color:var(--fg);">' + escapeHtml(item.name) + '</div>' +
+                    '<div style="color:var(--muted-fg); font-size:12px; margin-top:2px;">Qty: ' + item.qty + (item.condition ? ' • Condition: ' + escapeHtml(item.condition) : '') + '</div>' +
+                    '</div>' +
+                    '<div style="font-weight:800; font-size:14px; color:var(--primary);">' +
+                    '$' + (item.price * item.qty).toFixed(2) +
+                    '</div>' +
+                    '</div>';
+                });
+                itemsListHtml += '</div>';
+              }
+
+              var addrHtml = order.shippingAddress
+                ? '<div style="margin-top:10px;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted-fg)">' +
+                  '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                  '<span><strong style="color:var(--fg)">Ships to:</strong> ' + escapeHtml(order.shippingAddress) + '</span></div>'
+                : '';
+
+              hHtml += '<div class="card card-body" style="display:flex;gap:20px;align-items:flex-start">' +
+                '<img src="' + order.itemImg + '" alt="' + order.itemName + '" style="width:90px;height:90px;border-radius:var(--radius-sm);object-fit:cover">' +
+                '<div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:4px;align-items:flex-start"><h3 style="font-weight:700;font-size:16px">' + order.itemName + '</h3><span class="badge" style="background:rgba(16,185,129,.1);color:var(--success);border:1px solid var(--success)">' + order.status + '</span></div>' +
+                '<p style="font-size:13px;color:var(--muted-fg);margin-bottom:12px">Order ID: ' + order.id + ' • ' + d + '</p>' +
+                '<div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><span style="background:var(--muted);padding:4px 8px;border-radius:4px"><strong>Total:</strong> $' + order.totalPrice.toFixed(2) + '</span><span style="background:var(--muted);padding:4px 8px;border-radius:4px"><strong>Method:</strong> ' + m + ' (' + pl + ')</span><span style="background:var(--muted);padding:4px 8px;border-radius:4px"><strong>Qty:</strong> ' + order.qty + '</span></div>' +
+                addrHtml +
+                itemsListHtml +
+                '</div></div>';
+            });
+            hHtml += '</div>';
+            histTab.innerHTML = hHtml;
+          }
+        }
+
+        var walletPts = parseInt(localStorage.getItem('walletPoints'));
+        if (isNaN(walletPts)) walletPts = 1250;
+        var walletCash = (walletPts * 0.01).toFixed(2);
+        var wPtsEl = document.getElementById('walletPointsVal');
+        var wCashEl = document.getElementById('walletPointsCash');
+        if (wPtsEl) wPtsEl.textContent = walletPts.toLocaleString();
+        if (wCashEl) wCashEl.textContent = walletCash;
+
+        // Load saved cards from server (encrypted in DB) — carousel layout
+        var _wCards = [];
+        var _wIdx   = 0;
+        var _wCont  = document.getElementById('walletCardsContainer');
+
+        function _wEmpty() {
+          if (!_wCont) return;
+          _wCont.innerHTML =
+            '<div style="padding:28px 20px;border:2px dashed var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted-fg);min-height:160px">' +
+              '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.45"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>' +
+              '<div style="font-size:15px;font-weight:600">No saved card yet</div>' +
+              '<div style="font-size:13px;text-align:center;line-height:1.5">Your saved card will appear here.<br>Add one below or save at checkout.</div>' +
+            '</div>';
+        }
+
+        function _wRender() {
+          if (!_wCont) return;
+          if (!_wCards.length) { _wEmpty(); return; }
+          var card  = _wCards[_wIdx];
+          var multi = _wCards.length > 1;
+          var dots  = multi
+            ? '<div style="display:flex;justify-content:center;gap:6px;margin-top:10px">' +
+                _wCards.map(function(_, i) {
+                  return '<button onclick="window._wGoTo(' + i + ')" style="width:8px;height:8px;border-radius:50%;border:none;cursor:pointer;padding:0;background:' +
+                    (i === _wIdx ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.3)') + '"></button>';
+                }).join('') +
+              '</div>'
+            : '';
+          var prevBtn = multi
+            ? '<button onclick="window._wPrev()" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.18);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:white;font-size:20px;line-height:1;z-index:2;display:flex;align-items:center;justify-content:center">&#8249;</button>'
+            : '';
+          var nextBtn = multi
+            ? '<button onclick="window._wNext()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.18);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:white;font-size:20px;line-height:1;z-index:2;display:flex;align-items:center;justify-content:center">&#8250;</button>'
+            : '';
+          _wCont.innerHTML =
+            '<div style="position:relative">' +
+              prevBtn + nextBtn +
+              '<div style="padding:24px;background:linear-gradient(135deg,#1f2937,#111827);color:white;border:none;position:relative;overflow:hidden;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.2)">' +
+                '<div style="position:absolute;top:-30px;right:-20px;width:150px;height:150px;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 60%);border-radius:50%"></div>' +
+                '<div style="position:absolute;bottom:-40px;left:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,.05) 0%,transparent 60%);border-radius:50%"></div>' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;position:relative;z-index:1">' +
+                  '<div style="font-family:monospace;font-size:15px;letter-spacing:1px;color:rgba(255,255,255,.8)">Swapify Pay</div>' +
+                  '<div style="display:flex;align-items:center;gap:8px">' +
+                    (multi ? '<span style="font-size:11px;color:rgba(255,255,255,.55)">' + (_wIdx+1) + '/' + _wCards.length + '</span>' : '') +
+                    '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>' +
+                    '<button onclick="window._wDelete(\'' + card._id + '\',\'' + card.last4 + '\')" title="Remove card" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:18px;line-height:1;padding:0">&#x2715;</button>' +
+                  '</div>' +
+                '</div>' +
+                '<div style="font-family:monospace;font-size:22px;letter-spacing:3px;margin-bottom:16px;position:relative;z-index:1;color:white">**** **** **** ' + card.last4 + '</div>' +
+                '<div style="display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1">' +
+                  '<div>' +
+                    '<div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.6);margin-bottom:4px">Cardholder</div>' +
+                    '<div style="font-size:14px;font-weight:500;letter-spacing:1px;color:white;text-transform:uppercase">' + card.cardName + '</div>' +
+                  '</div>' +
+                  '<div>' +
+                    '<div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.6);margin-bottom:4px">Expires</div>' +
+                    '<div style="font-size:14px;font-weight:500;letter-spacing:1px;color:white">' + card.expiry + '</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+              dots +
+            '</div>';
+        }
+
+        window._wGoTo  = function(i) { _wIdx = i; _wRender(); };
+        window._wPrev  = function() { _wIdx = (_wIdx - 1 + _wCards.length) % _wCards.length; _wRender(); };
+        window._wNext  = function() { _wIdx = (_wIdx + 1) % _wCards.length; _wRender(); };
+
+        window._wDelete = function(cardId, last4) {
+          var overlay = document.getElementById('walletDeleteOverlay');
+          var msgEl   = document.getElementById('walletDeleteMsg');
+          if (msgEl) msgEl.textContent = 'Remove the card ending in •••• ' + last4 + ' from your wallet?';
+          window._wPendingId = cardId;
+          if (overlay) overlay.style.display = 'flex';
+        };
+
+        window._wConfirmDelete = function() {
+          var overlay = document.getElementById('walletDeleteOverlay');
+          if (overlay) overlay.style.display = 'none';
+          fetch('/api/wallet/cards/' + window._wPendingId, { method: 'DELETE' })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+              if (res.success) {
+                _wCards = _wCards.filter(function(c) { return String(c._id) !== String(window._wPendingId); });
+                if (_wIdx >= _wCards.length) _wIdx = Math.max(0, _wCards.length - 1);
+                _wRender();
+                _wToast('Card removed successfully.');
+              } else {
+                _wToast('Could not remove card.', true);
+              }
+            })
+            .catch(function() { _wToast('Network error. Please try again.', true); });
+        };
+
+        function _wToast(msg, isErr) {
+          var t = document.createElement('div');
+          t.textContent = msg;
+          t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:' +
+            (isErr ? '#ef4444' : '#10b981') +
+            ';color:white;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:5000;box-shadow:0 4px 16px rgba(0,0,0,.25);white-space:nowrap;pointer-events:none';
+          document.body.appendChild(t);
+          setTimeout(function() {
+            t.style.transition = 'opacity .4s';
+            t.style.opacity = '0';
+            setTimeout(function() { t.remove(); }, 400);
+          }, 2800);
+        }
+
+        fetch('/api/wallet/cards')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            _wCards = data.cards || [];
+            _wIdx   = 0;
+            _wRender();
+          })
+          .catch(function() {
+            if (_wCont) _wCont.innerHTML = '<div style="color:var(--muted-fg);font-size:14px;text-align:center;padding:16px">Could not load saved cards.</div>';
+          });
+
+        // Add-Card modal helpers
+        window.acFormatCardNumber = function(input) {
+          var val = input.value.replace(/\D/g, '').substring(0, 19);
+          var groups = val.match(/.{1,4}/g);
+          input.value = groups ? groups.join(' ') : val;
+          document.getElementById('acCardNumberErr').textContent = '';
+        };
+
+        window.acFormatExpiry = function(input) {
+          var raw = input.value.replace(/\D/g, '');
+
+          // Auto-pad single digit month > 1  ("3" → "03")
+          if (raw.length === 1 && parseInt(raw, 10) > 1) raw = '0' + raw;
+
+          // Clamp month to 01–12
+          if (raw.length >= 2) {
+            var mm = parseInt(raw.substring(0, 2), 10);
+            if (mm === 0)  raw = '01' + raw.substring(2);
+            if (mm > 12)   raw = '12' + raw.substring(2);
+          }
+
+          // Insert slash only when year digits are present (avoids backspace loop)
+          input.value = raw.length > 2
+            ? raw.substring(0, 2) + '/' + raw.substring(2, 4)
+            : raw;
+
+          document.getElementById('acCardExpiryErr').textContent = '';
+        };
+
+        window.acFormatCvv = function(input) {
+          input.value = input.value.replace(/\D/g, '').substring(0, 4);
+          document.getElementById('acCardCvvErr').textContent = '';
+        };
+
+        // Luhn algorithm — industry-standard card number check
+        function acLuhn(num) {
+          var sum = 0, alt = false;
+          for (var i = num.length - 1; i >= 0; i--) {
+            var n = parseInt(num[i], 10);
+            if (alt) { n *= 2; if (n > 9) n -= 9; }
+            sum += n;
+            alt = !alt;
+          }
+          return sum % 10 === 0;
+        }
+
+        window.submitAddCard = function() {
+          var name    = (document.getElementById('acCardName').value || '').trim();
+          var numRaw  = (document.getElementById('acCardNumber').value || '').replace(/\s/g, '');
+          var expiry  = (document.getElementById('acCardExpiry').value || '').trim();
+          var cvv     = (document.getElementById('acCardCvv').value || '').trim();
+          var errEl   = document.getElementById('acCardError');
+
+          document.getElementById('acCardNameErr').textContent   = '';
+          document.getElementById('acCardNumberErr').textContent = '';
+          document.getElementById('acCardExpiryErr').textContent = '';
+          document.getElementById('acCardCvvErr').textContent    = '';
+          errEl.style.display = 'none';
+
+          var ok = true;
+
+          // ── Cardholder name: letters, spaces, hyphens, apostrophes; min 2 chars
+          if (!name || name.length < 2) {
+            document.getElementById('acCardNameErr').textContent = 'Enter the cardholder name';
+            ok = false;
+          } else if (!/^[a-zA-Z\s\-']+$/.test(name)) {
+            document.getElementById('acCardNameErr').textContent = 'Name must contain letters only';
+            ok = false;
+          }
+
+          // ── Card number: 13–19 digits + Luhn checksum
+          if (!/^\d{13,19}$/.test(numRaw)) {
+            document.getElementById('acCardNumberErr').textContent = 'Enter a valid card number (13–19 digits)';
+            ok = false;
+          } else if (!acLuhn(numRaw)) {
+            document.getElementById('acCardNumberErr').textContent = 'Card number is not valid';
+            ok = false;
+          }
+
+          // ── Expiry: format, valid month, not expired
+          if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+            document.getElementById('acCardExpiryErr').textContent = 'Enter expiry as MM/YY';
+            ok = false;
+          } else {
+            var parts   = expiry.split('/');
+            var exMM    = parseInt(parts[0], 10);
+            var exYY    = parseInt(parts[1], 10);
+            var now     = new Date();
+            var curYY   = now.getFullYear() % 100;
+            var curMM   = now.getMonth() + 1;
+            if (exMM < 1 || exMM > 12) {
+              document.getElementById('acCardExpiryErr').textContent = 'Month must be between 01 and 12';
+              ok = false;
+            } else if (exYY < curYY || (exYY === curYY && exMM < curMM)) {
+              document.getElementById('acCardExpiryErr').textContent = 'This card has already expired';
+              ok = false;
+            }
+          }
+
+          // ── CVV: 3 or 4 digits only
+          if (!/^\d{3,4}$/.test(cvv)) {
+            document.getElementById('acCardCvvErr').textContent =
+              cvv.length === 0 ? 'CVV is required' : 'CVV must be 3 or 4 digits';
+            ok = false;
+          }
+
+          if (!ok) return;
+
+          var btn = document.getElementById('saveCardBtn');
+          btn.disabled = true;
+          btn.textContent = 'Saving…';
+
+          fetch('/api/wallet/save-card', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cardNumber: numRaw, cardName: name, expiry: expiry })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              window.location.reload();
+            } else {
+              errEl.textContent = data.error || 'Could not save card.';
+              errEl.style.display = 'block';
+              btn.disabled = false;
+              btn.textContent = 'Save Card';
+            }
+          })
+          .catch(function() {
+            errEl.textContent = 'Network error. Please try again.';
+            errEl.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Save Card';
+          });
+        };
+
+        var recentCont = document.getElementById('walletRecentTransactions');
+        if (recentCont) {
+          if (history.length === 0) {
+            recentCont.innerHTML = '<div class="card card-body text-center"><p style="color:var(--muted-fg);font-size:14px">No recent transactions.</p></div>';
+          } else {
+            var rrHtml = '<div style="display:flex;flex-direction:column;gap:12px">';
+            history.slice().reverse().slice(0, 5).forEach(function (order) {
+              var d = new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              var m = order.paymentMethod === 'card' ? 'Card' : (order.paymentMethod === 'points' ? 'Points' : 'COD');
+              rrHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card)">' +
+                '<div style="display:flex;gap:16px;align-items:center"><div style="width:44px;height:44px;background:rgba(124,58,237,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--primary)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>' +
+                '<div><div style="font-weight:700;font-size:15px;margin-bottom:2px">' + order.itemName + '</div><div style="font-size:13px;color:var(--muted-fg)">' + d + ' • ' + m + ' • ' + order.status + '</div></div></div>' +
+                '<div style="font-weight:800;color:var(--primary);font-size:16px">-$' + order.totalPrice.toFixed(2) + '</div></div>';
+            });
+            rrHtml += '</div>';
+            recentCont.innerHTML = rrHtml;
+          }
+        }
+      }
+
+      /* ── Tab param from URL ── */
+      var tabParam = urlParams.get('tab');
+      if (tabParam === 'requests' || tabParam === 'skillreq') {
+        window.location.replace('/swap-requests');
+      } else if (tabParam) {
+        var tBtn = document.querySelector('.tab[data-tab="' + tabParam + '"]');
+        if (tBtn) tBtn.click();
+      }
+
+    });
+  </script>
+
+</body>
+
+</html>

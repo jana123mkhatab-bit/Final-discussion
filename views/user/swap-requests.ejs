@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swap Requests — Swapify</title>
+  <meta name="description" content="Manage all your skill and object swap requests on Swapify.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+  <style>
+    .sr-filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .sr-filter-btn {
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted-fg);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .sr-filter-btn.active,
+    .sr-filter-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .sr-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+    }
+    .sr-type-skill  { background: rgba(124,58,237,.12); color: var(--primary); border: 1px solid rgba(124,58,237,.3); }
+    .sr-type-object { background: rgba(37,99,235,.12);  color: #2563eb;        border: 1px solid rgba(37,99,235,.3);  }
+    .sr-dir-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--muted);
+      color: var(--muted-fg);
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <!-- PAGE CONTENT -->
+  <section class="section" style="padding-top:40px">
+    <div class="container" style="max-width:800px;padding-bottom:100px">
+
+      <!-- Page header -->
+      <div class="flex justify-between items-center" style="margin-bottom:32px;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1 style="font-size:32px;font-weight:700;margin-bottom:4px">Swap Requests</h1>
+          <p style="color:var(--muted-fg)" id="srSubtitle">Loading…</p>
+        </div>
+        <a href="/profile" class="btn btn-outline btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m12 5-7 7 7 7"/></svg>
+          Back to Profile
+        </a>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="sr-filter-bar">
+        <button class="sr-filter-btn active" data-filter="all">All</button>
+        <button class="sr-filter-btn" data-filter="skill">Skill Swaps</button>
+        <button class="sr-filter-btn" data-filter="object">Object Swaps</button>
+        <button class="sr-filter-btn" data-filter="incoming">Incoming</button>
+        <button class="sr-filter-btn" data-filter="outgoing">Outgoing</button>
+        <button class="sr-filter-btn" data-filter="pending">Pending</button>
+        <button class="sr-filter-btn" data-filter="accepted">Accepted</button>
+        <button class="sr-filter-btn" data-filter="rejected">Rejected</button>
+      </div>
+
+      <!-- Swap list -->
+      <div id="srList"></div>
+
+      <!-- Empty state (hidden until needed) -->
+      <div id="srEmpty" style="display:none">
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted-fg)" stroke-width="2">
+              <path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/>
+            </svg>
+          </div>
+          <h3 id="srEmptyTitle">No swap requests yet</h3>
+          <p id="srEmptyMsg">Start exploring the community to find your next great swap!</p>
+          <a href="/skills" class="btn btn-primary">Explore Skills</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo" style="margin-bottom:8px" aria-label="Swapify Home">
+            <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></div>
+            <span class="logo-text"><span>Swapify</span></span>
+          </a>
+          <p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.</p>
+          <div class="footer-social">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on Facebook" class="social-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on X" class="social-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6L18 18"/></svg></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on Instagram" class="social-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg></a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on LinkedIn" class="social-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>About Swapify</h4>
+          <ul>
+            <li><a href="/about">About Swapify</a></li>
+            <li><a href="/our-story">Our Story</a></li>
+            <li><a href="/how-it-works">How it Works</a></li>
+            <li><a href="/sustainability">Sustainability</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="/guidelines">Guidelines</a></li>
+            <li><a href="/success-stories">Success Stories</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help Center</h4>
+          <ul>
+            <li><a href="/help-center">Help Center</a></li>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/contact">Contact Support</a></li>
+            <li><a href="/trust-safety">Trust &amp; Safety</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+        <div class="footer-tagline">
+          <span>Less waste. More sharing.</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
+    <a href="/skills"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg><span>Skills</span></a>
+    <a href="/add" class="add-btn"><div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div></a>
+    <a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg><span>Messages</span></a>
+    <a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg><span>Profile</span></a>
+  </nav>
+
+  <!-- Server data island -->
+  <script type="application/json" id="__srSwapsData"><%- JSON.stringify((userSwaps || []).map(function(sw) {
+    var uid = currentUserId || '';
+    var isIncoming = sw.receiver && String(sw.receiver._id) === uid;
+    var offeredLabel  = sw.swapType === 'object'
+      ? (sw.offeredItem   ? sw.offeredItem.title   : (sw.offeredItemName   || '(open offer)'))
+      : (sw.offeredSkill  ? sw.offeredSkill.title  : (sw.offeredSkillName  || 'Unknown skill'));
+    var requestedLabel = sw.swapType === 'object'
+      ? (sw.requestedItem ? sw.requestedItem.title : (sw.requestedItemName  || 'Unknown item'))
+      : (sw.requestedSkill ? sw.requestedSkill.title : (sw.requestedSkillName || 'Unknown skill'));
+    return {
+      id:             String(sw._id),
+      swapType:       sw.swapType || 'skill',
+      status:         sw.status,
+      isIncoming:     isIncoming,
+      requesterId:    sw.requester ? String(sw.requester._id) : '',
+      requesterName:  sw.requester ? sw.requester.username  : 'Unknown',
+      requesterAvatar:sw.requester ? (sw.requester.profileImage || '') : '',
+      receiverId:     sw.receiver  ? String(sw.receiver._id)  : '',
+      receiverName:   sw.receiver  ? sw.receiver.username   : 'Unknown',
+      receiverAvatar: sw.receiver  ? (sw.receiver.profileImage  || '') : '',
+      offeredLabel:   offeredLabel,
+      requestedLabel: requestedLabel,
+      offeredItemName:    sw.offeredItemName    || '',
+      requestedItemName:  sw.requestedItemName  || '',
+      offeredSkillName:   sw.offeredSkillName   || '',
+      requestedSkillName: sw.requestedSkillName || '',
+      createdAt:      sw.createdAt
+    };
+  })) %></script>
+
+  <script src="/js/app.js"></script>
+  <script>
+    (function () {
+      var DEFAULT_AVA = '/img/stock_pfp.jpg';
+      var allSwaps = JSON.parse(document.getElementById('__srSwapsData').textContent);
+      var activeFilter = 'all';
+
+      /* ── avatar hydration ── */
+      var me = (window.SwapifyAuth && SwapifyAuth.isLoggedIn()) ? SwapifyAuth.currentUser() : null;
+      var headerImg = document.getElementById('headerAvatarImg');
+      if (headerImg && me && me.avatar) { headerImg.src = me.avatar; }
+
+      /* ── subtitle ── */
+      var pendingCount = allSwaps.filter(function(s){ return s.status === 'pending' && s.isIncoming; }).length;
+      var subtitle = document.getElementById('srSubtitle');
+      if (subtitle) {
+        subtitle.textContent = allSwaps.length === 0
+          ? 'No swaps yet'
+          : allSwaps.length + ' swap' + (allSwaps.length !== 1 ? 's' : '') +
+            (pendingCount > 0 ? ' · ' + pendingCount + ' pending action' + (pendingCount !== 1 ? 's' : '') : '');
+      }
+
+      /* ── helpers ── */
+      function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function statusBadge(s) {
+        var map = {
+          pending:   ['#D97706', 'Pending'],
+          accepted:  ['var(--success)', 'Accepted'],
+          rejected:  ['#ef4444', 'Rejected'],
+          completed: ['var(--primary)', 'Completed']
+        };
+        var c = map[s] || ['var(--muted-fg)', s];
+        return '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid ' + c[0] + ';color:' + c[0] + '">' + c[1] + '</span>';
+      }
+
+      function typeBadge(t) {
+        if (t === 'object') {
+          return '<span class="sr-type-badge sr-type-object"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Object Swap</span>';
+        }
+        return '<span class="sr-type-badge sr-type-skill"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg>Skill Swap</span>';
+      }
+
+      /* ── filter ── */
+      function filtered() {
+        return allSwaps.filter(function(sw) {
+          if (activeFilter === 'skill')    return sw.swapType === 'skill';
+          if (activeFilter === 'object')   return sw.swapType === 'object';
+          if (activeFilter === 'incoming') return sw.isIncoming;
+          if (activeFilter === 'outgoing') return !sw.isIncoming;
+          if (activeFilter === 'pending')  return sw.status === 'pending';
+          if (activeFilter === 'accepted') return sw.status === 'accepted';
+          if (activeFilter === 'rejected') return sw.status === 'rejected';
+          return true;
+        });
+      }
+
+      /* ── render ── */
+      function render() {
+        var list  = document.getElementById('srList');
+        var empty = document.getElementById('srEmpty');
+        var swaps = filtered();
+
+        if (swaps.length === 0) {
+          list.innerHTML = '';
+          empty.style.display = '';
+          var emptyTitle = document.getElementById('srEmptyTitle');
+          var emptyMsg   = document.getElementById('srEmptyMsg');
+          if (activeFilter === 'all') {
+            emptyTitle.textContent = 'No swap requests yet';
+            emptyMsg.textContent   = 'Start exploring the community to find your next great swap!';
+          } else {
+            emptyTitle.textContent = 'No swaps in this category';
+            emptyMsg.textContent   = 'Try a different filter above.';
+          }
+          return;
+        }
+
+        empty.style.display = 'none';
+        var html = '<div style="display:flex;flex-direction:column;gap:12px">';
+
+        swaps.forEach(function(sw) {
+          var otherName   = sw.isIncoming ? sw.requesterName  : sw.receiverName;
+          var otherAvatar = sw.isIncoming ? sw.requesterAvatar : sw.receiverAvatar;
+          var otherUserId = sw.isIncoming ? sw.requesterId     : sw.receiverId;
+          var dirLabel    = sw.isIncoming ? 'Incoming' : 'Outgoing';
+          var actionLabel = sw.isIncoming ? 'wants to swap:' : 'you requested:';
+          var avatarSrc   = otherAvatar || DEFAULT_AVA;
+
+          html +=
+            '<div class="card card-body" style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">' +
+            '<a href="/users/' + escHtml(otherUserId) + '" title="View ' + escHtml(otherName) + '\'s profile" style="flex-shrink:0;display:block;border-radius:50%;overflow:hidden;width:52px;height:52px;text-decoration:none">' +
+            '<img src="' + escHtml(avatarSrc) + '" style="width:52px;height:52px;border-radius:50%;object-fit:cover;display:block" onerror="this.src=\'' + DEFAULT_AVA + '\'">' +
+            '</a>' +
+            '<div style="flex:1;min-width:0">' +
+            '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:4px">' +
+            typeBadge(sw.swapType) +
+            '<span class="sr-dir-badge">' + dirLabel + '</span>' +
+            '</div>' +
+            '<p style="margin-bottom:4px"><a href="/users/' + escHtml(otherUserId) + '" style="color:inherit;text-decoration:none;font-weight:700" title="View ' + escHtml(otherName) + '\'s profile">' + escHtml(otherName) + '</a> ' + actionLabel + '</p>' +
+            '<p style="font-size:13px;color:var(--muted-fg);margin-bottom:2px">Offers: <strong>' + escHtml(sw.offeredLabel) + '</strong></p>' +
+            '<p style="font-size:13px;color:var(--muted-fg);margin-bottom:8px">For: <strong>' + escHtml(sw.requestedLabel) + '</strong></p>' +
+            statusBadge(sw.status) +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex-shrink:0">';
+
+          if (sw.isIncoming && sw.status === 'pending') {
+            html +=
+              '<form method="POST" action="/swap/' + sw.id + '/accept" style="margin:0">' +
+              '<button type="submit" class="btn btn-primary btn-sm">Accept</button></form>' +
+              '<form method="POST" action="/swap/' + sw.id + '/reject" style="margin:0">' +
+              '<button type="submit" class="btn btn-ghost btn-sm" style="color:#ef4444">Decline</button></form>';
+          }
+          if (!sw.isIncoming && sw.status === 'pending') {
+            html +=
+              '<form method="POST" action="/swap/' + sw.id + '/cancel" style="margin:0">' +
+              '<button type="submit" class="btn btn-ghost btn-sm" style="color:var(--muted-fg)">Cancel Request</button></form>';
+          }
+
+          html += '</div></div>';
+        });
+
+        html += '</div>';
+        list.innerHTML = html;
+      }
+
+      /* ── filter buttons ── */
+      document.querySelectorAll('.sr-filter-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.sr-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+          btn.classList.add('active');
+          activeFilter = btn.dataset.filter;
+          render();
+        });
+      });
+
+      render();
+
+      /* ── Toast from ?action= query param ── */
+      (function() {
+        var p = new URLSearchParams(window.location.search);
+        var a = p.get('action');
+        if (a === 'declined')  SwapifyUI.toast('Swap declined.', 'info');
+        if (a === 'cancelled') SwapifyUI.toast('Swap request cancelled successfully.', 'success');
+        if (a) window.history.replaceState({}, '', '/swap-requests');
+      })();
+    })();
+  </script>
+</body>
+</html>

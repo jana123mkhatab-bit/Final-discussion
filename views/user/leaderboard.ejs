@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard — Swapify</title>
+  <meta name="description" content="Top Swapify users ranked by swap points.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+  <style>
+    .lb-page   { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
+    .lb-card   { background: var(--card, #1a1a2e); border: 1px solid var(--border, #2a2a40); border-radius: 14px; padding: 24px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; transition: transform .15s; }
+    .lb-card:hover { transform: translateX(4px); }
+    .lb-rank   { font-size: 22px; font-weight: 800; width: 36px; text-align: center; color: var(--muted-fg, #888); flex-shrink: 0; }
+    .lb-rank.gold   { color: #f59e0b; }
+    .lb-rank.silver { color: #94a3b8; }
+    .lb-rank.bronze { color: #b45309; }
+    .lb-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary, #7C3AED); flex-shrink: 0; }
+    .lb-name   { font-weight: 700; font-size: 16px; flex: 1; }
+    .lb-pts    { font-size: 15px; font-weight: 700; color: #7C3AED; white-space: nowrap; }
+    .lb-crown  { font-size: 20px; }
+  </style>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <main class="lb-page">
+    <h1 style="font-size:28px;font-weight:800;margin-bottom:6px">🏆 Leaderboard</h1>
+    <p style="color:var(--muted-fg);margin-bottom:32px">Top 10 swappers ranked by points earned.</p>
+
+    <% if (users.length === 0) { %>
+      <div style="text-align:center;padding:60px 0;color:var(--muted-fg)">
+        <p>No users on the leaderboard yet. Start swapping to earn points!</p>
+        <a href="/objects" class="btn btn-primary" style="margin-top:16px">Browse Items</a>
+      </div>
+    <% } %>
+
+    <% users.forEach(function(user, index) { %>
+      <div class="lb-card">
+        <div class="lb-rank <%= index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '' %>">
+          <% if (index === 0) { %><span class="lb-crown">🥇</span>
+          <% } else if (index === 1) { %><span class="lb-crown">🥈</span>
+          <% } else if (index === 2) { %><span class="lb-crown">🥉</span>
+          <% } else { %>#<%= index + 1 %>
+          <% } %>
+        </div>
+        <img
+          class="lb-avatar"
+          src="<%= user.profileImage || '/img/stock_pfp.jpg' %>"
+          alt="<%= user.username %>"
+        >
+        <span class="lb-name"><%= user.username %></span>
+        <span class="lb-pts"><%= user.points.toLocaleString() %> pts</span>
+      </div>
+    <% }); %>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
