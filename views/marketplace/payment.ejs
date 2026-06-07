@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Checkout — Swapify</title>
+  <meta name="description" content="Complete your purchase securely.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+  <style>
+    /* Payment specific styles */
+    .payment-layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; padding: 40px 0; align-items: start; }
+    @media (max-width: 1023px) { .payment-layout { grid-template-columns: 1fr; } }
+    .payment-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; transition: var(--transition); }
+    .payment-card:hover { border-color: rgba(124,58,237,.15); box-shadow: var(--shadow-lg); }
+    .payment-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; font-family: var(--font-heading); }
+    
+    .payment-option { border: 2px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 16px; background: var(--card); }
+    .payment-option:hover { border-color: var(--primary); background: var(--hover-surface); transform: translateY(-2px); }
+    .payment-option.selected { border-color: var(--primary); background: rgba(124,58,237,.05); box-shadow: 0 4px 12px rgba(124,58,237,.1); }
+    .payment-option input[type="radio"] { margin: 0; width: 18px; height: 18px; accent-color: var(--primary); }
+    .payment-option-details { flex: 1; }
+    .payment-option-title { font-weight: 700; font-size: 16px; margin-bottom: 4px; color: var(--fg); }
+    .payment-option-desc { font-size: 13px; color: var(--muted-fg); }
+
+    .flexible-payment { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+    .flex-option { flex: 1; min-width: 160px; border: 2px solid var(--border); border-radius: var(--radius-md); padding: 16px; text-align: center; cursor: pointer; transition: var(--transition); background: var(--card); }
+    .flex-option:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .flex-option.selected { border-color: var(--primary); background: rgba(124,58,237,.05); }
+    
+    .card-details-form { display: none; margin-top: 16px; animation: slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1); padding: 20px; background: var(--muted); border-radius: var(--radius-md); border: 1px solid var(--border); }
+    .card-details-form.active { display: block; }
+    
+    .order-item { display: flex; gap: 16px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed var(--border); }
+    .order-item img { width: 72px; height: 72px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--border); }
+    .order-item-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .order-item-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .order-item-qty { font-size: 13px; color: var(--muted-fg); }
+    .order-item-price { font-weight: 800; color: var(--primary); margin-top: auto; font-size: 16px; }
+    
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; color: var(--muted-fg); font-weight: 500; }
+    .summary-total { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 2px dashed var(--border); font-size: 20px; font-weight: 800; color: var(--fg); }
+    
+    .points-box { background: linear-gradient(135deg, rgba(124,58,237,.05), rgba(37,99,235,.05)); border: 1px solid rgba(124,58,237,.2); border-radius: var(--radius-md); padding: 16px; margin-bottom: 24px; position: relative; overflow: hidden; }
+    .points-box::before { content: ''; position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: radial-gradient(circle, rgba(124,58,237,.1) 0%, transparent 70%); border-radius: 50%; transform: translate(30%, -30%); }
+    .points-box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: relative; z-index: 1; }
+    .points-balance { font-weight: 800; font-size: 18px; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+    
+    .smart-suggestion { background: rgba(16,185,129,.1); border-left: 4px solid var(--success); padding: 16px; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin-bottom: 24px; display: none; gap: 16px; align-items: flex-start; animation: slide-down 0.4s ease; box-shadow: var(--shadow-sm); }
+    .smart-suggestion p { font-size: 13px; margin: 0; color: var(--fg); line-height: 1.5; }
+    
+    .loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 10; border-radius: var(--radius-lg); flex-direction: column; gap: 20px; }
+    .dark .loading-overlay { background: rgba(11,15,26,0.8); }
+    .loading-overlay.active { display: flex; animation: fade-in 0.3s ease; }
+    .spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite; }
+    
+    /* Confirmation Modal Styles */
+    .conf-details { background: var(--muted); padding: 20px; border-radius: var(--radius-md); margin-top: 20px; border: 1px solid var(--border); }
+    .conf-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; }
+    .conf-row:last-child { margin-bottom: 0; padding-top: 12px; border-top: 1px dashed var(--border); font-weight: 700; }
+    
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    
+    .mb-4 { margin-bottom: 16px; }
+    .mt-4 { margin-top: 16px; }
+    .mt-6 { margin-top: 24px; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <main class="container">
+    <div class="page-banner banner-purple" style="padding: 40px 0; margin-top: 32px;">
+      <div class="container text-center">
+        <h1 style="font-size: clamp(28px, 4vw, 40px); font-weight: 800; margin-bottom: 12px; font-family: var(--font-heading);">Secure Checkout</h1>
+        <p style="color: var(--muted-fg); font-size: 16px;">Complete your order securely and easily.</p>
+      </div>
+      <div class="emoji" style="right: 5%; font-size: 120px;">🔒</div>
+    </div>
+
+    <%
+      var purchaseBlocked = false;
+      var purchaseReason = '';
+      if (item && item.isAvailable === false) {
+        purchaseBlocked = true;
+        purchaseReason = 'This deal is sold out.';
+      } else if (currentUser && item && item.creator && String(item.creator) === String(currentUser._id)) {
+        purchaseBlocked = true;
+        purchaseReason = 'You cannot buy your own deal.';
+      }
+    %>
+    <% if (purchaseBlocked) { %>
+      <div class="container" style="margin-top:24px">
+        <div class="card" style="padding:16px;border:1px solid var(--error);background:rgba(239,68,68,.08)">
+          <strong>Purchase blocked.</strong> <span><%= purchaseReason %></span>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="payment-layout">
+      <!-- LEFT COLUMN: Payment Methods -->
+      <div class="payment-card fade-in" style="position: relative; z-index: 1;">
+        <div class="loading-overlay" id="paymentLoading">
+          <div class="spinner"></div>
+          <p class="font-bold text-lg" id="loadingText" style="color: var(--primary);">Processing your payment...</p>
+        </div>
+
+        <div id="smartSuggestion" class="smart-suggestion">
+          <div style="background:var(--success); color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div>
+            <strong style="font-size: 14px; display: block; margin-bottom: 4px;">Smart Suggestion</strong>
+            <p>You have enough points to cover this purchase! We recommend using your Swapify Points to save cash.</p>
+          </div>
+        </div>
+
+        <h2>1. Shipping Address</h2>
+        <div class="form-group mb-6">
+          <label for="shippingAddress" style="margin-bottom: 8px; display: block; font-weight: 600; font-size: 14px;">Delivery Address / Location</label>
+          <input type="text" class="input" id="shippingAddress" name="shippingAddress" placeholder="Enter your full shipping address" value="<%= currentUser ? (currentUser.location || '') : '' %>" style="width: 100%;">
+          <div id="addressError" class="form-error mt-1" style="display:none; color: var(--error);">Shipping address is required.</div>
+        </div>
+
+        <h2>2. Payment Plan</h2>
+        <div class="flexible-payment">
+          <div class="flex-option selected" id="planFull" onclick="selectPlan('full')">
+            <div class="font-bold text-lg mb-1">Pay Full Amount</div>
+            <div class="text-sm opacity-80">Pay 100% upfront</div>
+          </div>
+          <div class="flex-option" id="planSplit" onclick="selectPlan('split')">
+            <div class="font-bold text-lg mb-1">Pay 50% Advance</div>
+            <div class="text-sm opacity-80">Remaining 50% on delivery</div>
+          </div>
+        </div>
+
+        <h2>3. Payment Method</h2>
+        
+        <!-- Option 1: Card -->
+        <label class="payment-option selected" id="optCardLabel">
+          <input type="radio" name="payment_method" value="card" checked onchange="togglePaymentMethod()">
+          <div class="payment-option-details">
+            <div class="payment-option-title">Credit / Debit Card</div>
+            <div class="payment-option-desc">Secure payment with Visa, MasterCard, Amex</div>
+          </div>
+          <div class="flex gap-2">
+            <svg width="40" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--muted-fg)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+        </label>
+
+        <div class="card-details-form active" id="cardForm">
+          <!-- Saved card picker — shown when user has at least one saved card -->
+          <div id="savedCardBanner" style="display:none;margin-bottom:20px">
+            <label style="font-size:13px;font-weight:600;color:var(--muted-fg);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              Saved Cards
+            </label>
+            <select id="savedCardSelect" class="input" style="width:100%;cursor:pointer" onchange="onSavedCardChange(this)"></select>
+          </div>
+          <!-- Manual entry fields — hidden when a saved card is selected -->
+          <div id="manualCardFields">
+            <div class="form-group mb-4">
+              <label>Cardholder Name</label>
+              <input type="text" class="input" placeholder="e.g. Jane Doe" id="cardName">
+            </div>
+            <div class="form-group mb-4">
+              <label>Card Number</label>
+              <div class="input-icon-wrap">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <input type="text" class="input" placeholder="0000 0000 0000 0000" id="cardNumber" maxlength="19" oninput="formatCardNumber(this)">
+              </div>
+              <div id="cardError" class="form-error mt-1" style="display:none;">Invalid card number</div>
+            </div>
+            <div class="grid grid-2 gap-4 mb-4">
+              <div class="form-group">
+                <label>Expiry Date</label>
+                <input type="text" class="input" placeholder="MM/YY" id="cardExpiry" maxlength="5" oninput="formatExpiry(this)">
+              </div>
+              <div class="form-group">
+                <label>CVV</label>
+                <input type="password" class="input" placeholder="123" id="cardCvv" maxlength="4">
+              </div>
+            </div>
+          </div>
+          <label class="flex items-center gap-2 mt-4 cursor-pointer" id="saveCardLabel" style="font-size: 14px; font-weight: 500;">
+            <input type="checkbox" id="saveCardCheckbox" style="width:16px;height:16px;accent-color:var(--primary)" checked> Save card securely to wallet for future use
+          </label>
+        </div>
+        
+        <!-- Option 3: COD -->
+        <label class="payment-option" id="optCodLabel">
+          <input type="radio" name="payment_method" value="cod" onchange="togglePaymentMethod()">
+          <div class="payment-option-details">
+            <div class="payment-option-title">Cash on Delivery</div>
+            <div class="payment-option-desc">Pay cash when you receive the item</div>
+          </div>
+          <div style="font-size: 24px;">💵</div>
+        </label>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Order Summary -->
+      <div class="payment-card fade-in fade-in-delay-1" style="position: sticky; top: 88px;">
+        <h2>Order Summary</h2>
+        
+        <div id="orderItems">
+          <!-- Item info injected here -->
+        </div>
+        
+        <div class="form-group" style="margin: 24px 0;">
+          <label style="margin-bottom: 8px;">Discount Code / Coupon</label>
+          <div class="flex gap-2">
+            <input type="text" class="input" placeholder="e.g. SWAP50" id="promoCode" style="text-transform: uppercase;">
+            <button class="btn btn-secondary" onclick="applyPromo()">Apply</button>
+          </div>
+          <div id="promoMsg" class="mt-2 text-sm font-medium" style="display:none;"></div>
+        </div>
+        
+        <div class="points-box">
+          <div class="points-box-header">
+            <div class="font-bold">Wallet Balance</div>
+            <div class="points-balance"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> <span id="boxPointsBal">1,250</span> pts</div>
+          </div>
+          <p class="text-xs text-muted-fg mb-3" style="line-height: 1.5; position: relative; z-index: 1;">You can redeem points for a discount (100 pts = $1). <a href="#" class="text-primary" style="text-decoration: underline;">How to earn more?</a></p>
+          <label class="flex items-center gap-2 text-sm cursor-pointer font-medium" style="position: relative; z-index: 1;">
+            <input type="checkbox" id="usePoints" onchange="calculateTotals()" style="width:16px; height:16px; accent-color:var(--primary)"> Apply available points
+          </label>
+        </div>
+
+        <div class="summary-row"><span>Subtotal</span> <span id="summSubtotal">$0.00</span></div>
+        <div class="summary-row"><span>Shipping</span> <span id="summShipping">$5.00</span></div>
+        <div class="summary-row" id="rowDiscount" style="display:none; color: var(--success); font-weight: 600;"><span>Promo Discount</span> <span id="summDiscount">-$0.00</span></div>
+        <div class="summary-row" id="rowPoints" style="display:none; color: var(--success); font-weight: 600;"><span>Points Applied</span> <span id="summPoints">-$0.00</span></div>
+        
+        <div class="summary-total">
+          <div class="flex items-center gap-2">
+            Total 
+            <span id="splitBadge" class="badge badge-primary" style="display:none; font-size:11px;">Pay 50% Now</span>
+          </div>
+          <span id="summTotal" style="font-size: 24px; color: var(--primary);">$0.00</span>
+        </div>
+        
+        <button class="btn btn-primary w-full btn-lg mt-6" onclick="initiatePayment()" id="btnPay" style="font-size: 16px; padding: 16px;">Confirm & Pay <span id="btnAmount"></span></button>
+        <div class="text-center mt-4">
+          <p class="text-xs text-muted-fg" style="display:flex; align-items:center; justify-content:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure 256-bit SSL encryption
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer"><div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><a href="/" class="logo" style="margin-bottom:8px"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></div><span class="logo-text"><span>Swapify</span></span></a><p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.</p></div>
+      <div class="footer-col"><h4>About Swapify</h4><ul><li><a href="/our-story">Our Story</a></li><li><a href="/how-it-works">How it Works</a></li><li><a href="/sustainability">Sustainability</a></li></ul></div>
+      <div class="footer-col"><h4>Help Center</h4><ul><li><a href="#">FAQ</a></li><li><a href="#">Contact Support</a></li><li><a href="#">Trust &amp; Safety</a></li><li><a href="#">Terms of Service</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Swapify. All rights reserved.</p></div>
+  </div></footer>
+
+  <!-- Confirmation Modal -->
+  <div class="modal-overlay" id="confModal">
+    <div class="modal" style="max-width: 480px;">
+      <div class="modal-header">
+        <h2>Confirm Your Order</h2>
+        <button class="btn btn-icon btn-ghost" onclick="closeConfModal()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+      <div class="modal-body text-center" id="confBody">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(124,58,237,.1); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3 style="font-size:22px; font-weight:800; margin-bottom:8px;">Ready to complete?</h3>
+        <p class="text-muted-fg text-sm">Please review your payment details before finalizing the transaction. You cannot reverse this action instantly.</p>
+        
+        <div class="conf-details text-left">
+          <div class="conf-row"><span class="text-muted-fg">Item:</span> <strong id="confItem"></strong></div>
+          <div class="conf-row"><span class="text-muted-fg">Payment Method:</span> <strong id="confMethod"></strong></div>
+          <div class="conf-row"><span class="text-muted-fg">Payment Plan:</span> <strong id="confPlan"></strong></div>
+          <div class="conf-row"><span class="text-muted-fg">Shipping Address:</span> <strong id="confAddress"></strong></div>
+          <div class="conf-row" style="color: var(--primary); font-size: 18px;"><span class="text-muted-fg">Total to Charge:</span> <strong id="confAmount"></strong></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: var(--muted);">
+        <button class="btn btn-outline" onclick="closeConfModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="processPayment()">Confirm Payment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay" id="successModal">
+    <div class="modal" style="max-width: 440px;">
+      <div class="modal-body text-center" style="padding: 48px 32px;">
+        <div style="width:96px;height:96px;background:linear-gradient(135deg, #10B981, #059669);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 10px 25px rgba(16,185,129,.3);">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 style="font-size:28px; font-weight:800; margin-bottom:12px; font-family: var(--font-heading);">Payment Successful!</h2>
+        <p class="text-muted-fg mb-6" style="font-size: 15px; line-height: 1.6;">Your order <strong style="color:var(--fg)">#<span id="orderNum"></span></strong> has been placed successfully. We've sent a confirmation email with details.</p>
+        <div class="flex flex-col gap-3">
+          <button class="btn btn-primary w-full btn-lg" onclick="window.location= '/profile?tab=history'">Track Order in Profile</button>
+          <button class="btn btn-outline w-full" onclick="window.location= '/'">Return to Home</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/cart.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    // App State
+    let userPoints = parseInt(localStorage.getItem('walletPoints'));
+    if (isNaN(userPoints)) {
+      userPoints = 1250;
+      localStorage.setItem('walletPoints', userPoints);
+    }
+    const pointValue = 0.01; // 100 points = $1
+    let subtotal = 120.00;
+    let shipping = 5.00;
+    let promoDiscountAmt = 0;
+    let pointsDiscountAmt = 0;
+    let finalTotal = 0;
+    let plan = 'full';
+    let method = 'card';
+    let promoApplied = false;
+    let selectedSavedCardId = null;
+
+    function onSavedCardChange(select) {
+      selectedSavedCardId = select.value || null;
+      const manualFields = document.getElementById('manualCardFields');
+      const saveLabel    = document.getElementById('saveCardLabel');
+      if (selectedSavedCardId) {
+        manualFields.style.display = 'none';
+        saveLabel.style.display    = 'none';
+      } else {
+        manualFields.style.display = '';
+        saveLabel.style.display    = '';
+      }
+    }
+
+    // Check URL params for Deal ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const dealId = urlParams.get('id');
+    
+    let itemInfo = null;
+    <% if (typeof item !== 'undefined' && item) { %>
+      itemInfo = {
+        id: "<%= item._id %>",
+        name: <%- JSON.stringify(item.title) %>,
+        price: <%= item.price || item.pointsValue || 0 %>,
+        img: "<%= item.images && item.images.length ? item.images[0] : 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&q=80&w=400&h=300' %>",
+        condition: <%- JSON.stringify(item.condition || 'N/A') %>
+      };
+    <% } else { %>
+      // Default mock item
+      itemInfo = {
+        name: "Apple AirPods Pro",
+        price: 120.00,
+        img: "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&q=80&w=400&h=300",
+        condition: "Like New"
+      };
+
+      if(dealId === '2') {
+        itemInfo = { name: "IKEA Office Chair", price: 50.00, img: "https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1?auto=format&fit=crop&q=80&w=400&h=300", condition: "Good" };
+      } else if (dealId === '3') {
+        itemInfo = { name: "Nintendo Switch", price: 145.00, img: "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?auto=format&fit=crop&q=80&w=400&h=300", condition: "Used" };
+      } else if (dealId === '4') {
+        itemInfo = { name: "Winter Coat", price: 80.00, img: "https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?auto=format&fit=crop&q=80&w=400&h=300", condition: "New w/o tags" };
+      } else if (dealId === '5') {
+        itemInfo = { name: "Coffee Maker", price: 40.00, img: "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?auto=format&fit=crop&q=80&w=400&h=300", condition: "Good" };
+      } else if (dealId === '6') {
+        itemInfo = { name: "Acoustic Panels (6pk)", price: 25.00, img: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&q=80&w=400&h=300", condition: "New" };
+      }
+    <% } %>
+    subtotal = itemInfo.price;
+    var PURCHASE_BLOCKED = <%= purchaseBlocked ? 'true' : 'false' %>;
+    var PURCHASE_REASON = <%- JSON.stringify(purchaseReason || '') %>;
+
+    function init() {
+      const isCartCheckout = urlParams.get('cart') === 'true';
+
+      // Set points display
+      document.getElementById('boxPointsBal').textContent = userPoints.toLocaleString();
+
+      // Bug Fix 3: Cart total calculation — load all items for cart checkout
+      if (isCartCheckout && window.SwapifyCart) {
+        const cartItems = SwapifyCart.getAll();
+        if (cartItems.length > 0) {
+          subtotal = cartItems.reduce(function(sum, i) { return sum + i.price * i.qty; }, 0);
+          document.getElementById('orderItems').innerHTML = cartItems.map(function(item) {
+            return '<div class="order-item">' +
+              '<img src="' + item.img + '" alt="' + item.name + '">' +
+              '<div class="order-item-info">' +
+              '<div class="order-item-title">' + item.name + '</div>' +
+              '<div class="order-item-qty">Qty: ' + item.qty + ' &bull; ' + item.condition + '</div>' +
+              '<div class="order-item-price">$' + (item.price * item.qty).toFixed(2) + '</div>' +
+              '</div></div>';
+          }).join('');
+        } else {
+          window.location.href = '/cart';
+          return;
+        }
+      } else {
+        // Bug Fix 5: If Buy Now for an item already in cart, remove it from cart to prevent duplicate
+        if (dealId && window.SwapifyCart) {
+          const cartItems = SwapifyCart.getAll();
+          const inCart = cartItems.find(function(i) { return i.id === dealId; });
+          if (inCart) SwapifyCart.remove(dealId);
+        }
+
+        // Single item (Buy Now) flow
+        document.getElementById('orderItems').innerHTML = `
+          <div class="order-item">
+            <img src="${itemInfo.img}" alt="${itemInfo.name}">
+            <div class="order-item-info">
+              <div class="order-item-title">${itemInfo.name}</div>
+              <div class="order-item-qty">Qty: 1 • Condition: ${itemInfo.condition}</div>
+              <div class="order-item-price">$${itemInfo.price.toFixed(2)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Smart Suggestion Logic
+      const maxPointsValue = userPoints * pointValue;
+      if (maxPointsValue >= (subtotal + shipping)) {
+        document.getElementById('smartSuggestion').style.display = 'flex';
+      }
+
+      if (PURCHASE_BLOCKED) {
+        var payBtn = document.getElementById('btnPay');
+        if (payBtn) {
+          payBtn.disabled = true;
+          payBtn.textContent = 'Unavailable';
+        }
+      }
+
+      // Initial animations
+      setTimeout(() => {
+        document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
+      }, 100);
+
+      calculateTotals();
+    }
+
+    function selectPlan(selectedPlan) {
+      plan = selectedPlan;
+      document.getElementById('planFull').classList.toggle('selected', plan === 'full');
+      document.getElementById('planSplit').classList.toggle('selected', plan === 'split');
+      
+      const badge = document.getElementById('splitBadge');
+      if (plan === 'split') {
+        badge.style.display = 'inline-flex';
+      } else {
+        badge.style.display = 'none';
+      }
+      calculateTotals();
+    }
+
+    function togglePaymentMethod() {
+      const methods = document.getElementsByName('payment_method');
+      methods.forEach(radio => {
+        if(radio.checked) {
+          method = radio.value;
+          document.getElementById('optCardLabel').classList.toggle('selected', method === 'card');
+          document.getElementById('optCodLabel').classList.toggle('selected', method === 'cod');
+        }
+      });
+
+      const cardForm = document.getElementById('cardForm');
+      if (method === 'cod') {
+        // If 50% split plan is active and user selects COD, block it
+        if (plan === 'split') {
+          if (window.SwapifyUI) window.SwapifyUI.toast('Cash on Delivery is not allowed for the 50% Advance plan. Please use Credit/Debit Card.', 'error');
+          else alert('Cash on Delivery is not allowed for the 50% Advance plan. Please use Credit/Debit Card.');
+          // Revert to card
+          document.querySelector('input[value="card"]').checked = true;
+          method = 'card';
+          document.getElementById('optCodLabel').classList.remove('selected');
+          document.getElementById('optCardLabel').classList.add('selected');
+          cardForm.classList.add('active');
+        } else {
+          cardForm.classList.remove('active');
+        }
+      } else {
+        cardForm.classList.add('active');
+      }
+      
+      calculateTotals();
+    }
+
+    function applyPromo() {
+      const code = document.getElementById('promoCode').value.trim().toUpperCase();
+      const msg = document.getElementById('promoMsg');
+      
+      if (!code) {
+        msg.textContent = 'Please enter a code';
+        msg.style.color = 'var(--error)';
+        msg.style.display = 'block';
+        return;
+      }
+
+      if (code === 'SWAP50' || code === 'SAVE20') {
+        promoApplied = true;
+        promoDiscountAmt = subtotal * 0.20; // 20% off
+        msg.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg> Coupon applied successfully! (20% off)';
+        msg.style.color = 'var(--success)';
+        msg.style.display = 'block';
+        document.getElementById('rowDiscount').style.display = 'flex';
+      } else {
+        promoApplied = false;
+        promoDiscountAmt = 0;
+        msg.textContent = 'Invalid or expired promo code';
+        msg.style.color = 'var(--error)';
+        msg.style.display = 'block';
+        document.getElementById('rowDiscount').style.display = 'none';
+      }
+      calculateTotals();
+    }
+
+    function calculateTotals() {
+      document.getElementById('summSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('summShipping').textContent = `$${shipping.toFixed(2)}`;
+      
+      if (promoApplied) {
+        document.getElementById('summDiscount').textContent = `-$${promoDiscountAmt.toFixed(2)}`;
+      }
+
+      let currentTotal = subtotal + shipping - promoDiscountAmt;
+      
+      // Points logic
+      pointsDiscountAmt = 0;
+      const usePointsCheckbox = document.getElementById('usePoints');
+      
+      if (usePointsCheckbox.checked) {
+        const maxPointsValue = userPoints * pointValue;
+        if (maxPointsValue >= currentTotal) {
+          pointsDiscountAmt = currentTotal;
+          // If points cover everything, change method to points automatically if it's not
+          if (method !== 'points') {
+            document.querySelector('input[value="points"]').checked = true;
+            togglePaymentMethod();
+          }
+        } else {
+          pointsDiscountAmt = maxPointsValue;
+        }
+        document.getElementById('rowPoints').style.display = 'flex';
+        document.getElementById('summPoints').textContent = `-$${pointsDiscountAmt.toFixed(2)}`;
+      } else {
+        document.getElementById('rowPoints').style.display = 'none';
+      }
+
+      currentTotal = Math.max(0, currentTotal - pointsDiscountAmt);
+
+      // Split plan logic
+      if (plan === 'split' && currentTotal > 0) {
+        finalTotal = currentTotal / 2;
+      } else {
+        finalTotal = currentTotal;
+      }
+
+      document.getElementById('summTotal').textContent = `$${finalTotal.toFixed(2)}`;
+    }
+
+    // Validation
+    function formatCardNumber(input) {
+      let val = input.value.replace(/\D/g, '');
+      let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+      input.value = formatted;
+      
+      if(val.length === 16) {
+        input.classList.add('valid');
+        input.classList.remove('invalid');
+        document.getElementById('cardError').style.display = 'none';
+      } else {
+        input.classList.remove('valid');
+      }
+    }
+
+    function formatExpiry(input) {
+      let val = input.value.replace(/\D/g, '');
+      if (val.length >= 2) {
+        val = val.substring(0,2) + '/' + val.substring(2,4);
+      }
+      input.value = val;
+    }
+
+    function initiatePayment() {
+      // ── Validate shipping address first ──
+      const addrInput = document.getElementById('shippingAddress');
+      const addrErrEl = document.getElementById('addressError');
+      if (!addrInput || !addrInput.value.trim()) {
+        if (addrErrEl) addrErrEl.style.display = 'block';
+        if (addrInput) { addrInput.classList.add('invalid'); addrInput.focus(); addrInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        return;
+      }
+      if (addrErrEl) addrErrEl.style.display = 'none';
+      if (addrInput) addrInput.classList.remove('invalid');
+
+      if (PURCHASE_BLOCKED) {
+        if (window.SwapifyUI) window.SwapifyUI.toast(PURCHASE_REASON || 'Purchase not available.', 'error');
+        else alert(PURCHASE_REASON || 'Purchase not available.');
+        return;
+      }
+      // Enforce: 50% split plan only allows Credit/Debit Card
+      if (plan === 'split' && method === 'cod') {
+        if (window.SwapifyUI) window.SwapifyUI.toast('Cash on Delivery is not valid for the 50% Advance plan. Please use Credit/Debit Card.', 'error');
+        else alert('Cash on Delivery is not valid for the 50% Advance plan. Please use Credit/Debit Card.');
+        return;
+      }
+
+      // Basic validation if card is selected and no saved card is being used
+      if (method === 'card' && finalTotal > 0 && !selectedSavedCardId) {
+        const cardNum = document.getElementById('cardNumber').value.replace(/\D/g, '');
+        if (cardNum.length < 16) {
+          document.getElementById('cardNumber').classList.add('invalid');
+          document.getElementById('cardError').style.display = 'block';
+          return;
+        }
+        const expiry = document.getElementById('cardExpiry').value;
+        const cvv = document.getElementById('cardCvv').value;
+        if(expiry.length < 5 || cvv.length < 3) {
+          if (window.SwapifyUI) window.SwapifyUI.toast('Please complete card details', 'error');
+          else alert('Please complete card details');
+          return;
+        }
+
+        const [expMonth, expYear] = expiry.split('/').map(num => parseInt(num, 10));
+        const today = new Date();
+        const currentMonth = today.getMonth() + 1;
+        const currentYear = parseInt(today.getFullYear().toString().slice(-2), 10);
+
+        if (expMonth < 1 || expMonth > 12) {
+          if (window.SwapifyUI) window.SwapifyUI.toast('Invalid expiry month', 'error');
+          else alert('Invalid expiry month');
+          return;
+        }
+
+        if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
+          if (window.SwapifyUI) window.SwapifyUI.toast('Expiry date cannot be in the past', 'error');
+          else alert('Expiry date cannot be in the past');
+          return;
+        }
+      }
+
+      // Show confirmation modal
+      const modal = document.getElementById('confModal');
+      const isCartCheckout = new URLSearchParams(window.location.search).get('cart') === 'true';
+      const cartItems = (isCartCheckout && window.SwapifyCart) ? SwapifyCart.getAll() : [];
+      const displayName = (isCartCheckout && cartItems.length > 0)
+        ? cartItems[0].name + (cartItems.length > 1 ? ` + ${cartItems.length - 1} more` : '')
+        : itemInfo.name;
+      document.getElementById('confItem').textContent = displayName;
+      
+      let methodText = method === 'card' ? 'Credit/Debit Card' : 'Cash on Delivery';
+      document.getElementById('confMethod').textContent = methodText;
+      
+      document.getElementById('confPlan').textContent = plan === 'full' ? 'Full Amount' : '50% Advance';
+      document.getElementById('confAddress').textContent = document.getElementById('shippingAddress').value.trim();
+      document.getElementById('confAmount').textContent = `$${finalTotal.toFixed(2)}`;
+      
+      modal.classList.add('active');
+    }
+
+    function closeConfModal() {
+      document.getElementById('confModal').classList.remove('active');
+    }
+
+    function processPayment() {
+      closeConfModal();
+      
+      const loading = document.getElementById('paymentLoading');
+      loading.classList.add('active');
+      
+      function postPayment(payload) {
+        return fetch('/payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'fetch'
+          },
+          credentials: 'same-origin',
+          body: payload
+        })
+        .then(function(res) {
+          return res.json()
+            .then(function(data) { return { ok: res.ok && data && data.success, data: data || {} }; })
+            .catch(function() { return { ok: res.ok, data: {} }; });
+        })
+        .catch(function() { return { ok: false, data: {} }; });
+      }
+
+      const isCartCheckout = new URLSearchParams(window.location.search).get('cart') === 'true';
+      const cartItems = (isCartCheckout && window.SwapifyCart) ? SwapifyCart.getAll() : [];
+      const postItemId = (itemInfo && itemInfo.id) ? itemInfo.id : (dealId || '');
+      const postQty = (isCartCheckout && cartItems.length > 0)
+        ? cartItems.reduce(function(s, i) { return s + i.qty; }, 0)
+        : 1;
+
+      const shippingAddressVal = document.getElementById('shippingAddress').value.trim();
+      const requests = [];
+      if (isCartCheckout && cartItems.length > 0) {
+        cartItems.forEach(function(item) {
+          requests.push(postPayment(
+            'itemId=' + encodeURIComponent(item.id) +
+            '&quantity=' + item.qty +
+            '&amount=' + (item.price * item.qty).toFixed(2) +
+            '&paymentMethod=' + encodeURIComponent(method) +
+            '&notes=' + encodeURIComponent(plan === 'split' ? '50% Advance Plan' : 'Full Payment') +
+            '&shippingAddress=' + encodeURIComponent(shippingAddressVal)
+          ));
+        });
+      } else if (postItemId) {
+        requests.push(postPayment(
+          'itemId=' + encodeURIComponent(postItemId) +
+          '&quantity=' + postQty +
+          '&amount=' + finalTotal.toFixed(2) +
+          '&paymentMethod=' + encodeURIComponent(method) +
+          '&notes=' + encodeURIComponent(plan === 'split' ? '50% Advance Plan' : 'Full Payment') +
+          '&shippingAddress=' + encodeURIComponent(shippingAddressVal)
+        ));
+      }
+
+      if (requests.length === 0) {
+        loading.classList.remove('active');
+        if (window.SwapifyUI) window.SwapifyUI.toast('No items to purchase.', 'error');
+        else alert('No items to purchase.');
+        return;
+      }
+
+      Promise.all(requests)
+        .then(function(results) {
+          var failed = results.find(function(r) { return !r.ok; });
+          if (failed) {
+            loading.classList.remove('active');
+            var msg = failed.data && failed.data.error ? failed.data.error : 'Payment failed.';
+            if (window.SwapifyUI) window.SwapifyUI.toast(msg, 'error');
+            else alert(msg);
+            return;
+          }
+          finishSuccess();
+        })
+        .catch(function() {
+          loading.classList.remove('active');
+          if (window.SwapifyUI) window.SwapifyUI.toast('Payment failed.', 'error');
+          else alert('Payment failed.');
+        });
+
+      function finishSuccess() {
+        setTimeout(() => {
+        loading.classList.remove('active');
+        
+        // Show Success
+        const orderNum = Math.floor(100000 + Math.random() * 900000);
+        const isCartCheckout = new URLSearchParams(window.location.search).get('cart') === 'true';
+        const cartItems = (isCartCheckout && window.SwapifyCart) ? SwapifyCart.getAll() : [];
+
+        // Save to History with 3-stage status
+        const history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
+        let orderItemName = itemInfo.name;
+        let orderItemImg = itemInfo.img;
+        let orderQty = 1;
+        // Bug Fix 5: Build full items snapshot for the order record
+        let orderItemsSnapshot = [];
+        if (isCartCheckout && cartItems.length > 0) {
+          orderItemName = cartItems[0].name + (cartItems.length > 1 ? ` + ${cartItems.length - 1} more item(s)` : '');
+          orderItemImg = cartItems[0].img;
+          orderQty = cartItems.reduce((s, i) => s + i.qty, 0);
+          // Full snapshot of all cart items
+          orderItemsSnapshot = cartItems.map(function(i) {
+            return { id: i.id, name: i.name, qty: i.qty, price: i.price, img: i.img, condition: i.condition || '' };
+          });
+        } else {
+          // Single Buy Now item snapshot
+          orderItemsSnapshot = [{ id: dealId || '0', name: itemInfo.name, qty: 1, price: itemInfo.price, img: itemInfo.img, condition: itemInfo.condition || '' }];
+        }
+        const newOrder = {
+          id: `SWP-${orderNum}`,
+          itemName: orderItemName,
+          itemImg: orderItemImg,
+          qty: orderQty,
+          items: orderItemsSnapshot,
+          totalPrice: finalTotal,
+          paymentMethod: method,
+          paymentPlan: plan,
+          shippingAddress: document.getElementById('shippingAddress').value.trim(),
+          status: 'Preparing',
+          date: new Date().toISOString(),
+          estimatedDelivery: '25–35 mins'
+        };
+        history.push(newOrder);
+        localStorage.setItem('purchaseHistory', JSON.stringify(history));
+
+        // Save card to server wallet (encrypted in DB) — only for manually-entered new cards
+        if (method === 'card' && !selectedSavedCardId) {
+          const saveCardCheckbox = document.getElementById('saveCardCheckbox');
+          if (saveCardCheckbox && saveCardCheckbox.checked) {
+            const cardNum  = document.getElementById('cardNumber').value.replace(/\s/g, '');
+            const cardName = document.getElementById('cardName').value;
+            const cardExp  = document.getElementById('cardExpiry').value;
+            fetch('/api/wallet/save-card', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cardNumber: cardNum, cardName, expiry: cardExp })
+            }).catch(function() {});
+          }
+        }
+
+        // Bug Fix 4: Reduce persistent stock for each purchased item
+        if (isCartCheckout && window.SwapifyCart) {
+          cartItems.forEach(function(item) {
+            SwapifyCart.reduceStock(item.id, item.qty);
+          });
+        } else if (dealId && window.SwapifyCart) {
+          SwapifyCart.reduceStock(dealId, 1);
+        }
+
+        // Clear cart if this was a cart checkout
+        if (isCartCheckout && window.SwapifyCart) {
+          SwapifyCart.clear();
+        }
+
+        // Update Wallet Points
+        let currentWalletPoints = parseInt(localStorage.getItem('walletPoints'));
+        if (isNaN(currentWalletPoints)) currentWalletPoints = 1250;
+        
+        if (pointsDiscountAmt > 0) {
+          const pointsDeducted = Math.floor(pointsDiscountAmt / pointValue);
+          currentWalletPoints -= pointsDeducted;
+        }
+        // Earn points (10 points per dollar paid)
+        if (finalTotal > 0) {
+          currentWalletPoints += Math.floor(finalTotal * 10);
+        }
+        localStorage.setItem('walletPoints', currentWalletPoints);
+
+        // Notifications
+        if (window.SwapifyUI) {
+          window.SwapifyUI.toast(`Order #SWP-${orderNum} placed successfully! 🎉`, 'success');
+          window.SwapifyUI.toast(`Payment of $${finalTotal.toFixed(2)} confirmed ✓`, 'success');
+        }
+
+        document.getElementById('orderNum').textContent = `SWP-${orderNum}`;
+        document.getElementById('successModal').classList.add('active');
+        }, 2000);
+      }
+    }
+
+    // Initialize
+    init();
+
+    // Load saved cards and pre-populate the selector
+    fetch('/api/wallet/cards')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.cards || data.cards.length === 0) return;
+        var banner = document.getElementById('savedCardBanner');
+        var select = document.getElementById('savedCardSelect');
+        data.cards.forEach(function(card) {
+          var opt = document.createElement('option');
+          opt.value = card._id;
+          opt.textContent = '•••• ' + card.last4 + '  —  ' + card.cardName + '  (' + card.expiry + ')';
+          select.appendChild(opt);
+        });
+        var newOpt = document.createElement('option');
+        newOpt.value = '';
+        newOpt.textContent = '+ Enter a different card';
+        select.appendChild(newOpt);
+        // Default: first saved card selected
+        selectedSavedCardId = data.cards[0]._id;
+        document.getElementById('manualCardFields').style.display = 'none';
+        document.getElementById('saveCardLabel').style.display    = 'none';
+        banner.style.display = 'block';
+      })
+      .catch(function() {});
+  </script>
+</body>
+</html>

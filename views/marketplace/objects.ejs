@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swap Objects — Swapify</title>
+  <meta name="description" content="Trade items you no longer need. Find something you love.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <!-- BANNER -->
+  <section class="section" style="padding-top:32px;padding-bottom:0"><div class="container">
+    <div class="page-banner banner-beige" style="padding:32px">
+      <div style="position:relative;z-index:1;max-width:640px">
+        <h1 style="font-size:36px;font-weight:800;margin-bottom:12px">Swap Objects</h1>
+        <p class="text-lg opacity-80" style="margin-bottom:24px">Trade items you no longer need. Find something you love.</p>
+        <div class="flex gap-4" style="flex-wrap:wrap">
+          <div style="position:relative;flex:1;min-width:200px">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="objectSearchInput" class="input input-search" placeholder="What are you looking for?" autocomplete="off">
+          </div>
+          <button class="btn btn-primary" id="objectFilterBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filters
+          </button>
+        </div>
+      </div>
+      <div class="emoji">📦</div>
+    </div>
+  </div></section>
+
+  <!-- FILTER PANEL (hidden by default) -->
+  <section id="filterPanel" style="display:none;padding:0">
+    <div class="container" style="padding-top:16px;padding-bottom:0">
+      <div class="card card-body" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Category</label>
+          <select id="filterCategory" class="input" style="margin-top:6px;appearance:none">
+            <option value="">All Categories</option>
+            <option value="electronics">Electronics</option>
+            <option value="home">Home &amp; Garden</option>
+            <option value="sports">Sports &amp; Outdoors</option>
+            <option value="music">Music &amp; Instruments</option>
+            <option value="photography">Photography</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Condition</label>
+          <select id="filterCondition" class="input" style="margin-top:6px;appearance:none">
+            <option value="">Any Condition</option>
+            <option value="likenew">Like New</option>
+            <option value="good">Good</option>
+            <option value="fair">Fair</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Min Rating</label>
+          <select id="filterRating" class="input" style="margin-top:6px;appearance:none">
+            <option value="0">Any Rating</option>
+            <option value="4">4+ Stars</option>
+            <option value="4.5">4.5+ Stars</option>
+            <option value="4.8">4.8+ Stars</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <button class="btn btn-primary" id="applyFiltersBtn">Apply Filters</button>
+          <button class="btn btn-ghost" id="resetFiltersBtn">Reset</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACTIVE FILTER CHIPS -->
+  <div id="activeFilterChips" class="container" style="padding-top:12px;display:none">
+    <div id="chipsRow" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"></div>
+  </div>
+
+  <!-- RESULTS COUNT -->
+  <section class="section" style="padding-top:24px;padding-bottom:0">
+    <div class="container">
+      <div class="flex justify-between items-center" style="margin-bottom:20px;flex-wrap:wrap;gap:8px">
+        <p id="resultsCount" style="color:var(--muted-fg);font-size:14px;font-weight:500"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- OBJECTS GRID -->
+  <section class="section" style="padding-top:8px">
+    <div class="container">
+      <div class="grid grid-3 gap-6" id="objectsGrid"></div>
+      <!-- Empty state -->
+      <div id="objectsEmpty" style="display:none">
+        <div class="empty-state">
+          <div class="empty-state-icon" style="font-size:48px">🔍</div>
+          <h3>No objects found</h3>
+          <p>Try adjusting your search or filters to find more items.</p>
+          <button class="btn btn-secondary" id="emptyResetBtn">Clear All Filters</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer"><div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><a href="/" class="logo" style="margin-bottom:8px"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></div><span class="logo-text"><span>Swapify</span></span></a><p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.</p><div class="footer-social"><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6L18 18"/></svg></a><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg></a><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg></a></div></div>
+      <div class="footer-col"><h4>About Swapify</h4><ul><li><a href="/our-story">Our Story</a></li><li><a href="/how-it-works">How it Works</a></li><li><a href="/sustainability">Sustainability</a></li></ul></div>
+      <div class="footer-col"><h4>Community</h4><ul><li><a href="/guidelines">Guidelines</a></li><li><a href="/success-stories">Success Stories</a></li></ul></div>
+      <div class="footer-col"><h4>Help Center</h4><ul><li><a href="/faq">FAQ</a></li><li><a href="/contact">Contact Support</a></li><li><a href="/trust-safety">Trust &amp; Safety</a></li><li><a href="/terms">Terms of Service</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Swapify. All rights reserved.</p><div class="footer-tagline"><span>Less waste. More sharing.</span><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div></div>
+  </div></footer>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav"><a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a><a href="/skills"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg><span>Skills</span></a><a href="/add" class="add-btn"><div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div></a><a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg><span>Messages</span></a><a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg><span>Profile</span></a></nav>
+
+  <script src="/js/app.js"></script>
+  <script type="application/json" id="__myItemsData"><%- JSON.stringify((locals.myItems || []).map(function(s){ return { id: String(s._id), title: s.title }; })) %></script>
+
+  <!-- ═══ OFFER-OBJECT MODAL ═══ -->
+  <div id="offerObjectOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:2000;align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:440px;position:relative;animation:fadeUp .25s ease">
+      <button id="offerObjectClose" style="position:absolute;top:14px;right:16px;background:none;border:none;cursor:pointer;color:var(--muted-fg);font-size:24px;line-height:1;padding:4px">&times;</button>
+      <h3 style="font-size:20px;font-weight:700;margin-bottom:6px">Confirm Your Offer</h3>
+      <p style="font-size:14px;color:var(--muted-fg);margin-bottom:20px">Select one of your items to offer in exchange.</p>
+      <div class="form-group">
+        <label class="form-label">I Offer (from My Items) *</label>
+        <select class="input" id="offerObjectSelect"><option value="">— Select an item —</option></select>
+        <span id="offerObjectErr" style="font-size:12px;color:#ef4444"></span>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:16px">
+        <button class="btn btn-primary" style="flex:1" id="confirmOfferBtn">Confirm &amp; Request Swap</button>
+        <button class="btn btn-ghost" id="offerObjectCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <style>@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}</style>
+  <script type="application/json" id="__objectsData"><%- JSON.stringify(items.map(function(item) {
+    var cond     = item.condition || 'Good';
+    var condLow  = cond.toLowerCase().replace(/\s+/g, '');
+    var badgeCls = condLow === 'likenew' ? 'badge-success'
+                 : condLow === 'fair'    ? ''
+                 : 'badge-warning';
+    var badgeSty = condLow === 'fair' ? 'background:#f97316;color:#fff' : '';
+    var sub      = item.subCategory || 'other';
+    return {
+      id:           item._id.toString(),
+      name:         item.title,
+      img:          (item.images && item.images[0]) ? item.images[0] : '/img/placeholder.jpg',
+      condition:    cond,
+      conditionTag: condLow,
+      badgeClass:   badgeCls,
+      badgeStyle:   badgeSty,
+      wants:        item.wantsInExchange || 'Open to offers',
+      ownerId:      (item.creator && item.creator._id) ? item.creator._id.toString() : '',
+      ownerName:    (item.creator && item.creator.username) ? item.creator.username : 'Unknown',
+      ownerInitial: (item.creator && item.creator.username) ? item.creator.username.charAt(0).toUpperCase() : '?',
+      ownerImg:     (item.creator && item.creator.profileImage) ? item.creator.profileImage : '',
+      cachedRating:       item.cachedRating || 0,
+      distance:     item.itemLocation || 'Nearby',
+      category:     sub,
+      categoryName: sub.charAt(0).toUpperCase() + sub.slice(1)
+    };
+  })) %></script>
+  <script>
+  (function () {
+    'use strict';
+
+    var IS_LOGGED_IN = '<%= currentUser ? "true" : "false" %>' === 'true';
+    window._userFavoriteIds = window._userFavoriteIds || <%- JSON.stringify(userFavorites) %>;
+
+    /* ── MASTER DATA — injected from MongoDB via server ────── */
+    var MY_ITEMS = JSON.parse(document.getElementById('__myItemsData').textContent || '[]');
+    var ALL_OBJECTS = JSON.parse(document.getElementById('__objectsData').textContent || '[]');
+
+    SwapifyStore.set('objects', ALL_OBJECTS);
+
+    /* ── STATE ────────────────────────────────────────────── */
+    window.state = { query: '', category: '', condition: '', minRating: 0 };
+
+    /* ── DOM ──────────────────────────────────────────────── */
+    var searchInput   = document.getElementById('objectSearchInput');
+    var filterBtn     = document.getElementById('objectFilterBtn');
+    var filterPanel   = document.getElementById('filterPanel');
+    var filterCategory= document.getElementById('filterCategory');
+    var filterCond    = document.getElementById('filterCondition');
+    var filterRating  = document.getElementById('filterRating');
+    var applyBtn      = document.getElementById('applyFiltersBtn');
+    var resetBtn      = document.getElementById('resetFiltersBtn');
+    var emptyResetBtn = document.getElementById('emptyResetBtn');
+    var grid          = document.getElementById('objectsGrid');
+    var emptyEl       = document.getElementById('objectsEmpty');
+    var countEl       = document.getElementById('resultsCount');
+    var chipsPanel    = document.getElementById('activeFilterChips');
+    var chipsRow      = document.getElementById('chipsRow');
+
+    /* ── FILTER ENGINE (never mutates ALL_OBJECTS) ────────── */
+    function applyFilters() {
+      var q    = state.query.trim().toLowerCase();
+      var cat  = state.category.toLowerCase();
+      var cond = state.condition.toLowerCase();
+      var min  = parseFloat(state.minRating) || 0;
+
+      return ALL_OBJECTS.filter(function (o) {
+        var matchQ    = !q || o.name.toLowerCase().includes(q) || o.wants.toLowerCase().includes(q) || o.ownerName.toLowerCase().includes(q);
+        var matchCat  = !cat || o.category === cat;
+        var matchCond = !cond || o.conditionTag === cond;
+        var matchRat  = o.cachedRating >= min;
+        return matchQ && matchCat && matchCond && matchRat;
+      });
+    }
+
+    /* ── RENDER CARDS ─────────────────────────────────────── */
+    function renderCards(objects) {
+      grid.innerHTML = '';
+      emptyEl.style.display = 'none';
+
+      var total = ALL_OBJECTS.length;
+      var found = objects.length;
+      countEl.textContent = found === total
+        ? 'Showing all ' + total + ' objects'
+        : 'Showing ' + found + ' of ' + total + ' objects';
+
+      if (found === 0) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      var frag = document.createDocumentFragment();
+      objects.forEach(function (o, i) {
+        var delay = ['','fade-in-delay-1','fade-in-delay-2'][i % 3];
+        var div = document.createElement('div');
+        div.className = 'item-card object-card fade-in ' + delay;
+        
+        var badgeStyleAttr = o.badgeStyle ? ' style="' + o.badgeStyle + '"' : '';
+        var badgeClassAttr = o.badgeClass ? ' ' + o.badgeClass : '';
+        
+        var isFav = (window._userFavoriteIds || []).indexOf(o.id) > -1 ? ' active' : '';
+        div.innerHTML =
+          '<div class="item-card-img">' +
+            '<img class="card-img" src="' + o.img + '" alt="' + o.name + '">' +
+            '<div class="item-card-badges">' +
+              '<span class="badge badge-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Object</span>' +
+              '<span class="badge' + badgeClassAttr + '"' + badgeStyleAttr + '>' + o.condition + '</span>' +
+            '</div>' +
+            '<button class="item-card-fav' + isFav + '" data-item-id="' + o.id + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>' +
+          '</div>' +
+          '<div class="item-card-body">' +
+            '<h3 class="item-card-title" style="font-size:20px;margin-bottom:12px">' + o.name + '</h3>' +
+            '<div class="want-box"><div class="flex items-center gap-2 text-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg><strong>Wants: ' + o.wants + '</strong></div></div>' +
+            '<div class="owner-row">' +
+              '<div class="owner-info">' +
+                (o.ownerId
+                  ? '<a href="/users/' + o.ownerId + '" title="View ' + escapeHtml(o.ownerName) + '\'s profile" style="display:block;flex-shrink:0;border-radius:50%;overflow:hidden;text-decoration:none">' +
+                    (o.ownerImg
+                      ? '<img src="' + o.ownerImg + '" alt="' + escapeHtml(o.ownerName) + '" class="owner-avatar" style="border-radius:50%;object-fit:cover;width:32px;height:32px;display:block">'
+                      : '<div class="owner-avatar">' + o.ownerInitial + '</div>') +
+                    '</a>'
+                  : (o.ownerImg
+                      ? '<img src="' + o.ownerImg + '" alt="' + escapeHtml(o.ownerName) + '" class="owner-avatar" style="border-radius:50%;object-fit:cover;width:32px;height:32px;">'
+                      : '<div class="owner-avatar">' + o.ownerInitial + '</div>')
+                ) +
+              '<div>' +
+                (o.ownerId
+                  ? '<strong class="text-sm"><a href="/users/' + o.ownerId + '" title="View ' + escapeHtml(o.ownerName) + '\'s profile" style="color:inherit;text-decoration:none">' + escapeHtml(o.ownerName) + '</a></strong>'
+                  : '<strong class="text-sm">' + escapeHtml(o.ownerName) + '</strong>'
+                ) +
+                '<div class="item-card-rating"><svg viewBox="0 0 24 24" width="12" height="12"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ' + o.cachedRating.toFixed(1) + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="btn-grid"><button class="btn btn-secondary request-swap-btn" data-object-id="' + o.id + '">Swap</button><button class="btn btn-outline" onclick="window.location=\'/item-details/' + o.id + '\'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> View</button></div>' +
+          '</div>';
+        frag.appendChild(div);
+      });
+      grid.appendChild(frag);
+
+      if (window.SwapifyInitTiltCards) {
+        window.SwapifyInitTiltCards(grid);
+      }
+
+      /* trigger fade-in */
+      setTimeout(function () {
+        grid.querySelectorAll('.fade-in').forEach(function (el) { el.classList.add('visible'); });
+      }, 60);
+    }
+
+    /* ── FILTER CHIPS ─────────────────────────────────────── */
+    function renderChips() {
+      chipsRow.innerHTML = '';
+      var chips = [];
+      if (state.query)     chips.push({ label: '"' + state.query + '"',  clear: function () { state.query = ''; searchInput.value = ''; } });
+      if (state.category)  chips.push({ label: 'Category: ' + (filterCategory.options[filterCategory.selectedIndex] ? filterCategory.options[filterCategory.selectedIndex].text : state.category), clear: function () { state.category = ''; filterCategory.value = ''; } });
+      if (state.condition) chips.push({ label: 'Condition: ' + (filterCond.options[filterCond.selectedIndex] ? filterCond.options[filterCond.selectedIndex].text : state.condition), clear: function () { state.condition = ''; filterCond.value = ''; } });
+      if (state.minRating) chips.push({ label: state.minRating + '+ Stars', clear: function () { state.minRating = 0; filterRating.value = '0'; } });
+
+      chipsPanel.style.display = chips.length ? 'block' : 'none';
+      chips.forEach(function (chip) {
+        var btn = document.createElement('button');
+        btn.className = 'badge badge-outline';
+        btn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 12px;font-size:13px;transition:all .2s';
+        btn.innerHTML = chip.label + ' <span style="font-size:16px;line-height:1">&times;</span>';
+        btn.onclick = function () { chip.clear(); refresh(); };
+        chipsRow.appendChild(btn);
+      });
+    }
+
+    /* ── MAIN REFRESH ─────────────────────────────────────── */
+    window.refresh = function() {
+      var results = applyFilters();
+      renderCards(results);
+      renderChips();
+    }
+
+    /* ── RESET ────────────────────────────────────────────── */
+    function resetAll() {
+      state.query = ''; state.category = ''; state.condition = ''; state.minRating = 0;
+      searchInput.value = '';
+      filterCategory.value = '';
+      filterCond.value = '';
+      filterRating.value = '0';
+      refresh();
+    }
+
+    /* ── EVENTS ───────────────────────────────────────────── */
+
+    /* Live search on each keystroke */
+    searchInput.addEventListener('input', function () {
+      state.query = searchInput.value;
+      refresh();
+    });
+
+    /* Enter key also triggers search */
+    searchInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { state.query = searchInput.value; refresh(); }
+    });
+
+    /* Toggle filter panel */
+    filterBtn.addEventListener('click', function () {
+      var open = filterPanel.style.display !== 'none';
+      filterPanel.style.display = open ? 'none' : 'block';
+      filterBtn.classList.toggle('btn-outline', !open);
+    });
+
+    /* Apply filters */
+    applyBtn.addEventListener('click', function () {
+      state.category  = filterCategory.value;
+      state.condition = filterCond.value;
+      state.minRating = parseFloat(filterRating.value) || 0;
+      filterPanel.style.display = 'none';
+      refresh();
+    });
+
+    /* Reset buttons */
+    resetBtn.addEventListener('click', resetAll);
+    emptyResetBtn.addEventListener('click', resetAll);
+
+    /* Card navigation + swap button */
+    grid.addEventListener('click', function (e) {
+      /* ── Favorite button ──────────────────────────────────── */
+      var favBtn = e.target.closest('.item-card-fav');
+      if (favBtn) {
+        e.stopPropagation();
+        var itemId = favBtn.dataset.itemId;
+        if (!itemId) return;
+
+        var wasFav = favBtn.classList.contains('active');
+        var nowFav = !wasFav;
+        favBtn.classList.toggle('active', nowFav);
+        var svg = favBtn.querySelector('svg');
+        if (svg) { svg.setAttribute('fill', nowFav ? '#FF4D4D' : 'none'); svg.setAttribute('stroke', nowFav ? '#FF4D4D' : 'currentColor'); }
+
+        fetch('/api/favorites/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ itemId: itemId })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.success) {
+            favBtn.classList.toggle('active', wasFav);
+            if (svg) { svg.setAttribute('fill', wasFav ? '#FF4D4D' : 'none'); svg.setAttribute('stroke', wasFav ? '#FF4D4D' : 'currentColor'); }
+            if (window.SwapifyUI) SwapifyUI.toast(
+              (data.error === 'Not authenticated.' || data.error === 'Unauthorized.')
+                ? 'Please log in to add favorites'
+                : (data.error || 'Failed to update favorites'),
+              'warning'
+            );
+            return;
+          }
+          window._userFavoriteIds = window._userFavoriteIds || [];
+          if (data.added) { if (window._userFavoriteIds.indexOf(itemId) === -1) window._userFavoriteIds.push(itemId); }
+          else { window._userFavoriteIds = window._userFavoriteIds.filter(function (x) { return x !== itemId; }); }
+          if (window.SwapifyUI) SwapifyUI.toast(data.added ? 'Added to favorites ❤️' : 'Removed from favorites', data.added ? 'success' : 'info');
+        })
+        .catch(function () {
+          favBtn.classList.toggle('active', wasFav);
+          if (svg) { svg.setAttribute('fill', wasFav ? '#FF4D4D' : 'none'); svg.setAttribute('stroke', wasFav ? '#FF4D4D' : 'currentColor'); }
+          if (window.SwapifyUI) SwapifyUI.toast('Network error. Try again.', 'error');
+        });
+        return;
+      }
+
+      var swapBtn = e.target.closest('.request-swap-btn');
+      if (swapBtn) {
+        e.stopPropagation();
+        if (!IS_LOGGED_IN) {
+          window.location.href = '/login';
+          return;
+        }
+        var itemId = swapBtn.dataset.objectId;
+        var obj = ALL_OBJECTS.find(function(o) { return o.id === itemId; });
+        if (!obj) { if (window.SwapifyUI) window.SwapifyUI.toast('Object not found', 'error'); return; }
+        
+        if (MY_ITEMS.length === 0) {
+          if (window.SwapifyUI) window.SwapifyUI.toast('You need to add an item first before requesting a swap!', 'warning');
+          setTimeout(function() { window.location.href = '/add'; }, 1500);
+          return;
+        }
+        window._pendingSwap = { id: itemId, obj: obj };
+        
+        var offerSelect = document.getElementById('offerObjectSelect');
+        offerSelect.innerHTML = '<option value="">— Select an item you have —</option>';
+        MY_ITEMS.forEach(function(sk) {
+          var opt = document.createElement('option');
+          opt.value = sk.id;
+          opt.textContent = sk.title;
+          offerSelect.appendChild(opt);
+        });
+        document.getElementById('offerObjectErr').textContent = '';
+        document.getElementById('offerObjectOverlay').style.display = 'flex';
+        return;
+      }
+    });
+
+    var offerOverlay = document.getElementById('offerObjectOverlay');
+    var offerCloseBtn = document.getElementById('offerObjectClose');
+    var offerCancelBtn = document.getElementById('offerObjectCancelBtn');
+    var confirmBtn = document.getElementById('confirmOfferBtn');
+    
+    function closeOfferModal() {
+      offerOverlay.style.display = 'none';
+      window._pendingSwap = null;
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = 'Confirm &amp; Request Swap';
+    }
+    offerCloseBtn.addEventListener('click', closeOfferModal);
+    offerCancelBtn.addEventListener('click', closeOfferModal);
+    offerOverlay.addEventListener('click', function(e){ if (e.target === offerOverlay) closeOfferModal(); });
+
+    confirmBtn.addEventListener('click', function() {
+      if (!window._pendingSwap) return;
+      var offeredItemId = document.getElementById('offerObjectSelect').value;
+      if (!offeredItemId) { document.getElementById('offerObjectErr').textContent = 'Please select an item you are offering.'; return; }
+      document.getElementById('offerObjectErr').textContent = '';
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Sending...';
+
+      fetch('/swap/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestedItemId: window._pendingSwap.id, offeredItemId: offeredItemId })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          if (window.SwapifyUI) SwapifyUI.toast('Swap request sent! Owner has been notified.', 'success');
+          closeOfferModal();
+        } else {
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = 'Confirm &amp; Request Swap';
+          if (window.SwapifyUI) SwapifyUI.toast(data.message || 'Could not send request.', 'error');
+        }
+      })
+      .catch(function() {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = 'Confirm &amp; Request Swap';
+        if (window.SwapifyUI) SwapifyUI.toast('Network error. Please try again.', 'error');
+      });
+    });
+
+    /* ── INIT ─────────────────────────────────────────────── */
+    refresh();
+  }());
+  </script>
+  <script>
+    window.setObjectSearchQuery = function(q) {
+      window.state.query = q;
+      window.refresh();
+    };
+  </script>
+</body>
+</html>

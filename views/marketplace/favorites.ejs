@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favorites — Swapify</title>
+  <meta name="description" content="Your saved favorite items and skills on Swapify.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- page-content gives this page the same ambient purple/blue gradient as other inner pages -->
+  <div class="page-content">
+    <section class="section" style="padding-top:32px">
+      <div class="container">
+        <div style="margin-bottom:32px">
+          <h1 style="font-size:32px;font-weight:700;margin-bottom:8px">My Favorites ❤️</h1>
+          <p style="color:var(--muted-fg);font-size:16px">Items and skills you've saved</p>
+        </div>
+        <div class="grid grid-3 gap-6" id="favoritesGrid">
+          <!-- Dynamically populated -->
+        </div>
+        <div id="favoritesEmpty" style="display:none">
+          <div class="empty-state">
+            <div class="empty-state-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted-fg)" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+            <h3>No favorites yet</h3>
+            <p>Start exploring and tap the heart icon on items you love to save them here.</p>
+            <a href="/objects" class="btn btn-primary">Explore Items</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div><!-- /.page-content -->
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo" style="margin-bottom:8px" aria-label="Swapify Home">
+            <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></div>
+            <span class="logo-text"><span>Swapify</span></span>
+          </a>
+          <p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.</p>
+          <div class="footer-social">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on Facebook" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on X" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6L18 18"/></svg>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on Instagram" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on LinkedIn" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>About Swapify</h4>
+          <ul>
+            <li><a href="/about">About Swapify</a></li>
+            <li><a href="/our-story">Our Story</a></li>
+            <li><a href="/how-it-works">How it Works</a></li>
+            <li><a href="/sustainability">Sustainability</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="/guidelines">Guidelines</a></li>
+            <li><a href="/success-stories">Success Stories</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help Center</h4>
+          <ul>
+            <li><a href="/help-center">Help Center</a></li>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/contact">Contact Support</a></li>
+            <li><a href="/trust-safety">Trust &amp; Safety</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+        <div class="footer-tagline">
+          <span>Less waste. More sharing.</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <nav class="bottom-nav"><a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a><a href="/skills"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg><span>Skills</span></a><a href="/add" class="add-btn"><div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div></a><a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg><span>Messages</span></a><a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg><span>Profile</span></a></nav>
+
+  <script src="/js/app.js"></script>
+  <script>
+  /* Server-injected favourites (MongoDB documents, owner populated) */
+  var _serverFavorites = <%- JSON.stringify(
+    (favorites || []).map(function(item) {
+      return {
+        id:        String(item._id),
+        title:     item.title,
+        category:  item.category,
+        condition: item.condition || '',
+        location:  item.itemLocation || '',
+        image:     (item.images && item.images[0]) ? item.images[0] : '',
+        ownerId:   item.creator ? String(item.creator._id) : '',
+        ownerName: item.creator ? item.creator.username : 'Swapify User'
+      };
+    })
+  ) %>;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var grid  = document.getElementById('favoritesGrid');
+    var empty = document.getElementById('favoritesEmpty');
+
+    if (_serverFavorites.length === 0) {
+      empty.style.display = 'block';
+      grid.style.display  = 'none';
+      return;
+    }
+
+    empty.style.display = 'none';
+    grid.style.display  = '';
+
+    _serverFavorites.forEach(function (item) {
+      var imgSrc  = item.image || '/img/stock_pfp.jpg';
+      var itemUrl = item.category === 'skill' ? '/skill-details?id=' + item.id : '/item-details/' + item.id;
+
+      var card = document.createElement('div');
+      card.className    = 'item-card fade-in visible';
+      card.dataset.itemId = item.id;
+
+      card.innerHTML =
+        '<div class="item-card-img">' +
+          '<img class="card-img" src="' + imgSrc + '" alt="' + item.title + '" loading="lazy" ' +
+               'onerror="this.src=\'/img/stock_pfp.jpg\'">' +
+          '<div class="item-card-badges"><span class="badge badge-primary">' + item.category + '</span></div>' +
+          '<button class="item-card-fav active" aria-label="Remove from favorites" data-item-id="' + item.id + '">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="#FF4D4D" stroke="#FF4D4D" stroke-width="2">' +
+              '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>' +
+            '</svg>' +
+          '</button>' +
+        '</div>' +
+        '<div class="item-card-body">' +
+          '<a href="' + itemUrl + '"><h3 class="item-card-title">' + item.title + '</h3></a>' +
+          '<div class="item-card-meta">' +
+            (item.condition ? '<span>' + item.condition + '</span>' : '') +
+            (item.condition && item.location ? '<span>•</span>' : '') +
+            (item.location  ? '<span>' + item.location  + '</span>' : '') +
+          '</div>' +
+          '<div class="item-card-footer">' +
+            '<div class="item-card-owner">' +
+              (item.ownerId
+                ? '<a href="/users/' + item.ownerId + '" style="color:inherit;text-decoration:none;font-weight:600" title="View ' + escapeHtml(item.ownerName) + '\'s profile">' + escapeHtml(item.ownerName) + '</a>'
+                : '<span>' + escapeHtml(item.ownerName) + '</span>'
+              ) +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      // Remove-from-favourites via real API
+      card.querySelector('.item-card-fav').addEventListener('click', function () {
+        var btn = this;
+        fetch('/api/favorites/toggle', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ itemId: item.id })
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data.success && !data.added) {
+              var cardEl = btn.closest('.item-card');
+              if (cardEl) cardEl.remove();
+              if (!document.querySelector('.item-card')) {
+                empty.style.display = 'block';
+              }
+            }
+          })
+          .catch(function () {
+            if (window.SwapifyUI) SwapifyUI.toast('Could not remove favourite. Try again.', 'error');
+          });
+      });
+
+      grid.appendChild(card);
+    });
+  });
+  </script>
+</body>
+</html>

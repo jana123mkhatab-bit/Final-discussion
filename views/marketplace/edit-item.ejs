@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Listing — Swapify</title>
+  <meta name="description" content="Edit your item or skill listing on Swapify.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+  <style>
+    /* ── Inline styles scoped to this page only ── */
+    .edit-page   { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
+    .page-title  { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+    .page-sub    { color: var(--muted-fg, #888); font-size: 15px; margin-bottom: 32px; }
+    .card        { background: var(--card, #1a1a2e); border: 1px solid var(--border, #2a2a40); border-radius: 12px; padding: 28px; margin-bottom: 24px; }
+    .form-group  { margin-bottom: 20px; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+    .required    { color: var(--danger, #ef4444); margin-left: 2px; }
+    .form-input,
+    .form-textarea,
+    .form-select { width: 100%; padding: 10px 14px; border: 1px solid var(--border, #2a2a40); border-radius: 8px; background: var(--bg, #0f0f1a); color: var(--fg, #fff); font-size: 15px; box-sizing: border-box; transition: border-color .2s; }
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus { outline: none; border-color: #7C3AED; }
+    .form-textarea  { min-height: 120px; resize: vertical; }
+    .hint        { font-size: 12px; color: var(--muted-fg, #888); margin-top: 4px; }
+    .field-error { font-size: 12px; color: var(--danger, #ef4444); margin-top: 4px; display: none; }
+    .field-error.visible { display: block; }
+
+    /* Server-side error banner */
+    .error-banner { background: rgba(239,68,68,.12); border: 1px solid #ef4444; border-radius: 8px; padding: 12px 16px; color: #ef4444; font-size: 14px; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+
+    /* Action buttons */
+    .actions     { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary { flex: 2; min-width: 160px; padding: 12px 24px; background: #7C3AED; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .2s; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-cancel  { flex: 1; min-width: 120px; padding: 12px 24px; background: transparent; color: var(--fg, #fff); border: 1px solid var(--border, #2a2a40); border-radius: 8px; font-size: 15px; font-weight: 600; text-align: center; text-decoration: none; transition: border-color .2s; }
+    .btn-cancel:hover { border-color: #7C3AED; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <!-- MAIN CONTENT -->
+  <main class="edit-page">
+
+    <h1 class="page-title">Edit Listing</h1>
+    <p class="page-sub">Update the details of your listing. All changes are saved immediately.</p>
+
+    <!-- ── Server-side error banner ── -->
+    <% if (error) { %>
+      <div class="error-banner" role="alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+        </svg>
+        <%= error %>
+      </div>
+    <% } %>
+
+    <!-- ── Edit form ── -->
+    <form
+      id="editItemForm"
+      action="/item/<%= item._id %>/edit"
+      method="POST"
+      novalidate
+    >
+      <div class="card">
+        <h2 style="font-size:17px;font-weight:700;margin-bottom:20px">Listing Details</h2>
+
+        <!-- Title -->
+        <div class="form-group">
+          <label for="editTitle">Title <span class="required">*</span></label>
+          <input
+            type="text"
+            class="form-input"
+            id="editTitle"
+            name="title"
+            maxlength="100"
+            value="<%= item.title %>"
+            placeholder="What are you offering?"
+          >
+          <span class="hint">Min 3 characters, max 100.</span>
+          <span class="field-error" id="titleError">Title must be at least 3 characters.</span>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="editDescription">Description <span class="required">*</span></label>
+          <textarea
+            class="form-textarea"
+            id="editDescription"
+            name="description"
+            maxlength="1000"
+            placeholder="Describe your item or skill in detail."
+          ><%= item.description %></textarea>
+          <span class="hint">Max 1000 characters.</span>
+          <span class="field-error" id="descError">Description is required.</span>
+        </div>
+
+        <!-- Category -->
+        <div class="form-group">
+          <label for="editCategory">Category <span class="required">*</span></label>
+          <select class="form-select" id="editCategory" name="category">
+            <option value="">— Select a category —</option>
+            <option value="object" <%= item.category === 'object' ? 'selected' : '' %>>Object</option>
+            <option value="skill"  <%= item.category === 'skill'  ? 'selected' : '' %>>Skill</option>
+          </select>
+          <span class="field-error" id="categoryError">Please select a category.</span>
+        </div>
+
+        <!-- Points Value -->
+        <div class="form-group">
+          <label for="editPoints">Points Value <span class="required">*</span></label>
+          <input
+            type="number"
+            class="form-input"
+            id="editPoints"
+            name="pointsValue"
+            min="0"
+            max="10000"
+            step="1"
+            value="<%= item.pointsValue %>"
+            placeholder="0"
+          >
+          <span class="hint">Must be a number between 0 and 10 000.</span>
+          <span class="field-error" id="pointsError">Points must be a number between 0 and 10 000.</span>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="actions">
+        <a href="/item-details/<%= item._id %>" class="btn-cancel">Cancel</a>
+        <button type="submit" class="btn-primary">
+          Save Changes
+        </button>
+      </div>
+    </form>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
+    <a href="/objects"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Objects</span></a>
+    <a href="/add" class="add-btn"><div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div></a>
+    <a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg><span>Messages</span></a>
+    <a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg><span>Profile</span></a>
+  </nav>
+
+  <script src="/js/app.js"></script>
+
+  <!-- ── Frontend validation (Member 2 requirement) ── -->
+  <script>
+    document.getElementById('editItemForm').addEventListener('submit', function (e) {
+      let valid = true;
+
+      // Helper: show/hide field error
+      function setError(id, show) {
+        const el = document.getElementById(id);
+        if (show) { el.classList.add('visible');    valid = false; }
+        else       { el.classList.remove('visible'); }
+      }
+
+      const title       = document.getElementById('editTitle').value.trim();
+      const description = document.getElementById('editDescription').value.trim();
+      const category    = document.getElementById('editCategory').value;
+      const points      = Number(document.getElementById('editPoints').value);
+
+      // Title: required, min 3 chars
+      setError('titleError', title.length < 3);
+
+      // Description: required, min 10 chars
+      setError('descError', description.length < 10);
+
+      // Category: must be selected
+      setError('categoryError', category === '');
+
+      // Points: must be 0–10000
+      setError('pointsError', isNaN(points) || points < 0 || points > 10000);
+
+      if (!valid) {
+        e.preventDefault(); // stop form submission
+        // Scroll to first visible error
+        const firstError = document.querySelector('.field-error.visible');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  </script>
+
+</body>
+</html>
