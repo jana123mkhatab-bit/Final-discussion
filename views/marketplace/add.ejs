@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Item — Swapify</title>
+  <meta name="description" content="List a new item, skill, or deal on Swapify.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <!-- ADD ITEM FORM -->
+  <section class="section">
+    <div class="container" style="max-width:768px">
+      <% 
+        // Default role to 'user' if not provided
+        const userRole = typeof role !== 'undefined' ? role : 'user';
+        const isAdmin = userRole === 'admin';
+      %>
+      
+      <% if (isAdmin) { %>
+        <!-- ADMIN ACCESS DENIED MESSAGE -->
+        <div style="margin-bottom:32px">
+          <h1 style="font-size:32px;font-weight:800;margin-bottom:8px;color:var(--muted-fg)">Add New Listing</h1>
+          <p style="color:var(--muted-fg);font-size:16px">Choose your listing type, fill in the details, and share with the community.</p>
+        </div>
+        
+        <div style="background:linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.04) 100%);border:1.5px solid #ef4444;border-radius:12px;padding:48px 32px;text-align:center;box-shadow:0 4px 6px rgba(0,0,0,0.07)">
+          <div style="margin-bottom:24px">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" style="margin:0 auto;display:block;opacity:0.9"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+          </div>
+          
+          <h2 style="font-size:24px;font-weight:800;color:#dc2626;margin:0 0 12px 0">Admin Access Restricted</h2>
+          
+          <p style="color:#991b1b;font-size:15px;line-height:1.6;margin:0 0 24px 0;max-width:500px;margin-left:auto;margin-right:auto">
+            Administrator accounts cannot add new marketplace listings, skills, or objects. Admin accounts are reserved for platform governance and moderation.
+          </p>
+          
+          <p style="color:#7f1d1d;font-size:13px;margin:0 0 28px 0">
+            To participate in the marketplace, please use a regular user account.
+          </p>
+          
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <a href="/" class="btn btn-primary" style="min-width:140px;text-decoration:none;display:inline-block">← Return to Home</a>
+            <a href="/admin" class="btn btn-ghost" style="min-width:140px;text-decoration:none;display:inline-block;border:1.5px solid #ef4444;color:#ef4444">Go to Admin Panel</a>
+          </div>
+        </div>
+      
+      <% } else { %>
+        <!-- ADD ITEM FORM FOR REGULAR USERS -->
+        <div style="margin-bottom:32px">
+          <h1 style="font-size:32px;font-weight:800;margin-bottom:8px">Add New Listing</h1>
+          <p style="color:var(--muted-fg);font-size:16px">Choose your listing type, fill in the details, and share with the community.</p>
+        </div>
+
+        <!-- Hidden real form that submits to the backend -->
+        <form
+          id="realAddForm"
+          action="/add"
+          method="POST"
+          enctype="multipart/form-data"
+          style="display:none"
+          novalidate
+      >
+        <input type="hidden" id="f_title"       name="title">
+        <input type="hidden" id="f_description" name="description">
+        <input type="hidden" id="f_category"    name="category">
+        <input type="hidden" id="f_pointsValue" name="pointsValue" value="0">
+        <input type="hidden" id="f_level"       name="level" value="">
+        <input type="hidden" id="f_price"       name="price" value="">
+        <input type="hidden" id="f_originalPrice" name="originalPrice" value="">
+        <input type="hidden" id="f_condition"   name="condition" value="">
+        <input type="hidden" id="f_itemLocation" name="itemLocation" value="">
+      </form>
+
+      <!-- Visual UI form (no action — JS intercepts submit) -->
+      <form id="addItemForm" novalidate>
+        <!-- STEP 1: TYPE SELECTION -->
+        <div class="form-card" style="margin-bottom:24px">
+          <div class="form-card-header">
+            <h2 style="font-size:18px;font-weight:700">What are you listing?</h2>
+            <p class="text-sm" style="color:var(--muted-fg);margin-top:4px">Choose the type of listing and we'll show you the relevant fields.</p>
+          </div>
+          <div class="form-card-body">
+            <div class="type-selector">
+              <div class="type-option active" data-type="object">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                <span class="font-semibold">Object</span>
+                <span class="text-xs" style="color:var(--muted-fg)">Trade items</span>
+              </div>
+              <div class="type-option" data-type="deal">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9.5 11.5 5-5"/><circle cx="11" cy="11" r="1"/><circle cx="14" cy="14" r="1"/></svg>
+                <span class="font-semibold">Deal</span>
+                <span class="text-xs" style="color:var(--muted-fg)">Sell at half price</span>
+              </div>
+              <div class="type-option" data-type="skill">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5z"/><path d="M12 14c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/><path d="M19 8l2 2-6 6"/></svg>
+                <span class="font-semibold">Skill</span>
+                <span class="text-xs" style="color:var(--muted-fg)">Offer to teach or swap</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: BASIC DETAILS -->
+        <div class="form-card" style="margin-bottom:24px">
+          <div class="form-card-header">
+            <h2 style="font-size:18px;font-weight:700">Details</h2>
+          </div>
+          <div class="form-card-body">
+            <!-- Title (Required for all types) -->
+            <div class="form-group">
+              <label for="itemTitle">Title <span style="color:var(--danger);font-weight:700">*</span></label>
+              <input type="text" class="input" id="itemTitle" placeholder="What are you offering?" maxlength="100">
+              <span class="form-error" id="titleError"></span>
+              <span style="font-size:12px;color:var(--muted-fg)">Max 100 characters</span>
+            </div>
+
+            <!-- Description (Required for all types) -->
+            <div class="form-group">
+              <label for="itemDesc">Description <span style="color:var(--danger);font-weight:700">*</span></label>
+              <textarea class="textarea" id="itemDesc" placeholder="Describe your item, skill, or deal in detail. Include condition, what you're looking for, and any relevant info." maxlength="1000"></textarea>
+              <span class="form-error" id="descError"></span>
+              <span style="font-size:12px;color:var(--muted-fg)">Max 1000 characters</span>
+            </div>
+
+            <!-- Condition (show for object/deal) -->
+            <div class="form-group" id="conditionField" style="display:none">
+              <label for="itemCondition">Condition <span style="color:var(--danger);font-weight:700">*</span></label>
+              <div class="select-wrap">
+                <select id="itemCondition" class="input">
+                  <option value="">Select condition</option>
+                  <option value="new">New</option>
+                  <option value="likeNew">Like New</option>
+                  <option value="good">Good</option>
+                  <option value="fair">Fair</option>
+                  <option value="used">Used</option>
+                </select>
+              </div>
+              <span class="form-error" id="conditionError"></span>
+            </div>
+
+            <!-- Level (show for skill) -->
+            <div class="form-group" id="levelField" style="display:none">
+              <label for="itemLevel">Level</label>
+              <div class="select-wrap">
+                <select id="itemLevel" class="input">
+                  <option value="">Any level</option>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="expert">Expert</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Location (Required for Object/Deal, Optional for Skill) -->
+            <div class="form-group" id="locationField">
+              <label for="itemLocation">Location <span id="locationRequired" style="color:var(--danger);font-weight:700">*</span></label>
+              <input type="text" class="input" id="itemLocation" placeholder="City, area, or 'Online'">
+              <span class="form-error" id="locationError"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: PRICING (Deal only) -->
+        <div class="form-card" style="margin-bottom:24px;display:none" id="priceCard">
+          <div class="form-card-header">
+            <h2 style="font-size:18px;font-weight:700">Pricing</h2>
+            <p class="text-sm" style="color:var(--muted-fg);margin-top:4px">Selling price must not exceed original price</p>
+          </div>
+          <div class="form-card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <!-- Original Price -->
+              <div class="form-group">
+                <label for="originalPrice">Original Price ($) <span style="color:var(--danger);font-weight:700">*</span></label>
+                <input type="number" class="input" id="originalPrice" placeholder="0.00" step="0.01" min="0">
+                <span class="form-error" id="originalPriceError"></span>
+                <span style="font-size:12px;color:var(--muted-fg)">Must be positive number</span>
+              </div>
+
+              <!-- Selling Price -->
+              <div class="form-group">
+                <label for="sellingPrice">Selling Price ($) <span style="color:var(--danger);font-weight:700">*</span></label>
+                <input type="number" class="input" id="sellingPrice" placeholder="0.00" step="0.01" min="0">
+                <span class="form-error" id="sellingPriceError"></span>
+                <span style="font-size:12px;color:var(--muted-fg)">Must be ≤ Original Price</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: FILE UPLOADS -->
+        <!-- Images for Object/Deal -->
+        <div class="form-card" style="margin-bottom:24px;display:none" id="photoCard">
+          <div class="form-card-header">
+            <h2 style="font-size:18px;font-weight:700">Photos <span style="color:var(--danger);font-weight:700">*</span></h2>
+            <p class="text-sm" style="color:var(--muted-fg);margin-top:4px">Upload up to 5 photos (<span id="photoCount">0</span>/5)</p>
+          </div>
+          <div class="form-card-body">
+            <div class="photo-grid" id="photoGrid">
+              <label class="photo-add" for="photoInput">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                Add Photo
+              </label>
+              <input type="file" id="photoInput" name="images" form="realAddForm" accept="image/jpeg, image/png, image/webp" multiple style="display:none">
+            </div>
+            <span class="form-error" id="photoError"></span>
+            <span style="font-size:12px;color:var(--muted-fg)">Accepted formats: JPG, PNG, WEBP</span>
+          </div>
+        </div>
+
+        <!-- CV Upload for Skill -->
+        <div class="form-card" style="margin-bottom:24px;display:none" id="cvCard">
+          <div class="form-card-header">
+            <h2 style="font-size:18px;font-weight:700">Curriculum Vitae (CV) <span style="color:var(--danger);font-weight:700">*</span></h2>
+            <p class="text-sm" style="color:var(--muted-fg);margin-top:4px">Upload your CV or relevant document to showcase your expertise</p>
+          </div>
+          <div class="form-card-body">
+            <div style="border:2px dashed var(--border);border-radius:var(--radius-md);padding:24px;text-align:center;background:rgba(124,58,237,.02);cursor:pointer;transition:all 0.2s" id="cvUploadArea">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 12px;color:var(--primary)"><path d="M12 2v20"/><path d="M2 12h20"/></svg>
+              <h3 style="margin:8px 0;font-weight:600">Click to upload or drag & drop</h3>
+              <p style="color:var(--muted-fg);font-size:14px">PDF, DOC, DOCX (Max 10MB)</p>
+              <input type="file" id="cvInput" name="cv" form="realAddForm" accept=".pdf,.doc,.docx" style="display:none">
+            </div>
+            <div id="cvFileDisplay" style="margin-top:12px;padding:12px;background:var(--card);border-radius:var(--radius-md);border:1px solid var(--border);display:none">
+              <div style="display:flex;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--success)"><path d="M12 2v20"/><path d="M2 12h20"/></svg>
+                <span id="cvFileName" style="font-weight:500">Document.pdf</span>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('cvInput').value='';document.getElementById('cvFileDisplay').style.display='none';document.getElementById('cvUploadArea').style.display='block'" style="margin-left:auto">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+              </div>
+            </div>
+            <span class="form-error" id="cvError"></span>
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <% if (error) { %>
+          <div style="background:rgba(239,68,68,.12);border:1px solid #ef4444;border-radius:8px;padding:12px 16px;color:#ef4444;font-size:14px;margin-bottom:16px" role="alert">
+            ⚠ <%= error %>
+          </div>
+        <% } %>
+        <div id="frontendError" style="display:none;background:rgba(239,68,68,.12);border:1px solid #ef4444;border-radius:8px;padding:12px 16px;color:#ef4444;font-size:14px;margin-bottom:16px" role="alert"></div>
+        <div class="flex justify-between gap-4" style="flex-wrap:wrap">
+          <a href="/" class="btn btn-outline btn-lg" style="flex:1;min-width:140px;text-align:center">Cancel</a>
+          <button type="submit" class="btn btn-primary btn-lg" style="flex:2;min-width:200px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Publish Listing
+          </button>
+        </div>
+      </form>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo" style="margin-bottom:8px" aria-label="Swapify Home">
+            <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></div>
+            <span class="logo-text"><span>Swapify</span></span>
+          </a>
+          <p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.</p>
+          <div class="footer-social">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on Facebook" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on X" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6L18 18"/></svg>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on Instagram" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on LinkedIn" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>About Swapify</h4>
+          <ul>
+            <li><a href="/about">About Swapify</a></li>
+            <li><a href="/our-story">Our Story</a></li>
+            <li><a href="/how-it-works">How it Works</a></li>
+            <li><a href="/sustainability">Sustainability</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="/guidelines">Guidelines</a></li>
+            <li><a href="/success-stories">Success Stories</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help Center</h4>
+          <ul>
+            <li><a href="/help-center">Help Center</a></li>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/contact">Contact Support</a></li>
+            <li><a href="/trust-safety">Trust &amp; Safety</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+        <div class="footer-tagline">
+          <span>Less waste. More sharing.</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav"><a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a><a href="/skills"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg><span>Skills</span></a><a href="/add" class="add-btn active"><div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div></a><a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg><span>Messages</span></a><a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg><span>Profile</span></a></nav>
+
+  <script src="/js/app.js"></script>
+
+  <!-- ── Member 2: Frontend + Backend validation bridge ── -->
+  <script>
+  (function () {
+    var form      = document.getElementById('addItemForm');
+    var realForm  = document.getElementById('realAddForm');
+    var errBanner = document.getElementById('frontendError');
+
+    // ── Type-switching UI ──
+    var conditionField = document.getElementById('conditionField');
+    var levelField     = document.getElementById('levelField');
+    var priceCard      = document.getElementById('priceCard');
+    var photoCard      = document.getElementById('photoCard');
+    var cvCard         = document.getElementById('cvCard');
+
+    function applyTypeUI(type) {
+      conditionField.style.display = (type === 'skill') ? 'none' : '';
+      levelField.style.display     = (type === 'skill') ? '' : 'none';
+      priceCard.style.display      = (type === 'deal')  ? '' : 'none';
+      photoCard.style.display      = '';
+      cvCard.style.display         = (type === 'skill') ? '' : 'none';
+    }
+
+    var typeOptions = document.querySelectorAll('.type-option');
+    typeOptions.forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        typeOptions.forEach(function (o) { o.classList.remove('active'); });
+        opt.classList.add('active');
+        applyTypeUI(opt.getAttribute('data-type'));
+      });
+    });
+
+    // Initialize UI for the default active type
+    var initialActive = document.querySelector('.type-option.active');
+    applyTypeUI(initialActive ? initialActive.getAttribute('data-type') : 'object');
+
+    // Preselect type from ?type= query param (e.g. /add?type=deal)
+    (function () {
+      var _t = new URLSearchParams(window.location.search).get('type');
+      if (_t) {
+        var _opt = document.querySelector('.type-option[data-type="' + _t + '"]');
+        if (_opt) _opt.click();
+      }
+    }());
+
+    function showError(msg) {
+      errBanner.textContent = '⚠ ' + msg;
+      errBanner.style.display = 'block';
+      errBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    function clearError() {
+      errBanner.style.display = 'none';
+      errBanner.textContent = '';
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      clearError();
+
+      var titleEl     = document.getElementById('itemTitle');
+      var descEl      = document.getElementById('itemDesc');
+      var title       = titleEl ? titleEl.value.trim() : '';
+      var description = descEl ? descEl.value.trim() : '';
+
+      var activeType = document.querySelector('.type-option.active');
+      var category   = activeType ? activeType.getAttribute('data-type') : '';
+
+      var pointsEl    = document.getElementById('originalPrice');
+      var pointsValue = (category === 'deal' && pointsEl) ? Number(pointsEl.value) || 0 : 0;
+
+      // ── Frontend validation ──
+      if (!title || title.length < 3) {
+        showError('Title is required and must be at least 3 characters.');
+        if (titleEl) titleEl.focus();
+        return;
+      }
+      if (!description || description.length === 0) {
+        showError('Description is required.');
+        if (descEl) descEl.focus();
+        return;
+      }
+      if (!category || !['skill', 'object', 'deal'].includes(category)) {
+        showError('Please select a listing type.');
+        return;
+      }
+
+      var photoInput = document.getElementById('photoInput');
+      if (!photoInput || photoInput.files.length === 0) {
+        showError('At least one photo is required for your listing.');
+        return;
+      }
+
+      var cvInput = document.getElementById('cvInput');
+      if (category === 'skill' && (!cvInput || cvInput.files.length === 0)) {
+        showError('CV document is required.');
+        return;
+      }
+
+      // ── Populate hidden form and submit ──
+      document.getElementById('f_title').value       = title;
+      document.getElementById('f_description').value = description;
+      document.getElementById('f_category').value    = category;
+      document.getElementById('f_pointsValue').value = pointsValue;
+      var levelEl = document.getElementById('itemLevel');
+      document.getElementById('f_level').value = (levelEl && category === 'skill') ? levelEl.value : '';
+
+      var sellingPriceEl = document.getElementById('sellingPrice');
+      var conditionEl = document.getElementById('itemCondition');
+      var locationEl = document.getElementById('itemLocation');
+
+      document.getElementById('f_price').value = (category === 'deal' && sellingPriceEl) ? Number(sellingPriceEl.value) || 0 : '';
+      document.getElementById('f_originalPrice').value = (category === 'deal' && pointsEl) ? Number(pointsEl.value) || 0 : '';
+      document.getElementById('f_condition').value = conditionEl ? conditionEl.value : '';
+      document.getElementById('f_itemLocation').value = locationEl ? locationEl.value : '';
+
+      realForm.submit();
+    });
+  })();
+  </script>
+  <script src="/js/realtime-validation.js"></script>
+</body>
+</html>

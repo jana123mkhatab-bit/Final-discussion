@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart — Swapify</title>
+  <meta name="description" content="Review your cart before checkout on Swapify.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <main class="page-content" style="padding-bottom: 80px;">
+    <div class="container">
+
+    <div class="page-banner banner-purple" style="padding: 40px 0; margin-top: 32px;">
+      <div class="container text-center">
+        <h1 style="font-size: clamp(28px, 4vw, 40px); font-weight: 800; margin-bottom: 12px; font-family: var(--font-heading);">Your Cart 🛒</h1>
+        <p style="color: var(--muted-fg); font-size: 16px;" id="cartCount">0 items</p>
+      </div>
+    </div>
+
+    <div style="max-width: 960px; margin: 40px auto;">
+
+      <!-- Empty State -->
+      <div id="cartEmptyState" style="display:none; flex-direction:column; align-items:center; padding:80px 24px; text-align:center;">
+        <div style="font-size: 72px; margin-bottom: 24px;">🛒</div>
+        <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; font-family: var(--font-heading);">Your cart is empty</h2>
+        <p style="color: var(--muted-fg); margin-bottom: 32px; font-size: 16px; max-width: 360px;">Looks like you haven't added anything yet. Start exploring our deals!</p>
+        <a href="/deals" class="btn btn-primary btn-lg">Start Shopping</a>
+      </div>
+
+      <!-- Cart Items + Summary layout -->
+      <div style="display: grid; grid-template-columns: 1fr 340px; gap: 32px; align-items: start;" id="cartLayout">
+
+        <!-- LEFT: Cart Items -->
+        <div>
+          <div id="cartItemsContainer"></div>
+        </div>
+
+        <!-- RIGHT: Order Summary -->
+        <div id="cartSummary" style="display:none; position: sticky; top: 88px;">
+          <div class="card" style="padding: 28px; border: 1px solid var(--border); border-radius: var(--radius-lg);">
+            <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; font-family: var(--font-heading); border-bottom: 1px solid var(--border); padding-bottom: 16px;">Order Summary</h2>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:14px; color:var(--muted-fg);">
+              <span>Subtotal</span><span id="cartTotal">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:14px; color:var(--muted-fg);">
+              <span>Shipping</span><span>$5.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-top:16px; border-top:2px dashed var(--border); font-size:20px; font-weight:800; margin-bottom:24px;">
+              <span>Total</span>
+              <span id="cartGrandTotal" style="color:var(--primary);">$0.00</span>
+            </div>
+            <div style="font-size:12px; color:var(--muted-fg); margin-bottom:20px; padding: 10px; background:rgba(16,185,129,.08); border-radius:var(--radius-sm); border-left:3px solid var(--success);">
+              🚚 Estimated delivery: <strong>25–35 mins</strong>
+            </div>
+            <button class="btn btn-primary w-full btn-lg" onclick="checkoutCart()" style="margin-bottom:12px;">Proceed to Checkout</button>
+            <a href="/deals" class="btn btn-outline w-full">Continue Shopping</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart Recommendations -->
+      <div id="cartRecommendations" style="display:none; margin-top: 48px;">
+        <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 20px; font-family: var(--font-heading);">You may also like 💡</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" id="recGrid"></div>
+      </div>
+    </div>
+    </div> <!-- /.container -->
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer"><div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><a href="/" class="logo" style="margin-bottom:8px"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></div><span class="logo-text"><span>Swapify</span></span></a><p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.</p></div>
+      <div class="footer-col"><h4>About Swapify</h4><ul><li><a href="/our-story">Our Story</a></li><li><a href="/how-it-works">How it Works</a></li></ul></div>
+      <div class="footer-col"><h4>Help Center</h4><ul><li><a href="/faq">FAQ</a></li><li><a href="/contact">Contact Support</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Swapify. All rights reserved.</p></div>
+  </div></footer>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/cart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      renderCart();
+      updateGrandTotal();
+    });
+
+    // Keep grand total synced (subtotal + $5 shipping)
+    const _origRenderCart = window.renderCart;
+    window.renderCart = function() {
+      if (_origRenderCart) _origRenderCart();
+      updateGrandTotal();
+    };
+
+    function updateGrandTotal() {
+      const grand = document.getElementById('cartGrandTotal');
+      if (grand) {
+        const total = SwapifyCart.total();
+        grand.textContent = '$' + (total + (total > 0 ? 5 : 0)).toFixed(2);
+      }
+    }
+
+    function checkoutCart() {
+      const items = SwapifyCart.getAll();
+      if (items.length === 0) {
+        if (window.SwapifyUI) window.SwapifyUI.toast('Your cart is empty!', 'warning');
+        return;
+      }
+      window.location.href = '/payment?cart=true';
+    }
+  </script>
+</body>
+</html>

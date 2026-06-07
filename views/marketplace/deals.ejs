@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Half Price Deals — Swapify</title>
+  <meta name="description" content="Amazing items at 50% off or more. Save money and reduce waste.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <!-- DEALS MARQUEE -->
+  <div class="marquee-wrapper" aria-label="Hot deals ticker" role="marquee">
+    <div class="marquee-label">🔥 Hot Deals</div>
+    <div class="marquee-viewport">
+      <div class="marquee-track">
+        <%
+          /* Render the ticker twice so the CSS translateX(-50%) loop is seamless */
+          var marqueeItems = items.slice(0, 6);
+          for (var _mi = 0; _mi < 2; _mi++) {
+            marqueeItems.forEach(function(d) {
+              var disc = (d.originalPrice && d.price && d.originalPrice > 0)
+                ? Math.round((1 - d.price / d.originalPrice) * 100) : 0;
+        %>
+        <span class="marquee-item"><span class="marquee-badge">-<%= disc %>%</span> <%= d.title %> &nbsp;·&nbsp;
+          <strong>$<%= d.price %></strong> <s>$<%= d.originalPrice %></s></span>
+        <span class="marquee-sep">✦</span>
+        <% }); } %>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* ── Marquee wrapper ───────────────────────────────────────── */
+    .marquee-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: linear-gradient(90deg, var(--primary) 0%, hsl(270, 80%, 55%) 100%);
+      color: #fff;
+      padding: 10px 0;
+      overflow: hidden;
+      position: relative;
+      z-index: 10;
+      /*margin-top: 24px;*/
+      margin-bottom: 24px;
+    }
+
+    /* Pill label on the left */
+    .marquee-label {
+      flex-shrink: 0;
+      background: rgba(0, 0, 0, .25);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 4px 16px;
+      border-radius: 0 999px 999px 0;
+      margin-right: 24px;
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    /* Clipping window — hides what's outside */
+    .marquee-viewport {
+      flex: 1;
+      overflow: hidden;
+      /* soft fade edges */
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 5%, #000 95%, transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 0%, #000 5%, #000 95%, transparent 100%);
+    }
+
+    /*
+     * The track holds content TWICE (200% natural width).
+     * Translating by exactly -50% moves us from the start of copy-1
+     * to the start of copy-2 — pixel-perfect, no gap, no jump.
+     */
+    .marquee-track {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      will-change: transform;
+      animation: marquee-scroll 28s linear infinite;
+    }
+
+    /* Pause on hover so users can read */
+    .marquee-wrapper:hover .marquee-track {
+      animation-play-state: paused;
+    }
+
+    @keyframes marquee-scroll {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Individual items */
+    .marquee-item {
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 0 20px;
+      opacity: .95;
+      letter-spacing: .01em;
+    }
+
+    .marquee-item s {
+      opacity: .6;
+      margin-left: 4px;
+      font-weight: 400;
+    }
+
+    .marquee-item strong {
+      font-weight: 700;
+    }
+
+    /* Discount badge pill */
+    .marquee-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, .22);
+      border: 1px solid rgba(255, 255, 255, .35);
+      border-radius: 999px;
+      padding: 1px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-right: 6px;
+      letter-spacing: .04em;
+      vertical-align: middle;
+    }
+
+    /* Separator dot */
+    .marquee-sep {
+      font-size: 10px;
+      opacity: .45;
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+  </style>
+
+  <!-- DEALS BANNER -->
+  <section class="section" style="padding-top:32px;padding-bottom:0">
+    <div class="container">
+      <div class="page-banner banner-beige" style="padding:32px">
+        <div style="position:relative;z-index:1;max-width:640px">
+          <h1 style="font-size:36px;font-weight:800;margin-bottom:12px">Half Price Deals</h1>
+          <p class="text-lg opacity-80" style="margin-bottom:24px">Amazing items at 50% off or more. Save money and reduce waste.</p>
+          <div class="flex gap-4" style="flex-wrap:wrap">
+            <div style="position:relative;flex:1;min-width:200px">
+              <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+              <input type="text" id="dealSearchInput" class="input input-search" placeholder="What deals are you looking for?" autocomplete="off">
+            </div>
+            <button class="btn btn-primary" id="dealFilterBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
+              Filters
+            </button>
+          </div>
+        </div>
+        <div class="emoji">🏷️</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- FILTER PANEL (hidden by default) -->
+  <section id="filterPanel" style="display:none;padding:0">
+    <div class="container" style="padding-top:16px;padding-bottom:0">
+      <div class="card card-body" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Condition</label>
+          <select id="filterCondition" class="input" style="margin-top:6px;appearance:none">
+            <option value="">All Conditions</option>
+            <option value="new">New</option>
+            <option value="likenew">Like New</option>
+            <option value="good">Good</option>
+            <option value="used">Used</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Min Discount</label>
+          <select id="filterDiscount" class="input" style="margin-top:6px;appearance:none">
+            <option value="0">Any Discount</option>
+            <option value="50">50%+ Off</option>
+            <option value="55">55%+ Off</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <button class="btn btn-primary" id="applyFiltersBtn">Apply Filters</button>
+          <button class="btn btn-ghost" id="resetFiltersBtn">Reset</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACTIVE FILTER CHIPS -->
+  <div id="activeFilterChips" class="container" style="padding-top:12px;display:none">
+    <div id="chipsRow" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"></div>
+  </div>
+
+  <!-- DEALS GRID -->
+  <section class="section" id="deals-grid">
+    <div class="container">
+      <div class="flex items-center justify-between" style="margin-bottom:32px;flex-wrap:wrap;gap:12px">
+        <h2 style="font-size:24px;font-weight:700;display:flex;align-items:center;gap:8px"><svg width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+            <path d="M21.801 10A10 10 0 1 1 17 3.335" />
+            <path d="m9.5 11.5 5-5" />
+            <circle cx="11" cy="11" r="1" />
+            <circle cx="14" cy="14" r="1" />
+          </svg> Trending Deals</h2>
+        <p id="resultsCount" style="color:var(--muted-fg);font-size:14px;font-weight:500;margin:0"></p>
+      </div>
+
+      <div class="grid grid-4 gap-6" id="dealsGrid">
+        <% var fadeClasses = ['fade-in','fade-in fade-in-delay-1','fade-in fade-in-delay-2','fade-in fade-in-delay-3']; %>
+        <% items.forEach(function(deal, i) {
+          var disc       = (deal.originalPrice && deal.price && deal.originalPrice > 0)
+                           ? Math.round((1 - deal.price / deal.originalPrice) * 100) : 0;
+          var sellerName = (deal.creator && deal.creator.username) ? deal.creator.username : 'Unknown';
+          var imgSrc     = (deal.images && deal.images[0]) ? deal.images[0] : '/img/placeholder.jpg';
+          var dealId     = deal._id.toString();
+          var fadeCls    = fadeClasses[i % fadeClasses.length];
+          var isOwner    = (currentUser && deal.creator && String(deal.creator._id) === String(currentUser._id));
+        %>
+        <div class="item-card deal-card <%= fadeCls %>" data-deal-id="<%= dealId %>" data-item-id="<%= dealId %>">
+          <div class="item-card-img">
+            <img class="card-img" src="<%= imgSrc %>" alt="<%= deal.title %>">
+            <div class="item-card-badges"><span class="badge badge-discount">-<%= disc %>%</span></div>
+            <button class="item-card-fav<%= userFavorites.includes(dealId) ? ' active' : '' %>" id="fav-deal-<%= i+1 %>">
+              <svg width="16" height="16" viewBox="0 0 24 24"
+                fill="<%= userFavorites.includes(dealId) ? '#FF4D4D' : 'none' %>"
+                stroke="<%= userFavorites.includes(dealId) ? '#FF4D4D' : 'currentColor' %>"
+                stroke-width="2">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="item-card-body">
+            <h3 class="item-card-title"><%= deal.title %></h3>
+            <div class="deal-price">
+              <span class="current">$<%= typeof deal.price === 'number' ? deal.price : (deal.pointsValue || 0) %></span>
+              <span class="original">$<%= typeof deal.originalPrice === 'number' ? deal.originalPrice : (deal.pointsValue || 0) %></span>
+            </div>
+            <div class="deal-details">
+              <span>Condition: <strong><%= deal.condition || 'Good' %></strong></span>
+              <span>Seller: 
+                <% if (deal.creator && deal.creator._id) { %>
+                  <a href="/users/<%= deal.creator._id %>" style="color:var(--primary);text-decoration:none;font-weight:700" title="View <%= sellerName %>'s profile"><%= sellerName %></a>
+                <% } else { %>
+                  <strong><%= sellerName %></strong>
+                <% } %>
+              </span>
+            </div>
+            <% if (isOwner) { %>
+              <button class="btn btn-outline w-full" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M8 12h8"/>
+                </svg> Your Deal
+              </button>
+            <% } else { %>
+              <button class="btn btn-secondary w-full" onclick="window.location='/payment?id=<%= dealId %>'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+              </svg> Buy Now
+            </button>
+              <button class="btn btn-outline w-full add-to-cart-btn" style="margin-top:8px"
+                data-cart-id="<%= dealId %>"
+                data-cart-name="<%= deal.title %>"
+                data-cart-price="<%= deal.price || 0 %>"
+                data-cart-img="<%= imgSrc %>"
+                data-cart-condition="<%= deal.condition || 'N/A' %>"
+                data-cart-category="<%= deal.category || 'deal' %>">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+              </svg> Add to Cart
+            </button>
+            <% } %>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+      <!-- Empty state -->
+      <div id="dealsEmpty" style="display:none">
+        <div class="empty-state">
+          <div class="empty-state-icon" style="font-size:48px">🔍</div>
+          <h3>No deals found</h3>
+          <p>Try adjusting your search or filters to find more deals.</p>
+          <button class="btn btn-primary" id="emptyResetBtn">Clear All Filters</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand"><a href="/" class="logo" style="margin-bottom:8px">
+            <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M8 3L4 7l4 4" />
+                <path d="M4 7h16" />
+                <path d="M16 21l4-4-4-4" />
+                <path d="M20 17H4" />
+              </svg></div><span class="logo-text"><span>Swapify</span></span>
+          </a>
+          <p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.
+          </p>
+          <div class="footer-social"><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+              </svg></a><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M18 6L6 18" />
+                <path d="M6 6L18 18" />
+              </svg></a><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg></a><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                <rect width="4" height="12" x="2" y="9" />
+                <circle cx="4" cy="4" r="2" />
+              </svg></a></div>
+        </div>
+        <div class="footer-col">
+          <h4>About Swapify</h4>
+          <ul>
+            <li><a href="/our-story">Our Story</a></li>
+            <li><a href="/how-it-works">How it Works</a></li>
+            <li><a href="/sustainability">Sustainability</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="/guidelines">Guidelines</a></li>
+            <li><a href="/success-stories">Success Stories</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help Center</h4>
+          <ul>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/contact">Contact Support</a></li>
+            <li><a href="/trust-safety">Trust &amp; Safety</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+        <div class="footer-tagline"><span>Less waste. More sharing.</span><svg width="16" height="16"
+            viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2">
+            <path
+              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          </svg></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav"><a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg><span>Home</span></a><a href="/skills"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <path d="M8 3L4 7l4 4" />
+        <path d="M4 7h16" />
+        <path d="M16 21l4-4-4-4" />
+        <path d="M20 17H4" />
+      </svg><span>Skills</span></a><a href="/add" class="add-btn">
+      <div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M5 12h14" />
+          <path d="M12 5v14" />
+        </svg></div>
+    </a><a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z" />
+      </svg><span>Messages</span></a><a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="5" />
+        <path d="M20 21a8 8 0 1 0-16 0" />
+      </svg><span>Profile</span></a></nav>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/cart.js"></script>
+  <script>
+    window._userFavoriteIds = <%- JSON.stringify(userFavorites) %>;
+    window._isLoggedIn = <%= locals.currentUser ? 'true' : 'false' %>;
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Wire up Add to Cart buttons using data attributes
+      document.querySelectorAll('.add-to-cart-btn[data-cart-id]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var itemData = {
+            id: btn.dataset.cartId,
+            name: btn.dataset.cartName,
+            price: parseFloat(btn.dataset.cartPrice) || 0,
+            img: btn.dataset.cartImg,
+            condition: btn.dataset.cartCondition,
+            category: btn.dataset.cartCategory,
+            stock: 1
+          };
+          if (window.SwapifyCart) {
+            SwapifyCart.add(itemData.id, itemData);
+          }
+        });
+      });
+
+      // --- FILTERING LOGIC ---
+      const searchInput = document.getElementById('dealSearchInput');
+      const filterBtn = document.getElementById('dealFilterBtn');
+      const filterPanel = document.getElementById('filterPanel');
+      const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+      const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+      const emptyResetBtn = document.getElementById('emptyResetBtn');
+      
+      const filterCondition = document.getElementById('filterCondition');
+      const filterDiscount = document.getElementById('filterDiscount');
+      
+      const activeFilterChips = document.getElementById('activeFilterChips');
+      const chipsRow = document.getElementById('chipsRow');
+      const resultsCount = document.getElementById('resultsCount');
+      const dealsGrid = document.getElementById('dealsGrid');
+      const dealsEmpty = document.getElementById('dealsEmpty');
+      const cards = dealsGrid ? Array.from(dealsGrid.querySelectorAll('.deal-card')) : [];
+
+      let filters = {
+        query: '',
+        condition: '',
+        minDiscount: 0
+      };
+
+      // Toggle Filter Panel
+      if (filterBtn && filterPanel) {
+        filterBtn.addEventListener('click', function () {
+          const open = filterPanel.style.display !== 'none';
+          filterPanel.style.display = open ? 'none' : 'block';
+          filterBtn.classList.toggle('btn-outline', !open);
+          filters.query = searchInput ? searchInput.value : '';
+          refreshDeals();
+        });
+      }
+
+      function refreshDeals() {
+        let visibleCount = 0;
+        const query = filters.query.toLowerCase().trim();
+
+        cards.forEach(card => {
+          // Parse title
+          const titleEl = card.querySelector('.item-card-title');
+          const title = titleEl ? titleEl.textContent.toLowerCase() : '';
+
+          // Parse condition
+          let condition = '';
+          const detailsEl = card.querySelector('.deal-details');
+          if (detailsEl) {
+            const spans = detailsEl.querySelectorAll('span');
+            for (const span of spans) {
+              if (span.textContent.includes('Condition:')) {
+                const strong = span.querySelector('strong');
+                if (strong) condition = strong.textContent.trim().toLowerCase();
+              }
+            }
+          }
+
+          // Parse discount
+          let discount = 0;
+          const badgeEl = card.querySelector('.badge-discount');
+          if (badgeEl) {
+            const match = badgeEl.textContent.match(/-(\d+)%/);
+            if (match) {
+              discount = parseInt(match[1]);
+            }
+          }
+
+          // Match query
+          const matchesQuery = !query || title.includes(query);
+
+          // Match condition
+          let matchesCondition = true;
+          if (filters.condition) {
+            const filterCondLower = filters.condition.toLowerCase();
+            const condClean = condition.replace(/\s+/g, '');
+            if (filterCondLower === 'new') {
+              matchesCondition = (condition === 'new' || condition.startsWith('new '));
+            } else {
+              matchesCondition = condClean === filterCondLower;
+            }
+          }
+
+          // Match discount
+          const matchesDiscount = discount >= filters.minDiscount;
+
+          if (matchesQuery && matchesCondition && matchesDiscount) {
+            card.style.display = '';
+            visibleCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        // Update results UI
+        if (dealsGrid) {
+          dealsGrid.style.display = visibleCount === 0 ? 'none' : 'grid';
+        }
+        if (dealsEmpty) {
+          dealsEmpty.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        if (resultsCount) {
+          resultsCount.textContent = `Showing ${visibleCount} deal${visibleCount !== 1 ? 's' : ''}`;
+        }
+
+        updateChips();
+      }
+
+      function updateChips() {
+        if (!chipsRow || !activeFilterChips) return;
+        chipsRow.innerHTML = '';
+        let hasActiveFilters = false;
+
+        if (filters.condition) {
+          hasActiveFilters = true;
+          createChip(`Condition: ${filters.condition}`, () => {
+            filters.condition = '';
+            if (filterCondition) filterCondition.value = '';
+            refreshDeals();
+          });
+        }
+
+        if (filters.minDiscount > 0) {
+          hasActiveFilters = true;
+          createChip(`Discount: ${filters.minDiscount}%+ Off`, () => {
+            filters.minDiscount = 0;
+            if (filterDiscount) filterDiscount.value = '0';
+            refreshDeals();
+          });
+        }
+
+        if (hasActiveFilters) {
+          activeFilterChips.style.display = 'block';
+          
+          // Clear all button
+          const clearAllBtn = document.createElement('button');
+          clearAllBtn.className = 'btn btn-ghost btn-sm';
+          clearAllBtn.style.color = 'var(--primary)';
+          clearAllBtn.style.fontWeight = '600';
+          clearAllBtn.textContent = 'Clear All';
+          clearAllBtn.addEventListener('click', resetAll);
+          chipsRow.appendChild(clearAllBtn);
+        } else {
+          activeFilterChips.style.display = 'none';
+        }
+      }
+
+      function createChip(text, onRemove) {
+        const chip = document.createElement('div');
+        chip.className = 'filter-chip';
+        chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--muted);border:1px solid var(--border);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:500;color:var(--fg)';
+        
+        const label = document.createElement('span');
+        label.textContent = text;
+        chip.appendChild(label);
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted-fg);padding:0 2px;line-height:1';
+        closeBtn.addEventListener('click', onRemove);
+        chip.appendChild(closeBtn);
+        
+        chipsRow.appendChild(chip);
+      }
+
+      function resetAll() {
+        filters.query = '';
+        filters.condition = '';
+        filters.minDiscount = 0;
+        if (searchInput) searchInput.value = '';
+        if (filterCondition) filterCondition.value = '';
+        if (filterDiscount) filterDiscount.value = '0';
+        refreshDeals();
+      }
+
+      // Input listener for search box
+      if (searchInput) {
+        searchInput.addEventListener('input', function (e) {
+          filters.query = e.target.value;
+          refreshDeals();
+        });
+      }
+
+      // Apply button
+      if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', function () {
+          if (filterCondition) filters.condition = filterCondition.value;
+          if (filterDiscount) filters.minDiscount = parseInt(filterDiscount.value) || 0;
+          refreshDeals();
+          if (filterPanel) filterPanel.style.display = 'none';
+          if (filterBtn) filterBtn.classList.remove('btn-outline');
+        });
+      }
+
+      // Reset button
+      if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', resetAll);
+      }
+
+      // Empty state reset button
+      if (emptyResetBtn) {
+        emptyResetBtn.addEventListener('click', () => {
+          if (searchInput) {
+            searchInput.value = '';
+            filters.query = '';
+          }
+          resetAll();
+        });
+      }
+
+      // Expose setDealSearchQuery
+      window.setDealSearchQuery = function (q) {
+        if (searchInput) searchInput.value = q;
+        filters.query = q;
+        refreshDeals();
+      };
+
+      // Initial run to populate results count
+      refreshDeals();
+    });
+  </script>
+</body>
+
+</html>

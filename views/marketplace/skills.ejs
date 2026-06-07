@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swap Skills — Swapify</title>
+  <meta name="description" content="Exchange knowledge with the community. Teach what you know, learn what you don't.">
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- BANNER + SEARCH -->
+  <section class="section" style="padding-top:32px;padding-bottom:0">
+    <div class="container">
+      <div class="page-banner banner-beige" style="padding:32px">
+        <div style="position:relative;z-index:1;max-width:640px">
+          <h1 style="font-size:36px;font-weight:800;margin-bottom:12px">Swap Skills</h1>
+          <p class="text-lg opacity-80" style="margin-bottom:24px">Exchange knowledge with the community. Teach what you
+            know, learn what you don't.</p>
+          <div class="flex gap-4" style="flex-wrap:wrap">
+            <div style="position:relative;flex:1;min-width:200px">
+              <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input type="text" id="skillSearchInput" class="input input-search"
+                placeholder="What do you want to learn?" autocomplete="off">
+            </div>
+            <button class="btn btn-primary" id="skillFilterBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+              Filters
+            </button>
+          </div>
+        </div>
+        <div class="emoji">🧠</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FILTER PANEL (hidden by default) -->
+  <section id="filterPanel" style="display:none;padding:0">
+    <div class="container" style="padding-top:16px;padding-bottom:0">
+      <div class="card card-body" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label
+            style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Level</label>
+          <select id="filterLevel" class="input" style="margin-top:6px;appearance:none">
+            <option value="">All Levels</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+            <option value="expert">Expert</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label
+            style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Location</label>
+          <select id="filterLocation" class="input" style="margin-top:6px;appearance:none">
+            <option value="">Anywhere</option>
+            <option value="online">Online</option>
+            <option value="nearby">Nearby</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label
+            style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Min
+            Rating</label>
+          <select id="filterRating" class="input" style="margin-top:6px;appearance:none">
+            <option value="0">Any Rating</option>
+            <option value="4">4+ Stars</option>
+            <option value="4.5">4.5+ Stars</option>
+            <option value="5">5 Stars</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <button class="btn btn-primary" id="applyFiltersBtn">Apply Filters</button>
+          <button class="btn btn-ghost" id="resetFiltersBtn">Reset</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACTIVE FILTER CHIPS -->
+  <div id="activeFilterChips" class="container" style="padding-top:12px;display:none">
+    <div id="chipsRow" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"></div>
+  </div>
+
+  <!-- RESULTS COUNT -->
+  <section class="section" style="padding-top:24px;padding-bottom:0">
+    <div class="container">
+      <div class="flex justify-between items-center" style="margin-bottom:20px;flex-wrap:wrap;gap:8px">
+        <p id="resultsCount" style="color:var(--muted-fg);font-size:14px;font-weight:500"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SKILLS GRID -->
+  <section class="section" style="padding-top:8px">
+    <div class="container">
+      <div class="grid grid-3 gap-6" id="skillsGrid"></div>
+      <!-- Empty state -->
+      <div id="skillsEmpty" style="display:none">
+        <div class="empty-state">
+          <div class="empty-state-icon" style="font-size:48px">🔍</div>
+          <h3>No skills found</h3>
+          <p>Try adjusting your search or filters to find more skill swaps.</p>
+          <button class="btn btn-primary" id="emptyResetBtn">Clear All Filters</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo" style="margin-bottom:8px" aria-label="Swapify Home">
+            <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></div>
+            <span class="logo-text"><span>Swapify</span></span>
+          </a>
+          <p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.</p>
+          <div class="footer-social">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on Facebook" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on X" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6L18 18"/></svg>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on Instagram" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on LinkedIn" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>About Swapify</h4>
+          <ul>
+            <li><a href="/about">About Swapify</a></li>
+            <li><a href="/our-story">Our Story</a></li>
+            <li><a href="/how-it-works">How it Works</a></li>
+            <li><a href="/sustainability">Sustainability</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="/guidelines">Guidelines</a></li>
+            <li><a href="/success-stories">Success Stories</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help Center</h4>
+          <ul>
+            <li><a href="/help-center">Help Center</a></li>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/contact">Contact Support</a></li>
+            <li><a href="/trust-safety">Trust &amp; Safety</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+        <div class="footer-tagline">
+          <span>Less waste. More sharing.</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav"><a href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg><span>Home</span></a><a href="/skills" class="active"><svg width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3L4 7l4 4" />
+        <path d="M4 7h16" />
+        <path d="M16 21l4-4-4-4" />
+        <path d="M20 17H4" />
+      </svg><span>Skills</span></a><a href="/add" class="add-btn">
+      <div class="add-btn-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M5 12h14" />
+          <path d="M12 5v14" />
+        </svg></div>
+    </a><a href="/messages"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z" />
+      </svg><span>Messages</span></a><a href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="5" />
+        <path d="M20 21a8 8 0 1 0-16 0" />
+      </svg><span>Profile</span></a></nav>
+
+  <script src="/js/app.js"></script>
+  <% if (locals.currentUser) { %>
+  <script>
+  (function() {
+    var u = <%- JSON.stringify({ id: String(locals.currentUser._id), email: locals.currentUser.email, name: locals.currentUser.username, role: (locals.currentUser.role || 'user') }) %>;
+    if (window.SwapifyStore) SwapifyStore.setSession(u);
+  })();
+  </script>
+  <% } %>
+  <script type="application/json" id="__mySkillsData"><%- JSON.stringify((locals.mySkills || []).map(function(s){ return { id: String(s._id), title: s.title }; })) %></script>
+
+  <!-- ═══ OFFER-SKILL MODAL ═══ -->
+  <div id="offerSkillOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:2000;align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:440px;position:relative;animation:fadeUp .25s ease">
+      <button id="offerSkillClose" style="position:absolute;top:14px;right:16px;background:none;border:none;cursor:pointer;color:var(--muted-fg);font-size:24px;line-height:1;padding:4px">&times;</button>
+      <h3 style="font-size:20px;font-weight:700;margin-bottom:6px">Confirm Your Offer</h3>
+      <p style="font-size:14px;color:var(--muted-fg);margin-bottom:20px">Select one of your skills to offer in exchange.</p>
+      <div class="form-group">
+        <label class="form-label">I Offer (from My Skills) *</label>
+        <select class="input" id="offerSkillSelect"><option value="">— Select a skill —</option></select>
+        <span id="offerSkillErr" style="font-size:12px;color:#ef4444"></span>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:16px">
+        <button class="btn btn-primary" style="flex:1" id="confirmOfferBtn">Confirm &amp; Request Swap</button>
+        <button class="btn btn-ghost" id="offerSkillCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <style>@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}</style>
+  <script>
+    (function () {
+      'use strict';
+
+      /* ── MASTER DATA: server-rendered DB skills ───────────── */
+      var _currentUserId = '<%- (locals.currentUser && locals.currentUser._id) ? String(locals.currentUser._id) : "" %>';
+      window._userFavoriteIds = window._userFavoriteIds || <%- JSON.stringify(locals.userFavorites || []) %>;
+
+      var ALL_SKILLS = <%- JSON.stringify(items.map(function(i) {
+        var loc = i.itemLocation || 'Online';
+        var lvl = i.level || 'any';
+        var creator = i.creator || {};
+        return {
+          id:          String(i._id),
+          userId:      (creator._id) ? String(creator._id) : '',
+          offers:      i.title,
+          requests:    (i.wantsInExchange || i.description || '').substring(0, 60) || 'Open to swap',
+          level:       lvl.charAt(0).toUpperCase() + lvl.slice(1),
+          levelTag:    lvl.toLowerCase(),
+          location:    loc,
+          locationTag: loc.toLowerCase().includes('online') ? 'online' : 'nearby',
+          cachedRating:      i.cachedRating || 4.5,
+          name:        creator.username || 'Unknown',
+          avatar:      (creator.profileImage && creator.profileImage.trim()) ? creator.profileImage : '/img/stock_pfp.jpg',
+          image:       (i.images && i.images[0]) ? i.images[0] : ''
+        };
+      })) %>;
+
+      /* ── STATE ────────────────────────────────────────────── */
+      var state = { query: '', level: '', location: '', minRating: 0 };
+
+      /* ── DOM ──────────────────────────────────────────────── */
+      var searchInput = document.getElementById('skillSearchInput');
+      var filterBtn = document.getElementById('skillFilterBtn');
+      var filterPanel = document.getElementById('filterPanel');
+      var filterLevel = document.getElementById('filterLevel');
+      var filterLoc = document.getElementById('filterLocation');
+      var filterRating = document.getElementById('filterRating');
+      var applyBtn = document.getElementById('applyFiltersBtn');
+      var resetBtn = document.getElementById('resetFiltersBtn');
+      var emptyResetBtn = document.getElementById('emptyResetBtn');
+      var grid = document.getElementById('skillsGrid');
+      var emptyEl = document.getElementById('skillsEmpty');
+      var countEl = document.getElementById('resultsCount');
+      var chipsPanel = document.getElementById('activeFilterChips');
+      var chipsRow = document.getElementById('chipsRow');
+
+      /* ── FILTER ENGINE (never mutates ALL_SKILLS) ─────────── */
+      function applyFilters() {
+        var q = state.query.trim().toLowerCase();
+        var lvl = state.level.toLowerCase();
+        var loc = state.location.toLowerCase();
+        var min = parseFloat(state.minRating) || 0;
+
+        return ALL_SKILLS.filter(function (s) {
+          var matchQ = !q || s.offers.toLowerCase().includes(q) || s.requests.toLowerCase().includes(q) || s.name.toLowerCase().includes(q);
+          var matchLvl = !lvl || s.levelTag === lvl;
+          var matchLoc = !loc || s.locationTag === loc;
+          var matchRat = s.cachedRating >= min;
+          return matchQ && matchLvl && matchLoc && matchRat;
+        });
+      }
+
+      /* ── RENDER CARDS ─────────────────────────────────────── */
+      function renderCards(skills) {
+        grid.innerHTML = '';
+        emptyEl.style.display = 'none';
+
+        var total = ALL_SKILLS.length;
+        var found = skills.length;
+        countEl.textContent = found === total
+          ? 'Showing all ' + total + ' skills'
+          : 'Showing ' + found + ' of ' + total + ' skills';
+
+        if (found === 0) {
+          emptyEl.style.display = 'block';
+          return;
+        }
+
+        var frag = document.createDocumentFragment();
+        skills.forEach(function (s, i) {
+          var delay = ['', 'fade-in-delay-1', 'fade-in-delay-2'][i % 3];
+          var div = document.createElement('div');
+          div.className = 'skill-card fade-in ' + delay;
+          div.style.cursor = 'pointer';
+          div.setAttribute('data-skill-id', s.id);
+          var isFav = (window._userFavoriteIds || []).indexOf(s.id) > -1 ? ' active' : '';
+          div.innerHTML =
+            '<div style="position:relative">' +
+              (s.image ? '<div style="height:140px;overflow:hidden;border-radius:var(--radius) var(--radius) 0 0"><img src="' + s.image + '" alt="' + escapeHtml(s.offers) + '" style="width:100%;height:100%;object-fit:cover"></div>' : '') +
+              '<button class="item-card-fav' + isFav + '" data-item-id="' + s.id + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>' +
+            '</div>' +
+            '<div class="skill-card-header">' +
+            '<div class="skill-card-user">' +
+            '<a href="/users/' + s.userId + '" title="View ' + escapeHtml(s.name) + '\'s profile" style="display:block;flex-shrink:0;border-radius:50%;overflow:hidden;text-decoration:none" onclick="event.stopPropagation()">' +
+            '<img src="' + s.avatar + '" alt="' + escapeHtml(s.name) + '" style="display:block">' +
+            '</a>' +
+            '<div class="skill-card-info">' +
+            '<h3><a href="/users/' + s.userId + '" onclick="event.stopPropagation()" title="View ' + escapeHtml(s.name) + '\'s profile" style="color:inherit;text-decoration:none;font-weight:inherit">' + escapeHtml(s.name) + '</a></h3>' +
+            '<div class="item-card-rating"><svg viewBox="0 0 24 24" width="14" height="14"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ' + s.cachedRating.toFixed(1) + '</div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="skill-card-meta">' +
+            '<span class="flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' + s.location + '</span>' +
+            '<span class="level">' + s.level + '</span>' +
+            '</div>' +
+            '</div>' +
+            '<div class="skill-swap-box">' +
+            '<div><span class="label label-offers">OFFERS</span><span class="value">' + s.offers + '</span></div>' +
+            '<div class="skill-swap-divider"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></span></div>' +
+            '<div><span class="label label-requests">REQUESTS</span><span class="value">' + s.requests + '</span></div>' +
+            '</div>' +
+            '<button class="btn btn-primary w-full request-swap-btn" data-skill-id="' + s.id + '">' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg> Request Swap' +
+            '</button>';
+          frag.appendChild(div);
+        });
+        grid.appendChild(frag);
+
+        if (window.SwapifyInitTiltCards) {
+          window.SwapifyInitTiltCards(grid);
+        }
+
+        /* trigger fade-in */
+        setTimeout(function () {
+          grid.querySelectorAll('.fade-in').forEach(function (el) { el.classList.add('visible'); });
+        }, 60);
+      }
+
+      /* ── FILTER CHIPS ─────────────────────────────────────── */
+      function renderChips() {
+        chipsRow.innerHTML = '';
+        var chips = [];
+        if (state.query) chips.push({ label: '"' + state.query + '"', clear: function () { state.query = ''; searchInput.value = ''; } });
+        if (state.level) chips.push({ label: 'Level: ' + state.level, clear: function () { state.level = ''; filterLevel.value = ''; } });
+        if (state.location) chips.push({ label: 'Location: ' + state.location, clear: function () { state.location = ''; filterLoc.value = ''; } });
+        if (state.minRating) chips.push({ label: state.minRating + '+ Stars', clear: function () { state.minRating = 0; filterRating.value = '0'; } });
+
+        chipsPanel.style.display = chips.length ? 'block' : 'none';
+        chips.forEach(function (chip) {
+          var btn = document.createElement('button');
+          btn.className = 'badge badge-outline';
+          btn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 12px;font-size:13px;transition:all .2s';
+          btn.innerHTML = chip.label + ' <span style="font-size:16px;line-height:1">&times;</span>';
+          btn.onclick = function () { chip.clear(); refresh(); };
+          chipsRow.appendChild(btn);
+        });
+      }
+
+      /* ── MAIN REFRESH ─────────────────────────────────────── */
+      function refresh() {
+        var results = applyFilters();
+        renderCards(results);
+        renderChips();
+      }
+
+      /* ── RESET ────────────────────────────────────────────── */
+      function resetAll() {
+        state.query = ''; state.level = ''; state.location = ''; state.minRating = 0;
+        searchInput.value = '';
+        filterLevel.value = '';
+        filterLoc.value = '';
+        filterRating.value = '0';
+        refresh();
+      }
+
+      /* ── EVENTS ───────────────────────────────────────────── */
+
+      /* Live search on each keystroke */
+      searchInput.addEventListener('input', function () {
+        state.query = searchInput.value;
+        refresh();
+      });
+
+      /* Enter key also triggers search */
+      searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { state.query = searchInput.value; refresh(); }
+      });
+
+      /* Toggle filter panel — also applies current query so results are visible */
+      filterBtn.addEventListener('click', function () {
+        var open = filterPanel.style.display !== 'none';
+        if (open) {
+          filterPanel.style.display = 'none';
+        } else {
+          filterPanel.style.display = 'block';
+          filterPanel.classList.add('animating');
+          filterPanel.addEventListener('animationend', function () {
+            filterPanel.classList.remove('animating');
+          }, { once: true });
+        }
+        filterBtn.classList.toggle('btn-outline', !open);
+        /* Always apply current search query when Filters is clicked */
+        state.query = searchInput.value;
+        refresh();
+      });
+
+      /* Apply filters */
+      applyBtn.addEventListener('click', function () {
+        state.level = filterLevel.value;
+        state.location = filterLoc.value;
+        state.minRating = parseFloat(filterRating.value) || 0;
+        filterPanel.style.display = 'none';
+        refresh();
+      });
+
+      /* Reset buttons */
+      resetBtn.addEventListener('click', resetAll);
+      emptyResetBtn.addEventListener('click', resetAll);
+
+      /* Card navigation + swap button */
+      var _pendingSwap = null;
+      var MY_SKILLS = JSON.parse(document.getElementById('__mySkillsData').textContent || '[]');
+
+      var offerOverlay   = document.getElementById('offerSkillOverlay');
+      var offerSelect    = document.getElementById('offerSkillSelect');
+      var offerErr       = document.getElementById('offerSkillErr');
+      var confirmBtn     = document.getElementById('confirmOfferBtn');
+      var offerCloseBtn  = document.getElementById('offerSkillClose');
+      var offerCancelBtn = document.getElementById('offerSkillCancelBtn');
+
+      function closeOfferModal() {
+        offerOverlay.style.display = 'none';
+        _pendingSwap = null;
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = 'Confirm &amp; Request Swap';
+      }
+      offerCloseBtn.addEventListener('click', closeOfferModal);
+      offerCancelBtn.addEventListener('click', closeOfferModal);
+      offerOverlay.addEventListener('click', function(e){ if (e.target === offerOverlay) closeOfferModal(); });
+
+      grid.addEventListener('click', function (e) {
+        /* Prevent card details navigation when clicking links */
+        if (e.target.closest('a')) {
+          return;
+        }
+
+        /* ── Favorite button ──────────────────────────────────── */
+        var favBtn = e.target.closest('.item-card-fav');
+        if (favBtn) {
+          e.stopPropagation();
+          var itemId = favBtn.dataset.itemId;
+          if (!itemId) return;
+          var wasFav = favBtn.classList.contains('active');
+          var nowFav = !wasFav;
+          favBtn.classList.toggle('active', nowFav);
+          var svg = favBtn.querySelector('svg');
+          if (svg) { svg.setAttribute('fill', nowFav ? '#FF4D4D' : 'none'); svg.setAttribute('stroke', nowFav ? '#FF4D4D' : 'currentColor'); }
+          fetch('/api/favorites/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ itemId: itemId })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data.success) {
+              favBtn.classList.toggle('active', wasFav);
+              if (svg) { svg.setAttribute('fill', wasFav ? '#FF4D4D' : 'none'); svg.setAttribute('stroke', wasFav ? '#FF4D4D' : 'currentColor'); }
+              if (window.SwapifyUI) SwapifyUI.toast(
+                (data.error === 'Not authenticated.' || data.error === 'Unauthorized.')
+                  ? 'Please log in to add favorites'
+                  : (data.error || 'Failed to update favorites'),
+                'warning'
+              );
+              return;
+            }
+            window._userFavoriteIds = window._userFavoriteIds || [];
+            if (data.added) { if (window._userFavoriteIds.indexOf(itemId) === -1) window._userFavoriteIds.push(itemId); }
+            else { window._userFavoriteIds = window._userFavoriteIds.filter(function(x) { return x !== itemId; }); }
+            if (window.SwapifyUI) SwapifyUI.toast(data.added ? 'Added to favorites ❤️' : 'Removed from favorites', data.added ? 'success' : 'info');
+          })
+          .catch(function() {
+            favBtn.classList.toggle('active', wasFav);
+            if (svg) { svg.setAttribute('fill', wasFav ? '#FF4D4D' : 'none'); svg.setAttribute('stroke', wasFav ? '#FF4D4D' : 'currentColor'); }
+            if (window.SwapifyUI) SwapifyUI.toast('Network error. Try again.', 'error');
+          });
+          return;
+        }
+
+        var swapBtn = e.target.closest('.request-swap-btn');
+        if (swapBtn) {
+          e.stopPropagation();
+          if (!_currentUserId) { window.location.href = '/login'; return; }
+          var sid = swapBtn.dataset.skillId;
+          var skill = ALL_SKILLS.find(function(s) { return s.id === sid; });
+          if (!skill) { if (window.SwapifyUI) window.SwapifyUI.toast('Skill not found', 'error'); return; }
+          if (skill.userId === _currentUserId) {
+            if (window.SwapifyUI) window.SwapifyUI.toast('You cannot swap your own skill!', 'error');
+            return;
+          }
+          if (MY_SKILLS.length === 0) {
+            if (window.SwapifyUI) window.SwapifyUI.toast('You need to add a skill first before requesting a swap!', 'warning');
+            setTimeout(function() { window.location.href = '/add'; }, 1500);
+            return;
+          }
+          _pendingSwap = { sid: sid, skill: skill };
+          offerSelect.innerHTML = '<option value="">— Select a skill you have —</option>';
+          MY_SKILLS.forEach(function(sk) {
+            var opt = document.createElement('option');
+            opt.value = sk.id;
+            opt.textContent = sk.title;
+            offerSelect.appendChild(opt);
+          });
+          offerErr.textContent = '';
+          offerOverlay.style.display = 'flex';
+          return;
+        }
+        var card = e.target.closest('.skill-card');
+        if (card) { window.location = '/skill-details?id=' + card.dataset.skillId; }
+      });
+
+      confirmBtn.addEventListener('click', function() {
+        if (!_pendingSwap) return;
+        var offeredSkillId = offerSelect.value;
+        if (!offeredSkillId) { offerErr.textContent = 'Please select a skill you are offering.'; return; }
+        offerErr.textContent = '';
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Sending...';
+
+        fetch('/swap/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ offeredSkillId: offeredSkillId, requestedSkillId: _pendingSwap.sid })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) {
+            if (window.SwapifyUI) window.SwapifyUI.toast('Swap requested! 🎉', 'success');
+            var partnerId = _pendingSwap.skill.userId;
+            closeOfferModal();
+            setTimeout(function() { window.location.href = '/messages?partner=' + partnerId; }, 800);
+          } else {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = 'Confirm &amp; Request Swap';
+            if (window.SwapifyUI) window.SwapifyUI.toast(data.message || 'Failed to send swap request.', 'error');
+          }
+        })
+        .catch(function() {
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = 'Confirm &amp; Request Swap';
+          if (window.SwapifyUI) window.SwapifyUI.toast('Network error. Please try again.', 'error');
+        });
+      });
+
+      /* ── EXPOSE SEARCH SETTER FOR HEADER SEARCH ──────────── */
+      window.setSkillSearchQuery = function(query) {
+        state.query = query;
+        searchInput.value = query;
+        refresh();
+      };
+
+      /* ── INIT ─────────────────────────────────────────────── */
+      refresh();
+    }());
+  </script>
+</body>
+</html>
