@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Swapify</title>
+  <meta name="description" content="Log in or sign up to Swapify — start swapping skills, items, and deals.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ===== RESET ===== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0e1012;
+      --bg-lit: #1a1025;
+      --neon: #a855f7;
+      --neon-bright: #e879f9;
+      --neon-dim: #7c3aed;
+      --neon-glow: rgba(168, 85, 247, 0.28);
+      /* Keep old names so nothing else breaks */
+      --gold: #a855f7;
+      --gold-bright: #e879f9;
+      --gold-glow: rgba(168, 85, 247, .28);
+      --lamp-shade: #f5f0e6;
+      --lamp-base: #d1ccc2;
+      --glass-bg: rgba(168, 85, 247, 0.05);
+      --glass-brd: rgba(168, 85, 247, 0.14);
+      --glass-hov: rgba(168, 85, 247, 0.08);
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.50);
+      --in-bg: rgba(255, 255, 255, 0.06);
+      --in-focus: rgba(168, 85, 247, 0.12);
+      --red: #ff6b6b;
+      --green: #6bcb77;
+      --purple: #a855f7;
+      --tr: 0.5s cubic-bezier(.4, 0, .2, 1);
+      --tr-bounce: 0.7s cubic-bezier(.175, .885, .32, 1.275);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+      transition: background var(--tr);
+    }
+
+    /* ===== BACKGROUND RADIAL GLOW ===== */
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(124, 58, 237, .18), transparent 70%);
+      opacity: 0;
+      transition: opacity var(--tr);
+    }
+
+    body.lamp-on .bg-glow {
+      opacity: 1;
+    }
+
+    /* ===== FLOATING PARTICLES ===== */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--neon-bright);
+      opacity: 0;
+      box-shadow: 0 0 6px var(--neon);
+      animation: float-up linear infinite;
+    }
+
+    @keyframes float-up {
+      0% {
+        transform: translateY(100vh) scale(0);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 0.6;
+      }
+
+      90% {
+        opacity: 0.2;
+      }
+
+      100% {
+        transform: translateY(-15vh) scale(1);
+        opacity: 0;
+      }
+    }
+
+    /* ===== HINT TEXT — free-floating, no card ===== */
+    .hint-wrap {
+      position: fixed;
+      top: 9%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      text-align: center;
+      pointer-events: none;
+      transition: opacity .7s ease, transform .7s ease;
+      width: 90%;
+      max-width: 820px;
+    }
+
+    body.lamp-on .hint-wrap {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-22px);
+      pointer-events: none;
+    }
+
+    /* No card — just naked text */
+    .hint-box {
+      position: relative;
+      display: inline-block;
+      padding: 0;
+      pointer-events: auto;
+    }
+
+    .hint-box::before,
+    .hint-box::after {
+      display: none;
+    }
+
+    /* Hide the emoji icon */
+    .hint-icon {
+      display: none;
+    }
+
+    /* ===== CURSOR-SPOTLIGHT TEXT EFFECT — single element, no duplication ===== */
+
+    .hint-title-wrap {
+      margin-bottom: 14px;
+      display: inline-block;
+    }
+
+    /* Single element: two stacked backgrounds both clipped to the text shape.
+       Layer 1 (top)    = cursor-following neon spotlight
+       Layer 2 (bottom) = constant dim layer so ghost letters are barely visible */
+    .hint-title {
+      font-size: clamp(2rem, 4.8vw, 3.6rem);
+      font-weight: 900;
+      line-height: 1.18;
+      letter-spacing: -1px;
+      display: block;
+      background-image:
+        /* spotlight — follows cursor */
+        radial-gradient(circle 210px at var(--bx, -9999px) var(--by, -9999px),
+          rgba(255, 255, 255, 1.00) 0%,
+          rgba(232, 121, 249, 0.95) 22%,
+          rgba(168, 85, 247, 0.70) 46%,
+          rgba(109, 40, 217, 0.28) 65%,
+          transparent 78%),
+        /* dim base — always shows ghost of letters */
+        linear-gradient(rgba(255, 255, 255, 0.07),
+          rgba(255, 255, 255, 0.07));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hint-sub {
+      font-size: .78rem;
+      font-weight: 600;
+      color: rgba(192, 132, 252, 0.40);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ===== MAIN LAYOUT ===== */
+    .scene {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(20px, 6vw, 72px);
+      width: 100%;
+      max-width: 980px;
+      padding: 24px;
+      min-height: 100vh;
+      flex-wrap: wrap;
+    }
+
+    /* ===== LAMP ===== */
+    .lamp-wrap {
+      position: relative;
+      width: clamp(180px, 22vw, 270px);
+      height: clamp(260px, 32vw, 380px);
+      flex-shrink: 0;
+    }
+
+    .lamp-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .l-shade {
+      fill: var(--lamp-shade);
+      transition: fill var(--tr), filter var(--tr);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body.lamp-on .l-shade {
+      fill: #ffffff;
+      filter: drop-shadow(0 0 28px rgba(255, 255, 200, .55));
+    }
+
+    .l-shade.admin-flash {
+      fill: #e8d5ff !important;
+      filter: drop-shadow(0 0 22px rgba(200, 50, 255, .85)) !important;
+    }
+
+    .l-base {
+      fill: var(--lamp-base);
+    }
+
+    .l-glow {
+      fill: #c084fc;
+      opacity: 0;
+      filter: blur(14px);
+      transition: opacity var(--tr);
+    }
+
+    body.lamp-on .l-glow {
+      opacity: .55;
+    }
+
+    /* Lamp area neon room glow */
+    .l-room-glow {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200%;
+      height: 140%;
+      background: radial-gradient(ellipse at 50% 35%, rgba(168, 85, 247, .1), transparent 65%);
+      opacity: 0;
+      transition: opacity var(--tr);
+      pointer-events: none;
+    }
+
+    body.lamp-on .l-room-glow {
+      opacity: 1;
+    }
+
+    .c-line {
+      stroke: #555;
+      stroke-width: 2;
+    }
+
+    .c-bead {
+      fill: var(--neon);
+      filter: drop-shadow(0 0 6px rgba(168, 85, 247, .7));
+    }
+
+    .c-hit {
+      cursor: grab;
+      touch-action: pan-x;
+    }
+
+    /* Triple-click counter badge */
+    .shade-clicks {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #c084fc;
+      opacity: 0;
+      transition: opacity .3s;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .shade-clicks.show {
+      opacity: 1;
+    }
+
+    /* ===== AUTH CARD ===== */
+    .auth-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
+      border: 1px solid var(--glass-brd);
+      border-radius: 28px;
+      width: clamp(300px, 90vw, 385px);
+      box-shadow: 0 28px 55px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .04), inset 0 1px 0 rgba(255, 255, 255, .09);
+      opacity: 0;
+      transform: translateY(44px) scale(.94);
+      pointer-events: none;
+      transition: opacity var(--tr-bounce), transform var(--tr-bounce);
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.lamp-on .auth-card {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: all;
+    }
+
+    /* top neon accent bar */
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-bright), var(--neon), transparent);
+    }
+
+    /* ===== TAB BAR ===== */
+    .tab-bar {
+      display: flex;
+      padding: 14px 14px 0;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 9px 10px;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: .83rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .28s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: var(--glass-hov);
+    }
+
+    .tab-btn.active {
+      color: var(--neon-bright);
+      background: rgba(168, 85, 247, .09);
+      box-shadow: 0 0 0 1px rgba(168, 85, 247, .28), 0 3px 10px rgba(168, 85, 247, .12);
+    }
+
+    .tab-btn.admin-tab {
+      color: #c084fc;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab-btn.admin-tab.active {
+      color: #e879f9;
+      background: rgba(192, 132, 252, .1);
+      box-shadow: 0 0 0 1px rgba(192, 132, 252, .3), 0 3px 10px rgba(192, 132, 252, .15);
+    }
+
+    .tab-btn.admin-tab::after {
+      content: '★';
+      position: absolute;
+      top: 3px;
+      right: 5px;
+      font-size: 7px;
+      opacity: .65;
+    }
+
+    /* ===== PANELS ===== */
+    .panel {
+      padding: 18px 22px 22px;
+      display: none;
+      animation: pIn .32s ease forwards;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    @keyframes pIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Card logo */
+    .c-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      text-decoration: none;
+      margin-bottom: 14px;
+    }
+
+    .c-logo-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--neon-bright), var(--neon));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .c-logo-text {
+      font-size: 1.15rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--neon-bright), var(--neon));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .p-title {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .p-sub {
+      text-align: center;
+      font-size: .8rem;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ===== FORM FIELDS ===== */
+    .fgroup {
+      margin-bottom: 12px;
+    }
+
+    .flabel {
+      display: block;
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .iwrap {
+      position: relative;
+    }
+
+    .iicon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /* Eye toggle button inside password fields */
+    .eye-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      transition: color .2s, background .2s;
+      padding: 0;
+    }
+
+    .eye-toggle:hover {
+      color: var(--neon-bright);
+      background: rgba(168, 85, 247, .12);
+    }
+
+    .eye-toggle svg {
+      width: 16px;
+      height: 16px;
+      pointer-events: none;
+    }
+
+    /* When on password fields give right padding for the eye button */
+    .has-toggle {
+      padding-right: 44px;
+    }
+
+    .finput {
+      width: 100%;
+      padding: 12px 12px 12px 40px;
+      background: var(--in-bg);
+      border: 1px solid transparent;
+      border-radius: 11px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      outline: none;
+      transition: all .28s ease;
+    }
+
+    .finput::placeholder {
+      color: rgba(255, 255, 255, .22);
+    }
+
+    .finput:focus {
+      border-color: var(--neon);
+      background: var(--in-focus);
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, .15);
+    }
+
+    .finput.valid {
+      border-color: var(--green);
+    }
+
+    .finput.invalid {
+      border-color: var(--red);
+    }
+
+    .ferr {
+      display: block;
+      font-size: .72rem;
+      color: var(--red);
+      margin-bottom: 0;
+      margin-left: 3px;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease-out, opacity 0.2s ease-out, margin-bottom 0.2s ease-out;
+      line-height: 1.45;
+    }
+
+    .ferr.visible {
+      opacity: 1;
+      max-height: 120px;
+      margin-bottom: 4px;
+    }
+
+    /* Strength bars */
+    .sbars {
+      display: flex;
+      gap: 4px;
+      margin-top: 7px;
+    }
+
+    .sbar {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, .1);
+      transition: background .3s;
+    }
+
+    .sbars.weak .sbar:nth-child(1) {
+      background: var(--red);
+    }
+
+    .sbars.medium .sbar:nth-child(1),
+    .sbars.medium .sbar:nth-child(2) {
+      background: #f59e0b;
+    }
+
+    .sbars.strong .sbar {
+      background: var(--green);
+    }
+
+    /* Check row */
+    .crow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: .78rem;
+    }
+
+    .clabel {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .clabel input {
+      accent-color: var(--neon);
+      width: 13px;
+      height: 13px;
+    }
+
+    .flink {
+      color: var(--neon);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color .2s;
+    }
+
+    .flink:hover {
+      color: var(--neon-bright);
+    }
+
+    /* Buttons */
+    .sbtn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #6d28d9, #a855f7, #e879f9, #a855f7, #7c3aed);
+      background-size: 200% auto;
+      border: none;
+      border-radius: 11px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: .92rem;
+      color: #fff;
+      cursor: pointer;
+      transition: all .3s ease;
+      overflow: hidden;
+      position: relative;
+      margin-top: 2px;
+      box-shadow: 0 0 0 0 rgba(168, 85, 247, 0);
+    }
+
+    .sbtn:hover {
+      background-position: right center;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(168, 85, 247, .45), 0 0 0 1px rgba(232, 121, 249, .3);
+    }
+
+    .sbtn:active {
+      transform: translateY(0);
+    }
+
+    .sbtn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .sbtn.abtn {
+      background: linear-gradient(135deg, #7c3aed, #a855f7, #4c1d95);
+      color: #fff;
+      background-size: 200% auto;
+    }
+
+    .sbtn.abtn:hover {
+      background-position: right center;
+      box-shadow: 0 8px 22px rgba(168, 85, 247, .5);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin: 14px 0;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--glass-brd);
+    }
+
+    .divider span {
+      font-size: .72rem;
+      color: var(--muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* Social */
+    .socials {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .soc {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 11px;
+      border-radius: 11px;
+      border: 1px solid var(--glass-brd);
+      background: var(--glass-hov);
+      color: var(--text);
+      text-decoration: none;
+      font-size: .83rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      transition: all .25s ease;
+      cursor: pointer;
+    }
+
+    .soc:hover {
+      border-color: rgba(255, 255, 255, .2);
+      background: rgba(255, 255, 255, .1);
+      transform: translateY(-1px);
+    }
+
+    .soc svg {
+      flex-shrink: 0;
+    }
+
+    /* removed social-login specific colors (Facebook/Instagram) */
+
+    /* Switch */
+    .swlink {
+      text-align: center;
+      margin-top: 14px;
+      font-size: .79rem;
+      color: var(--muted);
+    }
+
+    .swlink a {
+      color: var(--neon);
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .swlink a:hover {
+      color: var(--neon-bright);
+    }
+
+    /* ===== ADMIN PANEL ===== */
+    .a-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 7px 14px;
+      background: rgba(192, 132, 252, .1);
+      border: 1px solid rgba(192, 132, 252, .25);
+      border-radius: 20px;
+      margin-bottom: 14px;
+      font-size: .73rem;
+      font-weight: 700;
+      color: #c084fc;
+      letter-spacing: 1px;
+    }
+
+    .a-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #c084fc;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .15;
+      }
+    }
+
+    /* Admin step container */
+    .a-step-hint {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(192, 132, 252, .07);
+      border: 1px solid rgba(192, 132, 252, .15);
+      margin-bottom: 16px;
+      font-size: .73rem;
+      color: rgba(192, 132, 252, .85);
+      line-height: 1.4;
+    }
+
+    .a-step-hint svg {
+      flex-shrink: 0;
+    }
+
+    /* PIN display */
+    .pin-display {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin: 18px 0;
+    }
+
+    .pin-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 2px solid rgba(192, 132, 252, .45);
+      background: transparent;
+      transition: all .2s ease;
+    }
+
+    .pin-dot.filled {
+      background: var(--purple);
+      border-color: var(--purple);
+      box-shadow: 0 0 10px rgba(168, 85, 247, .5);
+      transform: scale(1.2);
+    }
+
+    /* PIN pad */
+    .pin-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin-bottom: 14px;
+    }
+
+    .pkey {
+      padding: 15px 10px;
+      background: var(--in-bg);
+      border: 1px solid var(--glass-brd);
+      border-radius: 11px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s ease;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pkey:hover {
+      background: rgba(168, 85, 247, .12);
+      border-color: rgba(168, 85, 247, .32);
+      transform: translateY(-1px);
+    }
+
+    .pkey:active {
+      transform: scale(.94);
+    }
+
+    .pkey.zero {
+      grid-column: 2;
+    }
+
+    .pkey.del {
+      background: rgba(255, 107, 107, .07);
+      border-color: rgba(255, 107, 107, .2);
+      color: var(--red);
+    }
+
+    .pkey.del:hover {
+      background: rgba(255, 107, 107, .16);
+    }
+
+    .pin-lbl {
+      text-align: center;
+      font-size: .78rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* Attempts counter */
+    .pin-attempts {
+      text-align: center;
+      font-size: .72rem;
+      color: var(--red);
+      margin-top: 6px;
+      min-height: 16px;
+    }
+
+    /* ===== SHAKE ANIMATION ===== */
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      12%,
+      36%,
+      60%,
+      84% {
+        transform: translateX(-7px);
+      }
+
+      24%,
+      48%,
+      72%,
+      96% {
+        transform: translateX(7px);
+      }
+    }
+
+    .shake {
+      animation: shake .48s ease;
+    }
+
+    /* ===== SPIN ===== */
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ===== PIN RIPPLE ===== */
+    @keyframes pinRipple {
+      to {
+        transform: translate(-50%, -50%) scale(3);
+        opacity: 0;
+      }
+    }
+
+    /* ===== TOAST ===== */
+    .tcont {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 16px;
+      border-radius: 13px;
+      background: rgba(22, 24, 30, .95);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-brd);
+      color: var(--text);
+      font-size: .84rem;
+      font-weight: 500;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .32);
+      animation: tIn .35s cubic-bezier(.175, .885, .32, 1.275);
+      max-width: 310px;
+      transition: opacity .3s, transform .3s;
+    }
+
+    @keyframes tIn {
+      from {
+        opacity: 0;
+        transform: translateX(55px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .toast.success {
+      border-color: rgba(107, 203, 119, .3);
+    }
+
+    .toast.error {
+      border-color: rgba(255, 107, 107, .3);
+    }
+
+    .toast.warning {
+      border-color: rgba(245, 158, 11, .3);
+    }
+
+    .toast.admin {
+      border-color: rgba(192, 132, 252, .4);
+    }
+
+    /* ===== CURSOR FOLLOWER ===== */
+    #cursorGlow {
+      position: fixed;
+      pointer-events: none;
+      z-index: 999;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 214, 110, .6) 0%, transparent 75%);
+      transform: translate(-50%, -50%);
+      transition: width .2s, height .2s, opacity .3s;
+      opacity: 0;
+      mix-blend-mode: screen;
+    }
+
+    body.lamp-on #cursorGlow {
+      opacity: 1;
+      width: 36px;
+      height: 36px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media(max-width:680px) {
+      .scene {
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+        min-height: unset;
+      }
+
+      html,
+      body {
+        overflow: auto;
+      }
+
+      .lamp-wrap {
+        width: 160px;
+        height: 220px;
+      }
+
+      .auth-card {
+        width: 100%;
+      }
+
+      .hint-wrap {
+        width: 92%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Background radial glow (lamp-on) -->
+  <div class="bg-glow"></div>
+
+  <!-- Floating particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Cursor glow orb -->
+  <div id="cursorGlow"></div>
+
+  <!-- Hint text — visible while lamp is OFF -->
+  <div class="hint-wrap" id="hintWrap">
+    <div class="hint-box" id="hintBox">
+      <span class="hint-icon">💡</span>
+      <div class="hint-title-wrap" id="hintTitleWrap">
+        <p class="hint-title" id="hintTitle">Whachu waiting for?<br>Pull the cord &amp; get swapping!</p>
+      </div>
+      <p class="hint-sub">↓ pull the cord ↓</p>
+    </div>
+  </div>
+
+  <!-- Scene -->
+  <div class="scene">
+
+    <!-- ===== LAMP ===== -->
+    <div class="lamp-wrap">
+      <div class="l-room-glow"></div>
+      <svg class="lamp-svg" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+        <ellipse class="l-glow" cx="100" cy="110" rx="60" ry="30"></ellipse>
+        <rect class="l-base" x="92" y="100" width="16" height="160" rx="8"></rect>
+        <rect class="l-base" x="60" y="250" width="80" height="12" rx="6"></rect>
+
+        <g>
+          <line class="c-line" id="cordLine" x1="130" y1="110" x2="130" y2="180"></line>
+          <circle class="c-bead" id="cordBead" cx="130" cy="190" r="6"></circle>
+          <circle class="c-hit" id="cordHit" cx="130" cy="190" r="26" fill="transparent"></circle>
+        </g>
+
+        <!-- Clickable lamp shade — triple-click Easter egg -->
+        <path class="l-shade" id="lampShade" d="M30 110 C 30 50, 170 50, 170 110 C 170 125, 30 125, 30 110 Z"></path>
+      </svg>
+      <span class="shade-clicks" id="shadeClicksLabel"></span>
+    </div>
+
+    <!-- ===== AUTH CARD ===== -->
+    <div class="auth-card" id="authCard">
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-login" data-tab="login">Login</button>
+        <button class="tab-btn" id="tab-signup" data-tab="signup">Sign Up</button>
+        <!-- Admin tab — hidden until triple-click Easter egg -->
+        <button class="tab-btn admin-tab" id="tab-admin" data-tab="admin" style="display:none">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          Admin
+        </button>
+      </div>
+
+      <!-- ===== LOGIN PANEL ===== -->
+      <div class="panel active" id="panel-login">
+        <a href="/" class="c-logo">
+          <div class="c-logo-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M8 3L4 7l4 4" />
+              <path d="M4 7h16" />
+              <path d="M16 21l4-4-4-4" />
+              <path d="M20 17H4" />
+            </svg>
+          </div>
+          <span class="c-logo-text">Swapify</span>
+        </a>
+        <h1 class="p-title">Welcome Back</h1>
+        <p class="p-sub">Log in to continue swapping</p>
+
+        <form id="loginForm" action="/login" method="POST" novalidate>
+          <div class="fgroup">
+            <label class="flabel">Email</label>
+            <div class="iwrap">
+              <svg class="iicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              <input type="email" name="email" class="finput" id="loginEmail" placeholder="your@email.com" autocomplete="email">
+            </div>
+            <span class="ferr" id="loginEmailErr"></span>
+          </div>
+          <div class="fgroup">
+            <label class="flabel">Password</label>
+            <div class="iwrap">
+              <svg class="iicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="18" height="11" x="3" y="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <input type="password" name="password" class="finput has-toggle" id="loginPassword" placeholder="••••••••"
+                autocomplete="current-password">
+              <button type="button" class="eye-toggle" aria-label="Toggle password visibility"
+                data-target="loginPassword">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-open">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-shut"
+                  style="display:none">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94" />
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <span class="ferr" id="loginPasswordErr"></span>
+          </div>
+          <div class="crow">
+            <label class="clabel"><input type="checkbox" id="rememberMe"> Remember me</label>
+            <button type="button" class="flink" id="openForgotModal" style="background:none;border:none;cursor:pointer;font-size:.78rem;font-weight:500;">Forgot password?</button>
+          </div>
+          <button type="submit" class="sbtn" id="loginSubmit">Sign In</button>
+        </form>
+
+        
+        <p class="swlink">Don't have an account? <a id="goSignup">Sign up</a></p>
+      </div>
+
+      <!-- ===== SIGN UP PANEL ===== -->
+      <div class="panel" id="panel-signup">
+        <a href="/" class="c-logo">
+          <div class="c-logo-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M8 3L4 7l4 4" />
+              <path d="M4 7h16" />
+              <path d="M16 21l4-4-4-4" />
+              <path d="M20 17H4" />
+            </svg>
+          </div>
+          <span class="c-logo-text">Swapify</span>
+        </a>
+        <h1 class="p-title">Create Account</h1>
+        <p class="p-sub">Join and start swapping today</p>
+
+        <form id="registerForm" action="/register" method="POST" novalidate>
+          <div class="fgroup">
+            <label class="flabel">User Name</label>
+            <div class="iwrap">
+              <svg class="iicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="5" />
+                <path d="M20 21a8 8 0 1 0-16 0" />
+              </svg>
+              <input type="text" name="username" class="finput" id="regName" placeholder="Your user name" autocomplete="name">
+            </div>
+            <span class="ferr" id="regNameErr"></span>
+          </div>
+          <div class="fgroup">
+            <label class="flabel">Email</label>
+            <div class="iwrap">
+              <svg class="iicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              <input type="email" name="email" class="finput" id="regEmail" placeholder="your@email.com" autocomplete="email">
+            </div>
+            <span class="ferr" id="regEmailErr"></span>
+          </div>
+          <div class="fgroup">
+            <label class="flabel">Password</label>
+            <div class="iwrap">
+              <svg class="iicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="18" height="11" x="3" y="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <input type="password" name="password" class="finput has-toggle" id="regPassword" placeholder="Min 10 chars"
+                autocomplete="new-password">
+              <button type="button" class="eye-toggle" aria-label="Toggle password visibility"
+                data-target="regPassword">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-open">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-shut"
+                  style="display:none">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94" />
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <div class="sbars" id="strengthBars">
+              <div class="sbar"></div>
+              <div class="sbar"></div>
+              <div class="sbar"></div>
+              <div class="sbar"></div>
+            </div>
+            <span class="ferr" id="regPasswordErr"></span>
+          </div>
+          <div class="fgroup">
+            <label class="flabel">Confirm Password</label>
+            <div class="iwrap">
+              <svg class="iicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              <input type="password" name="confirmPassword" class="finput has-toggle" id="regConfirm" placeholder="Same as above"
+                autocomplete="new-password">
+              <button type="button" class="eye-toggle" aria-label="Toggle confirm password visibility"
+                data-target="regConfirm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-open">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-shut"
+                  style="display:none">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94" />
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <span class="ferr" id="regConfirmErr"></span>
+          </div>
+          <button type="submit" class="sbtn" id="registerSubmit">Create Account</button>
+        </form>
+
+        <p class="swlink">Already have an account? <a id="goLogin">Log in</a></p>
+      </div>
+
+      <!-- ===== ADMIN PANEL ===== -->
+      <div class="panel" id="panel-admin">
+        <div class="a-badge">
+          <div class="a-dot"></div> ADMIN ACCESS
+        </div>
+
+        <!-- Step 1: Credentials -->
+        <div id="adminStep1">
+          <h2 class="p-title">Admin Login</h2>
+          <p class="p-sub">Restricted — authorised personnel only</p>
+
+          <div class="a-step-hint">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+            Step 1 of 2 — Enter your admin credentials, then verify with your secret PIN
+          </div>
+
+          <form id="adminForm" novalidate>
+            <div class="fgroup">
+              <label class="flabel">Admin Email</label>
+              <div class="iwrap">
+                <svg class="iicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="20" height="16" x="2" y="4" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+                <input type="email" class="finput" id="adminEmail" placeholder="admin@swapify.com" autocomplete="email">
+              </div>
+              <span class="ferr" id="adminEmailErr"></span>
+            </div>
+            <div class="fgroup">
+              <label class="flabel">Password</label>
+              <div class="iwrap">
+                <svg class="iicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="18" height="11" x="3" y="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <input type="password" class="finput has-toggle" id="adminPassword" placeholder="••••••••"
+                  autocomplete="current-password">
+                <button type="button" class="eye-toggle" aria-label="Toggle password visibility"
+                  data-target="adminPassword">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-open">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-shut"
+                    style="display:none">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94" />
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                </button>
+              </div>
+              <span class="ferr" id="adminPasswordErr"></span>
+            </div>
+            <button type="submit" class="sbtn abtn" id="adminSubmit">Continue →</button>
+          </form>
+        </div>
+
+        <!-- Step 2: PIN Keypad -->
+        <div id="adminStep2" style="display:none">
+          <h2 class="p-title">Enter Admin PIN</h2>
+          <p class="p-sub">4-digit security verification</p>
+          <div class="a-step-hint">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="18" height="11" x="3" y="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Step 2 of 2 — Enter your secret numeric PIN to complete verification
+          </div>
+          <div class="pin-display">
+            <div class="pin-dot" id="pd0"></div>
+            <div class="pin-dot" id="pd1"></div>
+            <div class="pin-dot" id="pd2"></div>
+            <div class="pin-dot" id="pd3"></div>
+          </div>
+          <p class="pin-lbl">Use keypad or number keys</p>
+          <div class="pin-pad" id="pinPad">
+            <button class="pkey" type="button" data-d="1">1</button>
+            <button class="pkey" type="button" data-d="2">2</button>
+            <button class="pkey" type="button" data-d="3">3</button>
+            <button class="pkey" type="button" data-d="4">4</button>
+            <button class="pkey" type="button" data-d="5">5</button>
+            <button class="pkey" type="button" data-d="6">6</button>
+            <button class="pkey" type="button" data-d="7">7</button>
+            <button class="pkey" type="button" data-d="8">8</button>
+            <button class="pkey" type="button" data-d="9">9</button>
+            <button class="pkey zero" type="button" data-d="0">0</button>
+            <button class="pkey del" type="button" id="pinDel">⌫</button>
+          </div>
+          <p class="pin-attempts" id="pinAttemptsMsg"></p>
+          <button class="sbtn" type="button" id="backToStep1"
+            style="background:var(--glass-hov);color:var(--muted);margin-top:2px;font-size:.8rem;padding:9px">←
+            Back</button>
+        </div>
+
+      </div><!-- /panel-admin -->
+
+    </div><!-- /auth-card -->
+  </div><!-- /scene -->
+
+  <!-- Toast container -->
+  <div class="tcont" id="tcont"></div>
+
+  <!-- GSAP -->
+  <script src="https://unpkg.co/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/Draggable.min.js"></script>
+  <script>
+    window.SWAPIFY_INLINE_AUTH = true;
+  </script>
+  <script src="/js/app.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      gsap.registerPlugin(Draggable);
+
+      /* ---- element refs ---- */
+      const body = document.body;
+      const cordBead = document.getElementById('cordBead');
+      const cordLine = document.getElementById('cordLine');
+      const cordHit = document.getElementById('cordHit');
+      const lampShade = document.getElementById('lampShade');
+      const hintWrap = document.getElementById('hintWrap');
+      const hintBox = document.getElementById('hintBox');
+      const tcont = document.getElementById('tcont');
+      const adminStep1 = document.getElementById('adminStep1');
+      const adminStep2 = document.getElementById('adminStep2');
+      const pinPad = document.getElementById('pinPad');
+      const cursorGlow = document.getElementById('cursorGlow');
+      const shadeLabel = document.getElementById('shadeClicksLabel');
+
+      /* ---- state ---- */
+      let isOn = false;
+      let adminPIN = '';
+      let adminTabRevealed = false;
+      let shadeClicks = 0;
+      let shadeTimer = null;
+      let pinAttempts = 0;
+      let pinLocked = false;
+      const MAX_ATTEMPTS = 5;
+      const PIN_CODE = '2580'; // change this to your desired PIN
+
+      /* ---- click sound ---- */
+      const snd = new Audio('https://assets.codepen.io/605876/click.mp3');
+      snd.volume = 0.4;
+      function playClick() { try { snd.currentTime = 0; snd.play(); } catch (e) { } }
+
+      /* ============================================================
+         CURSOR FOLLOWER + SPOTLIGHT TEXT EFFECT
+      ============================================================ */
+
+      document.addEventListener('mousemove', e => {
+        /* Move neon orb with cursor */
+        cursorGlow.style.left = e.clientX + 'px';
+        cursorGlow.style.top = e.clientY + 'px';
+
+        /* Spotlight: track cursor globally, translate to element-local coords */
+        const hintTitle = document.getElementById('hintTitle');
+        if (hintTitle && !isOn) {
+          const r = hintTitle.getBoundingClientRect();
+          hintTitle.style.setProperty('--bx', (e.clientX - r.left) + 'px');
+          hintTitle.style.setProperty('--by', (e.clientY - r.top) + 'px');
+        }
+      });
+
+      /* Push spotlight off-screen when mouse leaves the document */
+      document.addEventListener('mouseleave', () => {
+        const hintTitle = document.getElementById('hintTitle');
+        if (hintTitle) {
+          hintTitle.style.setProperty('--bx', '-9999px');
+          hintTitle.style.setProperty('--by', '-9999px');
+        }
+      });
+
+      /* ============================================================
+         DRAGGABLE LAMP CORD
+      ============================================================ */
+      Draggable.create(cordHit, {
+        type: 'y',
+        bounds: { minY: 0, maxY: 65 },
+        cursor: 'grab',
+        onDrag: function () {
+          gsap.set(cordBead, { y: this.y });
+          gsap.set(cordLine, { attr: { y2: 180 + this.y } });
+        },
+        onRelease: function () {
+          if (this.y > 28) toggleLamp();
+          gsap.to([cordBead, cordHit], { y: 0, duration: .5, ease: 'back.out(2.5)' });
+          gsap.to(cordLine, { attr: { y2: 180 }, duration: .5, ease: 'back.out(2.5)' });
+        }
+      });
+
+      /* ============================================================
+         TOGGLE LAMP
+      ============================================================ */
+      function toggleLamp() {
+        isOn = !isOn;
+        playClick();
+        if (isOn) {
+          body.classList.add('lamp-on');
+          gsap.to(body, { backgroundColor: '#1c1f24', duration: .6 });
+          spawnParticles();
+        } else {
+          body.classList.remove('lamp-on');
+          gsap.to(body, { backgroundColor: '#0e1012', duration: .6 });
+        }
+      }
+
+      /* ============================================================
+         PARTICLES
+      ============================================================ */
+      function spawnParticles() {
+        const c = document.getElementById('particles');
+        c.innerHTML = '';
+        for (let i = 0; i < 22; i++) {
+          setTimeout(() => {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const sz = Math.random() * 4 + 2;
+            p.style.cssText = `width:${sz}px;height:${sz}px;left:${15 + Math.random() * 70}%;animation-duration:${5 + Math.random() * 6}s;animation-delay:${Math.random() * 2}s;`;
+            c.appendChild(p);
+          }, i * 130);
+        }
+      }
+
+      /* ============================================================
+         TAB SWITCHER
+      ============================================================ */
+      function switchTab(name) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+        document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+        if (name !== 'admin') resetAdminFlow();
+      }
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+      document.getElementById('goSignup').addEventListener('click', () => switchTab('signup'));
+      document.getElementById('goLogin').addEventListener('click', () => switchTab('login'));
+
+      /* URL param: ?tab=signup (from register.html redirect) */
+      const urlTab = new URLSearchParams(window.location.search).get('tab');
+      if (urlTab === 'signup') {
+        isOn = true;
+        body.classList.add('lamp-on');
+        gsap.set(body, { backgroundColor: '#1c1f24' });
+        switchTab('signup');
+      }
+
+      /* URL param: ?action=loggedout — show logout confirmation toast */
+      const urlAction = new URLSearchParams(window.location.search).get('action');
+      if (urlAction === 'loggedout') {
+        history.replaceState(null, '', '/login');
+        setTimeout(() => toast('You have been logged out successfully.', 'success'), 400);
+      }
+
+      /* ============================================================
+         TRIPLE-CLICK EASTER EGG — lamp shade → Admin tab
+      ============================================================ */
+      lampShade.addEventListener('click', () => {
+        /* Toggle lamp on single click when off — discoverable interaction */
+        if (!isOn && !adminTabRevealed) {
+          toggleLamp();
+        }
+
+        /* Easter egg counter — only when lamp is ON and admin not yet revealed */
+        if (isOn && !adminTabRevealed) {
+          shadeClicks++;
+          clearTimeout(shadeTimer);
+
+          const remaining = 3 - shadeClicks;
+          if (remaining > 0) {
+            shadeLabel.textContent = '🔒 ' + remaining + ' more';
+            shadeLabel.classList.add('show');
+            shadeTimer = setTimeout(() => { shadeClicks = 0; shadeLabel.classList.remove('show'); }, 1800);
+          }
+
+          if (shadeClicks >= 3) {
+            shadeClicks = 0;
+            shadeLabel.classList.remove('show');
+            unlockAdmin();
+          }
+        } else if (isOn && adminTabRevealed) {
+          /* If lamp is on and admin revealed, let shade toggle off */
+          toggleLamp();
+        }
+      });
+
+      function unlockAdmin() {
+        adminTabRevealed = true;
+        const btn = document.getElementById('tab-admin');
+        btn.style.display = 'flex';
+        gsap.from(btn, { opacity: 0, scale: .25, x: -15, duration: .5, ease: 'back.out(2.8)' });
+        lampShade.classList.add('admin-flash');
+        playClick();
+        toast('🔐 Secret admin panel unlocked!', 'admin');
+        setTimeout(() => {
+          lampShade.classList.remove('admin-flash');
+          if (!isOn) toggleLamp();
+          switchTab('admin');
+        }, 1200);
+      }
+
+      /* ============================================================
+         TOAST
+      ============================================================ */
+      function toast(msg, type) {
+        type = type || 'info';
+        const icons = { success: '✓', error: '✕', warning: '⚡', info: 'ℹ', admin: '🔐' };
+        const t = document.createElement('div');
+        t.className = 'toast ' + type;
+        t.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${msg}</span>`;
+        tcont.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(55px)'; setTimeout(() => t.remove(), 300); }, 4200);
+      }
+
+      /* ============================================================
+         HELPERS
+      ============================================================ */
+      function shake(el) {
+        el.classList.remove('shake');
+        void el.offsetWidth;
+        el.classList.add('shake');
+        setTimeout(() => el.classList.remove('shake'), 550);
+      }
+
+      function setLoading(btn, on, theme) {
+        if (on) {
+          btn._orig = btn.innerHTML;
+          const c1 = theme === 'light' ? 'rgba(255,255,255,.4)' : 'rgba(0,0,0,.3)';
+          const c2 = theme === 'light' ? '#fff' : '#111';
+          btn.innerHTML = `<span style="display:inline-block;width:18px;height:18px;border:2px solid ${c1};border-top-color:${c2};border-radius:50%;animation:spin .6s linear infinite"></span>`;
+          btn.disabled = true;
+        } else {
+          btn.innerHTML = btn._orig || btn.innerHTML;
+          btn.disabled = false;
+        }
+      }
+
+      /* ============================================================
+         FIELD ERROR HELPERS — uses .visible class for smooth transitions
+      ============================================================ */
+      function showFieldError(errId, msg) {
+        const el = document.getElementById(errId);
+        if (!el) return;
+        el.innerHTML = msg;
+        el.classList.add('visible');
+      }
+      function clearFieldError(errId) {
+        const el = document.getElementById(errId);
+        if (!el) return;
+        el.innerHTML = '';
+        el.classList.remove('visible');
+      }
+      function clearFieldState(input) {
+        if (!input) return;
+        input.classList.remove('valid', 'invalid');
+      }
+
+      /* ============================================================
+         DYNAMIC PASSWORD REQUIREMENTS CHECK (client-side)
+      ============================================================ */
+      function getPasswordMissing(val) {
+        var missing = [];
+        if (!val || val.length < 10) missing.push('Minimum 10 characters');
+        if (!/[A-Z]/.test(val || '')) missing.push('At least one uppercase letter');
+        if (!/[a-z]/.test(val || '')) missing.push('At least one lowercase letter');
+        if (!/[0-9]/.test(val || '')) missing.push('At least one number');
+        if (!/[^a-zA-Z0-9]/.test(val || '')) missing.push('At least one special character');
+        return missing;
+      }
+
+      /* ============================================================
+         LOGIN FORM — AJAX
+      ============================================================ */
+      document.getElementById('loginForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const form = this;
+        const email = document.getElementById('loginEmail');
+        const pass = document.getElementById('loginPassword');
+        const emailErr = 'loginEmailErr';
+        const passErr = 'loginPasswordErr';
+        let hasError = false;
+
+        // Clear previous errors
+        clearFieldError(emailErr);
+        clearFieldError(passErr);
+        clearFieldState(email);
+        clearFieldState(pass);
+
+        // Client-side validation
+        if (!SwapifyValidate.email(email.value)) {
+          showFieldError(emailErr, 'Please enter a valid email address.');
+          email.classList.add('invalid');
+          hasError = true;
+        }
+        if (!SwapifyValidate.required(pass.value)) {
+          showFieldError(passErr, 'Password is required.');
+          pass.classList.add('invalid');
+          hasError = true;
+        }
+
+        if (hasError) {
+          shake(form);
+          toast('Please fix the errors', 'error');
+          return;
+        }
+
+        // Submit via AJAX
+        const btn = document.getElementById('loginSubmit');
+        setLoading(btn, true, 'dark');
+
+        fetch('/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+          },
+          body: new URLSearchParams({
+            email: email.value.trim(),
+            password: pass.value
+          }),
+          credentials: 'same-origin'
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          setLoading(btn, false, 'dark');
+          if (data.success) {
+            // Sync localStorage session for client-side pages
+            if (data.user && typeof SwapifyStore !== 'undefined') {
+              SwapifyStore.setSession(data.user);
+            }
+            toast('Welcome back! 🎉', 'success');
+            setTimeout(function () {
+              window.location.href = data.redirect || '/';
+            }, 600);
+          } else {
+            // Server returned a field-specific error
+            if (data.field === 'email') {
+              // Email not found / invalid email for login
+              email.value = '';
+              email.classList.add('invalid');
+              showFieldError(emailErr, data.error || 'Email not found.');
+            } else if (data.field === 'password') {
+              // Incorrect password — clear and highlight password only
+              pass.value = '';
+              pass.classList.add('invalid');
+              showFieldError(passErr, data.error || 'Incorrect password.');
+            } else {
+              // Fallback — show generic error on password field
+              pass.value = '';
+              pass.classList.add('invalid');
+              showFieldError(passErr, data.error || 'Login failed.');
+            }
+
+            shake(form);
+            toast(data.error || 'Login failed. Please check your details.', 'error');
+          }
+        })
+        .catch(function () {
+          setLoading(btn, false, 'dark');
+          toast('Network error. Please try again.', 'error');
+        });
+      });
+
+      /* ============================================================
+         REGISTER FORM — AJAX
+      ============================================================ */
+      document.getElementById('registerForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const form = this;
+        const name = document.getElementById('regName');
+        const email = document.getElementById('regEmail');
+        const pass = document.getElementById('regPassword');
+        const confirm = document.getElementById('regConfirm');
+        let hasError = false;
+
+        // Clear all previous errors
+        ['regNameErr', 'regEmailErr', 'regPasswordErr', 'regConfirmErr'].forEach(clearFieldError);
+        [name, email, pass, confirm].forEach(function (el) { clearFieldState(el); });
+
+        // Name validation
+        if (!SwapifyValidate.name(name.value)) {
+          showFieldError('regNameErr', 'Name must be at least 2 characters.');
+          name.classList.add('invalid');
+          hasError = true;
+        } else {
+          name.classList.add('valid');
+        }
+
+        // Email validation
+        if (!SwapifyValidate.email(email.value)) {
+          showFieldError('regEmailErr', 'Please enter a valid email address.');
+          email.classList.add('invalid');
+          hasError = true;
+        } else {
+          email.classList.add('valid');
+        }
+
+        // Password validation — dynamic requirements
+        var pwMissing = getPasswordMissing(pass.value);
+        if (pwMissing.length > 0) {
+          var pwMsg = 'Password must include:<br>• ' + pwMissing.join('<br>• ');
+          showFieldError('regPasswordErr', pwMsg);
+          pass.classList.add('invalid');
+          hasError = true;
+        } else {
+          pass.classList.add('valid');
+        }
+
+        // Confirm password
+        if (confirm.value !== pass.value || !confirm.value) {
+          showFieldError('regConfirmErr', 'Passwords do not match.');
+          confirm.classList.add('invalid');
+          hasError = true;
+        } else {
+          confirm.classList.add('valid');
+        }
+
+        if (hasError) {
+          shake(form);
+          toast('Please fix the errors', 'error');
+          return;
+        }
+
+        // Submit via AJAX
+        const btn = document.getElementById('registerSubmit');
+        setLoading(btn, true, 'dark');
+
+        fetch('/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+          },
+          body: new URLSearchParams({
+            username: name.value.trim(),
+            email: email.value.trim(),
+            password: pass.value,
+            confirmPassword: confirm.value
+          }),
+          credentials: 'same-origin'
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          setLoading(btn, false, 'dark');
+          if (data.success) {
+            // Sync localStorage session for client-side pages
+            if (data.user && typeof SwapifyStore !== 'undefined') {
+              SwapifyStore.setSession(data.user);
+            }
+            toast('Account created! Welcome! 🎉', 'success');
+            setTimeout(function () {
+              window.location.href = data.redirect || '/';
+            }, 600);
+          } else {
+            // Server returned an error — highlight only the problematic field
+            if (data.field === 'email') {
+              email.value = '';
+              email.classList.add('invalid');
+              email.classList.remove('valid');
+              showFieldError('regEmailErr', data.error || 'This email is already registered.');
+            } else if (data.field === 'username') {
+              name.classList.add('invalid');
+              name.classList.remove('valid');
+              showFieldError('regNameErr', data.error || 'That username is already taken.');
+            } else if (data.field === 'password') {
+              pass.classList.add('invalid');
+              pass.classList.remove('valid');
+              if (data.missing && data.missing.length > 0) {
+                var srvMsg = 'Password must include:<br>• ' + data.missing.join('<br>• ');
+                showFieldError('regPasswordErr', srvMsg);
+              } else {
+                showFieldError('regPasswordErr', data.error || 'Invalid password.');
+              }
+            } else {
+              // Generic error
+              toast(data.error || 'Registration failed. Please try again.', 'error');
+            }
+
+            shake(form);
+            toast(data.error || 'Please fix the errors', 'error');
+          }
+        })
+        .catch(function () {
+          setLoading(btn, false, 'dark');
+          toast('Network error. Please try again.', 'error');
+        });
+      });
+
+      /* Password strength meter */
+      document.getElementById('regPassword').addEventListener('input', function () {
+        const bars = document.getElementById('strengthBars');
+        const str = SwapifyValidate.passwordStrength(this.value);
+        bars.className = 'sbars' + (this.value.length > 0 ? ' ' + str : '');
+      });
+
+      /* ============================================================
+         AUTO-CLEAR ERRORS ON INPUT — errors vanish as user corrects
+      ============================================================ */
+      // Login fields
+      document.getElementById('loginEmail').addEventListener('input', function () {
+        clearFieldError('loginEmailErr');
+        clearFieldState(this);
+      });
+      document.getElementById('loginPassword').addEventListener('input', function () {
+        clearFieldError('loginPasswordErr');
+        clearFieldState(this);
+      });
+      // Register fields
+      document.getElementById('regName').addEventListener('input', function () {
+        clearFieldError('regNameErr');
+      });
+      document.getElementById('regEmail').addEventListener('input', function () {
+        clearFieldError('regEmailErr');
+      });
+      document.getElementById('regPassword').addEventListener('input', function () {
+        clearFieldError('regPasswordErr');
+      });
+      document.getElementById('regConfirm').addEventListener('input', function () {
+        clearFieldError('regConfirmErr');
+      });
+
+      /* ============================================================
+         ADMIN FORM — Step 1
+      ============================================================ */
+      document.getElementById('adminForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const email = document.getElementById('adminEmail');
+        const pass = document.getElementById('adminPassword');
+        let err = false;
+        document.getElementById('adminEmailErr').textContent = '';
+        document.getElementById('adminPasswordErr').textContent = '';
+        if (!SwapifyValidate.email(email.value)) { document.getElementById('adminEmailErr').textContent = 'Enter a valid email'; email.classList.add('invalid'); err = true; }
+        if (!SwapifyValidate.required(pass.value)) { document.getElementById('adminPasswordErr').textContent = 'Password is required'; pass.classList.add('invalid'); err = true; }
+        if (err) { shake(this); return; }
+        const btn = document.getElementById('adminSubmit');
+        setLoading(btn, true, 'light');
+        setTimeout(() => {
+          const users = SwapifyStore.get('users') || [];
+          const adminUser = users.find(u => u.email === email.value.trim() && u.password === pass.value && u.role === 'admin');
+          setLoading(btn, false, 'light');
+          if (adminUser) {
+            window._pendingAdmin = adminUser;
+            showPinStep();
+            toast('✓ Credentials verified — enter your PIN', 'success');
+          } else {
+            toast('Invalid admin credentials', 'error');
+            shake(document.getElementById('adminForm'));
+            // Flash a subtle warning with increasing delay for brute-force protection
+            email.classList.add('invalid');
+            pass.classList.add('invalid');
+            setTimeout(() => { email.classList.remove('invalid'); pass.classList.remove('invalid'); }, 1500);
+          }
+        }, 900);
+      });
+
+      function showPinStep() {
+        adminStep1.style.display = 'none';
+        adminStep2.style.display = 'block';
+        gsap.from(adminStep2, { opacity: 0, y: 22, duration: .42, ease: 'back.out(1.4)' });
+        adminPIN = '';
+        pinAttempts = 0;
+        pinLocked = false;
+        document.getElementById('pinAttemptsMsg').textContent = '';
+        updateDots();
+      }
+
+      function resetAdminFlow() {
+        adminStep1.style.display = 'block';
+        adminStep2.style.display = 'none';
+        adminPIN = '';
+        pinAttempts = 0;
+        pinLocked = false;
+        updateDots();
+        window._pendingAdmin = null;
+        ['adminEmail', 'adminPassword'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        ['adminEmailErr', 'adminPasswordErr'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
+        document.getElementById('pinAttemptsMsg').textContent = '';
+      }
+
+      document.getElementById('backToStep1').addEventListener('click', () => {
+        adminStep1.style.display = 'block';
+        adminStep2.style.display = 'none';
+        adminPIN = '';
+        updateDots();
+        gsap.from(adminStep1, { opacity: 0, y: 12, duration: .3, ease: 'power2.out' });
+      });
+
+      /* ============================================================
+         PIN KEYPAD — Step 2
+      ============================================================ */
+      function updateDots() {
+        for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.toggle('filled', i < adminPIN.length);
+      }
+
+      pinPad.addEventListener('click', e => {
+        if (pinLocked) return;
+        const key = e.target.closest('.pkey');
+        if (!key) return;
+        if (key.id === 'pinDel') { adminPIN = adminPIN.slice(0, -1); updateDots(); return; }
+        const d = key.dataset.d;
+        if (d === undefined || adminPIN.length >= 4) return;
+        /* ripple on key */
+        const rip = document.createElement('span');
+        rip.style.cssText = 'position:absolute;border-radius:50%;background:rgba(168,85,247,.38);width:60px;height:60px;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);animation:pinRipple .4s ease forwards;pointer-events:none;';
+        key.style.position = 'relative';
+        key.appendChild(rip);
+        setTimeout(() => rip.remove(), 420);
+        adminPIN += d;
+        updateDots();
+        if (adminPIN.length === 4) setTimeout(checkPin, 320);
+      });
+
+      function checkPin() {
+        const ADMIN_PIN = SwapifyStore.get('adminPin') || PIN_CODE;
+        if (adminPIN === String(ADMIN_PIN)) {
+          toast('✓ Admin verified! Entering dashboard…', 'success');
+          gsap.to(document.getElementById('pinPad'), { scale: 1.04, duration: .2, yoyo: true, repeat: 1 });
+          /* Store localStorage session for client-side pages */
+          if (window._pendingAdmin) {
+            SwapifyStore.setSession(window._pendingAdmin);
+          }
+          /* Animate card out */
+          gsap.to(document.getElementById('authCard'), { scale: .9, opacity: 0, duration: .4, ease: 'power2.in' });
+          /* POST to server so isAdmin middleware sees req.session.role === 'admin' */
+          const email = window._pendingAdmin ? window._pendingAdmin.email : document.getElementById('adminEmail').value.trim();
+          const password = document.getElementById('adminPassword').value;
+          window._pendingAdmin = null;
+          fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+            body: new URLSearchParams({ email, password }),
+            credentials: 'same-origin'
+          }).then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              window.location.href = '/admin';
+            } else {
+              toast(data.error || 'Admin login failed. Please try again.', 'error');
+              resetAdminFlow();
+            }
+          }).catch(function() {
+            toast('Network error. Please try again.', 'error');
+            resetAdminFlow();
+          });
+        } else {
+          pinAttempts++;
+          const remaining = MAX_ATTEMPTS - pinAttempts;
+          if (remaining <= 0) {
+            pinLocked = true;
+            document.getElementById('pinAttemptsMsg').textContent = '⛔ Too many attempts. Please go back and try again.';
+            adminPIN = '';
+            updateDots();
+            shake(adminStep2);
+            // Flash all dots red and lock
+            for (let i = 0; i < 4; i++) {
+              const d = document.getElementById('pd' + i);
+              d.style.borderColor = '#ff6b6b';
+              d.style.background = 'rgba(255,107,107,.28)';
+            }
+            toast('Too many wrong attempts — locked out', 'error');
+            return;
+          }
+          toast(`Incorrect PIN — ${remaining} attempt${remaining === 1 ? '' : 's'} remaining`, 'error');
+          shake(adminStep2);
+          adminPIN = '';
+          /* flash dots red */
+          for (let i = 0; i < 4; i++) {
+            const d = document.getElementById('pd' + i);
+            d.style.borderColor = '#ff6b6b';
+            d.style.background = 'rgba(255,107,107,.28)';
+          }
+          document.getElementById('pinAttemptsMsg').textContent = `${remaining} attempt${remaining === 1 ? '' : 's'} remaining`;
+          setTimeout(() => {
+            updateDots();
+            for (let i = 0; i < 4; i++) {
+              const d = document.getElementById('pd' + i);
+              d.style.borderColor = ''; d.style.background = '';
+            }
+          }, 650);
+        }
+      }
+
+      /* Keyboard support for PIN */
+      document.addEventListener('keydown', e => {
+        const adminPanel = document.getElementById('panel-admin');
+        if (!adminPanel.classList.contains('active') || adminStep2.style.display === 'none') return;
+        if (pinLocked) return;
+        if (e.key >= '0' && e.key <= '9' && adminPIN.length < 4) { adminPIN += e.key; updateDots(); if (adminPIN.length === 4) setTimeout(checkPin, 320); }
+        else if (e.key === 'Backspace') { adminPIN = adminPIN.slice(0, -1); updateDots(); }
+      });
+
+      /* ============================================================
+         PASSWORD VISIBILITY TOGGLE — covers all forms via delegation
+      ============================================================ */
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.eye-toggle');
+        if (!btn) return;
+        const input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        btn.querySelector('.eye-open').style.display = showing ? '' : 'none';
+        btn.querySelector('.eye-shut').style.display = showing ? 'none' : '';
+        btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+        /* Keep focus on the input after toggle */
+        input.focus();
+      });
+
+    })();
+  </script>
+  <script src="/js/realtime-validation.js"></script>
+
+  <!-- ══════════════════════════════════════════
+       FORGOT PASSWORD MODAL
+  ══════════════════════════════════════════ -->
+  <div id="forgotModal" style="
+    display:none;position:fixed;inset:0;z-index:9999;
+    background:rgba(0,0,0,.65);backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  ">
+    <div style="
+      background:#1a1025;border:1px solid rgba(168,85,247,.25);
+      border-radius:24px;width:clamp(300px,92vw,400px);padding:32px;
+      box-shadow:0 28px 55px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.07);
+      position:relative;animation:modalIn .4s cubic-bezier(.175,.885,.32,1.275) both;
+    ">
+      <!-- neon accent top -->
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;border-radius:24px 24px 0 0;
+        background:linear-gradient(90deg,transparent,#e879f9,#a855f7,transparent);"></div>
+
+      <button id="closeForgotModal" style="
+        position:absolute;top:14px;right:14px;
+        background:rgba(255,255,255,.06);border:none;border-radius:8px;
+        width:30px;height:30px;cursor:pointer;color:rgba(255,255,255,.5);
+        display:flex;align-items:center;justify-content:center;
+        transition:background .2s,color .2s;
+      " onmouseover="this.style.background='rgba(255,255,255,.12)';this.style.color='#fff'"
+         onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.5)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <!-- Icon -->
+      <div style="width:52px;height:52px;border-radius:14px;margin:0 auto 16px;
+        background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);
+        display:flex;align-items:center;justify-content:center;color:#e879f9;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="20" height="16" x="2" y="4" rx="2"/>
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      </div>
+
+      <h2 style="text-align:center;font-size:1.15rem;font-weight:800;margin-bottom:6px;">Forgot password?</h2>
+      <p style="text-align:center;font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.5;">
+        Enter your email and we'll send you a reset link.
+      </p>
+
+      <!-- State: form -->
+      <div id="fpm-form">
+        <div style="margin-bottom:12px;">
+          <div style="position:relative;">
+            <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:rgba(255,255,255,.4);pointer-events:none;"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <input type="email" id="fpmEmail" placeholder="your@email.com" autocomplete="email"
+              style="width:100%;padding:12px 12px 12px 40px;
+                background:rgba(255,255,255,.06);border:1px solid transparent;border-radius:11px;
+                color:#fff;font-family:'Inter',sans-serif;font-size:.88rem;outline:none;
+                transition:all .28s ease;"
+              onfocus="this.style.borderColor='#a855f7';this.style.background='rgba(168,85,247,.12)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.15)';"
+              onblur="this.style.borderColor='transparent';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='none';"
+            >
+          </div>
+          <span id="fpmErr" style="display:block;font-size:.72rem;color:#ff6b6b;margin-top:4px;margin-left:3px;min-height:16px;"></span>
+        </div>
+        <button id="fpmSend" style="
+          width:100%;padding:13px;margin-top:4px;
+          background:linear-gradient(135deg,#6d28d9,#a855f7,#e879f9,#a855f7,#7c3aed);
+          background-size:200% auto;
+          border:none;border-radius:11px;
+          font-family:'Inter',sans-serif;font-weight:700;font-size:.92rem;
+          color:#fff;cursor:pointer;transition:all .3s ease;
+        " onmouseover="this.style.backgroundPosition='right center';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(168,85,247,.45)';"
+           onmouseout="this.style.backgroundPosition='';this.style.transform='';this.style.boxShadow='';">
+          Send Reset Link
+        </button>
+      </div>
+
+      <!-- State: success -->
+      <div id="fpm-success" style="display:none;text-align:center;padding:8px 0;">
+        <div style="width:60px;height:60px;border-radius:50%;margin:0 auto 16px;
+          background:rgba(107,203,119,.12);border:2px solid rgba(107,203,119,.35);
+          display:flex;align-items:center;justify-content:center;
+          animation:fpmPop .55s cubic-bezier(.175,.885,.32,1.275) both;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6bcb77" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <p style="font-size:.95rem;font-weight:700;color:#6bcb77;margin-bottom:8px;">Email sent!</p>
+        <p style="font-size:.82rem;color:rgba(255,255,255,.5);line-height:1.5;">
+          If that email is registered, a reset link has been sent. Check your inbox (and spam folder).
+        </p>
+        <button onclick="document.getElementById('forgotModal').style.display='none'" style="
+          margin-top:18px;padding:10px 24px;
+          background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);
+          border-radius:10px;color:#a855f7;font-family:'Inter',sans-serif;
+          font-weight:600;font-size:.85rem;cursor:pointer;
+        ">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes modalIn { from { opacity:0; transform:scale(.92) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    @keyframes fpmPop  { from { transform:scale(0); opacity:0; } to { transform:scale(1); opacity:1; } }
+  </style>
+
+  <script>
+  (() => {
+    const modal      = document.getElementById('forgotModal');
+    const closeBtn   = document.getElementById('closeForgotModal');
+    const openBtn    = document.getElementById('openForgotModal');
+    const sendBtn    = document.getElementById('fpmSend');
+    const emailInput = document.getElementById('fpmEmail');
+    const errSpan    = document.getElementById('fpmErr');
+    const formDiv    = document.getElementById('fpm-form');
+    const successDiv = document.getElementById('fpm-success');
+
+    function openModal() {
+      modal.style.display = 'flex';
+      emailInput.value = '';
+      errSpan.textContent = '';
+      formDiv.style.display = 'block';
+      successDiv.style.display = 'none';
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send Reset Link';
+      setTimeout(() => emailInput.focus(), 80);
+    }
+
+    function closeModal() { modal.style.display = 'none'; }
+
+    openBtn  && openBtn.addEventListener('click',  openModal);
+    closeBtn && closeBtn.addEventListener('click',  closeModal);
+
+    // Close on backdrop click
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    // Close on Escape
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.style.display === 'flex') closeModal(); });
+
+    // Submit via fetch
+    sendBtn && sendBtn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      errSpan.textContent = '';
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errSpan.textContent = 'Please enter a valid email address.';
+        emailInput.style.borderColor = '#ff6b6b';
+        return;
+      }
+      emailInput.style.borderColor = '';
+
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending…';
+
+      try {
+        const res  = await fetch('/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.success) {
+          formDiv.style.display    = 'none';
+          successDiv.style.display = 'block';
+        } else {
+          errSpan.textContent = data.error || 'Something went wrong. Please try again.';
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Send Reset Link';
+        }
+      } catch (err) {
+        errSpan.textContent = 'Network error. Please try again.';
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send Reset Link';
+      }
+    });
+
+    // Allow pressing Enter in the email field
+    emailInput && emailInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); sendBtn.click(); }
+    });
+
+    // Show success toast if redirected after password reset
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'passwordreset') {
+      window.history.replaceState({}, '', '/login');
+      // Use SwapifyUI toast if available, otherwise simple alert
+      setTimeout(() => {
+        if (typeof SwapifyUI !== 'undefined' && SwapifyUI.toast) {
+          SwapifyUI.toast('Password reset successfully! Please log in.', 'success');
+        } else {
+          const tc = document.querySelector('.tcont');
+          if (tc) {
+            const t = document.createElement('div');
+            t.className = 'toast success';
+            t.innerHTML = '<span style="font-size:16px">✅</span> Password reset! Please log in.';
+            tc.appendChild(t);
+            setTimeout(() => t.remove(), 4000);
+          }
+        }
+      }, 300);
+    }
+  })();
+  </script>
+
+</body>
+</html>
