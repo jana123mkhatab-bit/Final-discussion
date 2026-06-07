@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Admin Dashboard — Swapify</title>
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+  <style>
+    .btn-danger-ghost { color: #ff6b6b; border: 1px solid rgba(255,107,107,.3); border-radius: 10px; padding: 6px 14px; font-size: 12px; font-weight: 700; transition: background .25s; }
+    .btn-danger-ghost:hover { background: rgba(255,107,107,.12); }
+  </style>
+</head>
+<body>
+<%- include('../partials/admin-navbar', { activePage: 'dashboard' }) %>
+
+
+  <section class="section" style="padding-top:32px">
+    <div class="container">
+      
+      <!-- WOW Hero Section -->
+      <div style="margin-bottom:40px; padding: 40px; border-radius: 24px; background: var(--gradient-hero); color: white; position: relative; overflow: hidden; box-shadow: var(--shadow-xl);">
+        <div style="position: relative; z-index: 2;">
+          <h1 style="font-size:42px; font-weight:800; margin-bottom:8px; letter-spacing: -1px;">Admin Dashboard</h1>
+          <p style="font-size:18px; opacity: 0.9; max-width: 500px;">Welcome back to command central. Monitor system health, manage users, and govern the Swapify ecosystem.</p>
+        </div>
+        <!-- Decorative glowing orbs -->
+        <div style="position: absolute; right: -50px; top: -50px; width: 300px; height: 300px; background: rgba(255,255,255,0.1); filter: blur(40px); border-radius: 50%;"></div>
+        <div style="position: absolute; right: 150px; bottom: -100px; width: 250px; height: 250px; background: rgba(139,92,246,0.3); filter: blur(50px); border-radius: 50%;"></div>
+      </div>
+
+      <!-- Metrics with premium styling -->
+      <!-- Embed server-side counts as data attributes -->
+      <div class="grid grid-4 gap-6" style="margin-bottom:40px" id="metricsGrid" 
+           data-user-count="<%= userCount %>"
+           data-skill-count="<%= skillCount %>"
+           data-swap-count="<%= swapCount %>"
+           data-report-count="<%= reportCount %>"></div>
+
+      <!-- Dashboard Layout -->
+      <div class="grid gap-8" style="grid-template-columns: 2fr 1fr;">
+        <!-- Left Column: Activity & Stats -->
+        <div style="display:flex; flex-direction:column; gap:32px;">
+          <div class="card card-body" style="border:none; box-shadow: var(--shadow-md);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+              <h2 style="font-weight:800; font-size:22px;">Real-Time Activity</h2>
+              <span class="badge badge-primary badge-glow" style="animation: glow-pulse 2s infinite">Live Update</span>
+            </div>
+            <div id="recentActivity" style="display:flex; flex-direction:column; gap: 16px;"></div>
+          </div>
+          
+          <!-- Mock Chart UI -->
+          <div class="card card-body" style="border:none; box-shadow: var(--shadow-md); background: var(--input-bg);">
+            <h2 style="font-weight:800; font-size:22px; margin-bottom:24px;">Platform Growth</h2>
+            <div style="height: 180px; display:flex; align-items:flex-end; gap:8px; padding-top: 20px; border-bottom: 2px solid var(--border);">
+              <div style="flex:1; background:var(--primary); border-radius:6px 6px 0 0; height:30%; opacity:0.6; transition: height 1s ease;" class="bar"></div>
+              <div style="flex:1; background:var(--primary); border-radius:6px 6px 0 0; height:45%; opacity:0.7; transition: height 1s ease;" class="bar"></div>
+              <div style="flex:1; background:var(--primary); border-radius:6px 6px 0 0; height:60%; opacity:0.8; transition: height 1s ease;" class="bar"></div>
+              <div style="flex:1; background:var(--primary); border-radius:6px 6px 0 0; height:50%; opacity:0.7; transition: height 1s ease;" class="bar"></div>
+              <div style="flex:1; background:var(--gradient-main); border-radius:6px 6px 0 0; height:85%; box-shadow: var(--shadow-glow); transition: height 1s ease;" class="bar"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:12px; color:var(--muted-fg); font-size:12px; font-weight:600;">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span style="color:var(--primary)">Today</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Quick Actions -->
+        <div>
+          <div class="card card-body" style="position:sticky; top:100px; border:none; box-shadow: var(--shadow-lg); background: linear-gradient(to bottom, var(--card), var(--muted));">
+            <h2 style="font-weight:800; font-size:22px; margin-bottom:24px; display:flex; align-items:center; gap:8px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> 
+              Quick Actions
+            </h2>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <a href="/admin/users" class="btn btn-outline" style="justify-content:space-between; padding: 16px; border-radius: 16px; font-size:16px;">
+                <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">👥</span> <span>Manage Users</span></div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+              <a href="/admin/skills" class="btn btn-outline" style="justify-content:space-between; padding: 16px; border-radius: 16px; font-size:16px;">
+                <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">🧠</span> <span>Manage Skills</span></div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+              <a href="/admin/objects" class="btn btn-outline" style="justify-content:space-between; padding: 16px; border-radius: 16px; font-size:16px;">
+                <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">📦</span> <span>Manage Objects</span></div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+              <a href="/admin/deals" class="btn btn-outline" style="justify-content:space-between; padding: 16px; border-radius: 16px; font-size:16px;">
+                <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">🏷️</span> <span>Manage Deals</span></div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+              <a href="/admin/swaps" class="btn btn-outline" style="justify-content:space-between; padding: 16px; border-radius: 16px; font-size:16px;">
+                <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">🔁</span> <span>Monitor Swaps</span></div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+              <a href="/admin/reports" class="btn btn-outline" style="justify-content:space-between; padding: 16px; border-radius: 16px; font-size:16px; border-color: rgba(217,119,6,0.3);">
+                <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">🚨</span> <span style="color:#D97706">Review Reports</span></div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/app.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!SwapifyAdmin.requireAdmin()) return;
+
+    // Admin logout is handled by the modal in admin-navbar.ejs
+
+    // Show admin name in avatar tooltip
+    var session = SwapifyStore.getSession();
+    if (session && session.name) {
+      var badge = document.getElementById('adminBadge');
+      if (badge) badge.title = 'Logged in as ' + session.name;
+    }
+
+    // Trigger chart animation
+    setTimeout(function() {
+      var bars = document.querySelectorAll('.bar');
+      var heights = ['30%', '45%', '60%', '50%', '85%'];
+      bars.forEach(function(b, i) { b.style.height = '0%'; setTimeout(function(){ b.style.height = heights[i]; }, 50); });
+    }, 100);
+
+    // Get actual counts from server-side data attributes
+    var grid = document.getElementById('metricsGrid');
+    var userCount = parseInt(grid.dataset.userCount) || 0;
+    var skillCount = parseInt(grid.dataset.skillCount) || 0;
+    var swapCount = parseInt(grid.dataset.swapCount) || 0;
+    var reportCount = parseInt(grid.dataset.reportCount) || 0;
+
+    // Define metrics with actual database counts and navigation links
+    var metrics = [
+      { label:'Total Users',   value: userCount,  href: '/admin/users', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', color:'var(--primary)' },
+      { label:'Total Skills',  value: skillCount, href: '/admin/skills', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>', color:'var(--secondary)' },
+      { label:'Active Swaps',   value: swapCount,  href: '/admin/swaps', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg>', color:'var(--success)' },
+      { label:'Open Reports',  value: reportCount, href: '/admin/reports', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>', color:'#D97706' }
+    ];
+
+    metrics.forEach(function(m, index) {
+      // Create anchor tag for each card to make it clickable
+      var link = document.createElement('a');
+      link.href = m.href;
+      link.style.cssText = 'text-decoration: none; color: inherit;';
+      
+      var a = document.createElement('div');
+      a.className = 'card card-body';
+      a.style.cssText = 'position:relative; overflow:hidden; border:none; box-shadow: var(--shadow-sm); padding:24px; display:flex; flex-direction:column; gap:16px; border-top: 4px solid ' + m.color + '; animation: slideUp 0.4s ease forwards; opacity:0; transform:translateY(20px); animation-delay:' + (index * 0.1) + 's; cursor:pointer; transition: all 0.3s ease;';
+      
+      // Add hover effect
+      a.onmouseenter = function() { 
+        this.style.boxShadow = 'var(--shadow-lg)'; 
+        this.style.transform = 'translateY(-4px)';
+      };
+      a.onmouseleave = function() { 
+        this.style.boxShadow = 'var(--shadow-sm)'; 
+        this.style.transform = '';
+      };
+      
+      // Decorative background icon
+      var bgIcon = '<div style="position:absolute; right:-20px; bottom:-20px; opacity:0.05; width:120px; height:120px; color:' + m.color + ';">' + m.icon + '</div>';
+      
+      a.innerHTML = bgIcon + 
+        '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' + 
+          '<div style="width:48px; height:48px; border-radius:12px; background:' + m.color + '20; color:' + m.color + '; display:flex; align-items:center; justify-content:center; padding:10px;">' + m.icon + '</div>' + 
+          '<div style="font-size:32px; font-weight:800; color:var(--fg); line-height:1;">' + m.value + '</div>' + 
+        '</div>' + 
+        '<div style="color:var(--muted-fg); font-size:15px; font-weight:600;">' + m.label + '</div>';
+      
+      link.appendChild(a);
+      grid.appendChild(link);
+    });
+
+    // Render recent activity
+    var swaps  = SwapifyAdmin.getAllSwaps();
+    var activity = document.getElementById('recentActivity');
+    var recentSwaps = swaps.slice(0,6);
+    if (!recentSwaps.length) { activity.innerHTML = '<p style="color:var(--muted-fg)">No recent activity.</p>'; return; }
+    recentSwaps.forEach(function(sw) {
+      var ago = Math.round((Date.now()-sw.createdAt)/60000);
+      var t = ago < 60 ? ago+'m ago' : ago < 1440 ? Math.round(ago/60)+'h ago' : Math.round(ago/1440)+'d ago';
+      var statusColor = {pending:'#D97706',accepted:'var(--success)',cancelled:'var(--error)'}[sw.status] || 'var(--fg)';
+      
+      var div = document.createElement('div');
+      div.style.cssText = 'display:flex; align-items:center; gap:16px; padding:16px; background:var(--bg); border-radius:16px; transition:transform 0.2s ease; cursor:pointer;';
+      div.onmouseenter = function() { this.style.transform = 'scale(1.02)'; this.style.boxShadow = 'var(--shadow-sm)'; };
+      div.onmouseleave = function() { this.style.transform = ''; this.style.boxShadow = 'none'; };
+      
+      div.innerHTML = 
+        '<div style="width:40px; height:40px; border-radius:50%; background:' + statusColor + '20; color:' + statusColor + '; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' +
+          (sw.status === 'pending' ? '⏳' : sw.status === 'accepted' ? '✓' : '✕') +
+        '</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:700; font-size:15px; margin-bottom:4px;">Swap ' + (sw.status.charAt(0).toUpperCase() + sw.status.slice(1)) + '</div>' +
+          '<div style="font-size:13px; color:var(--muted-fg);"><b>' + escapeHtml(sw.fromName) + '</b> requested a swap with <b>' + escapeHtml(sw.toName) + '</b></div>' +
+        '</div>' +
+        '<div style="font-size:12px; font-weight:600; color:var(--muted-fg); background:var(--hover-surface); padding:4px 8px; border-radius:8px;">' + t + '</div>';
+        
+      activity.appendChild(div);
+    });
+  });
+  </script>
+  <style>
+    @keyframes slideUp { to { opacity:1; transform:translateY(0); } }
+  </style>
+</body>
+</html>

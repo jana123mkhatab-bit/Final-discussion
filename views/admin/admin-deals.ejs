@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Deal Listings — Swapify Admin</title>
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+<%- include('../partials/admin-navbar', { activePage: 'deals' }) %>
+
+
+  <section class="section" style="padding-top:32px">
+    <div class="container">
+
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1 style="font-size:28px;font-weight:700;margin-bottom:4px">🏷️ Deal Listings</h1>
+          <p style="color:var(--muted-fg)">
+            Items listed for <strong>direct sale</strong> on the /deals page —
+            <strong><%= deals.length %></strong> listing<%= deals.length !== 1 ? 's' : ''%>
+          </p>
+        </div>
+        <a href="/deals" class="btn btn-outline btn-sm" target="_blank">View Public Page ↗</a>
+      </div>
+
+      <!-- Tab pills -->
+      <div style="display:flex;gap:8px;margin-bottom:24px">
+        <button id="tabListings" class="btn btn-primary btn-sm" onclick="showTab('listings')">Deal Listings (<%= deals.length %>)</button>
+        <button id="tabOrders"   class="btn btn-outline btn-sm" onclick="showTab('orders')">Recent Orders (<%= orders.length %>)</button>
+      </div>
+
+      <!-- ───── DEALS TABLE ───── -->
+      <div id="panelListings">
+        <!-- Filter bar -->
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <input type="text" id="dealSearch" class="input" placeholder="Search by title or owner…" style="max-width:300px">
+          <select id="dealAvailFilter" class="input" style="max-width:180px;appearance:none">
+            <option value="">All Availability</option>
+            <option value="true">Available</option>
+            <option value="false">Sold / Unavailable</option>
+          </select>
+        </div>
+
+        <div class="card" style="overflow:hidden">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border);background:var(--muted)">
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Item</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Owner</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Price</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Original</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Condition</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Status</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% deals.forEach(function(deal) { %>
+              <tr class="deal-row"
+                  data-title="<%= (deal.title || '').toLowerCase() %>"
+                  data-owner="<%= deal.creator ? (deal.creator.username || '').toLowerCase() : '' %>"
+                  data-available="<%= deal.isAvailable %>"
+                  style="border-bottom:1px solid var(--border);transition:background .2s"
+                  onmouseenter="this.style.background='var(--hover-surface)'"
+                  onmouseleave="this.style.background=''">
+
+                <!-- Item -->
+                <td style="padding:14px 16px;max-width:220px">
+                  <div style="font-weight:600;font-size:14px;margin-bottom:2px"><%= deal.title %></div>
+                  <div style="font-size:12px;color:var(--muted-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px"><%= deal.description %></div>
+                  <% if (deal.subCategory) { %>
+                    <span style="font-size:11px;color:var(--primary);font-weight:600"><%= deal.subCategory %></span>
+                  <% } %>
+                </td>
+
+                <!-- Owner -->
+                <td style="padding:14px 16px">
+                  <% if (deal.creator) { %>
+                    <div style="font-weight:600;font-size:14px"><%= deal.creator.username %></div>
+                    <div style="font-size:12px;color:var(--muted-fg)"><%= deal.creator.email %></div>
+                  <% } else { %>
+                    <span style="color:var(--muted-fg);font-size:13px">Deleted user</span>
+                  <% } %>
+                </td>
+
+                <!-- Price -->
+                <td style="padding:14px 16px;font-size:15px;font-weight:700;color:var(--success)">
+                  $<%= deal.price != null ? deal.price : '—' %>
+                </td>
+
+                <!-- Original Price -->
+                <td style="padding:14px 16px;font-size:13px;color:var(--muted-fg);text-decoration:line-through">
+                  <%= deal.originalPrice != null ? '$' + deal.originalPrice : '—' %>
+                </td>
+
+                <!-- Condition -->
+                <td style="padding:14px 16px">
+                  <% if (deal.condition) { %>
+                    <span class="badge badge-outline" style="font-size:11px"><%= deal.condition %></span>
+                  <% } else { %>
+                    <span style="color:var(--muted-fg)">—</span>
+                  <% } %>
+                </td>
+
+                <!-- Status -->
+                <td style="padding:14px 16px">
+                  <% if (deal.isAvailable) { %>
+                    <span class="badge" style="color:var(--success);border-color:var(--success)">For Sale</span>
+                  <% } else { %>
+                    <span class="badge" style="color:var(--muted-fg);border-color:var(--border)">Sold</span>
+                  <% } %>
+                </td>
+
+                <!-- Actions -->
+                <td style="padding:14px 16px">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <a href="/item-details/<%= deal._id %>" target="_blank" class="btn btn-ghost btn-sm" style="font-size:12px">View</a>
+                    <form method="POST" action="/admin/items/<%= deal._id %>/delete" style="display:inline"
+                          onsubmit="return confirm('Permanently delete \'<%= deal.title.replace(/\'/g, '&#39;') %>\'? This cannot be undone.')">
+                      <button type="submit" class="btn btn-ghost btn-sm" style="color:#ff6b6b;font-size:12px">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <% }); %>
+              <% if (deals.length === 0) { %>
+              <tr><td colspan="7" style="padding:60px;text-align:center;color:var(--muted-fg)">
+                <div style="font-size:40px;margin-bottom:12px">🏷️</div>
+                <div style="font-size:16px;font-weight:600">No deal listings yet</div>
+              </td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ───── ORDERS TABLE ───── -->
+      <div id="panelOrders" style="display:none">
+        <div class="card" style="overflow:hidden">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border);background:var(--muted)">
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Order ID</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Buyer</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Item</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Amount</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Payment</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Status</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Ship To</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Date</th>
+                <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% orders.forEach(function(order) { %>
+              <tr style="border-bottom:1px solid var(--border);transition:background .2s"
+                  onmouseenter="this.style.background='var(--hover-surface)'"
+                  onmouseleave="this.style.background=''">
+
+                <td style="padding:14px 16px;font-size:11px;color:var(--muted-fg);font-family:monospace">
+                  <%= order._id.toString().slice(-8) %>
+                </td>
+
+                <td style="padding:14px 16px;font-size:14px;font-weight:600">
+                  <%= order.buyer ? order.buyer.username : 'Deleted user' %>
+                </td>
+
+                <td style="padding:14px 16px;font-size:14px;color:var(--primary)">
+                  <%= order.item ? order.item.title : 'Deleted item' %>
+                </td>
+
+                <td style="padding:14px 16px;font-size:15px;font-weight:700;color:var(--success)">
+                  $<%= order.amount %>
+                </td>
+
+                <td style="padding:14px 16px">
+                  <span class="badge badge-outline" style="font-size:11px;text-transform:uppercase"><%= order.paymentMethod %></span>
+                </td>
+
+                <td style="padding:14px 16px">
+                  <% var sc = {confirmed:'var(--success)', shipped:'var(--primary)', delivered:'#3b82f6', cancelled:'#ff6b6b', refunded:'#D97706', pending:'#D97706'}[order.status] || 'var(--fg)'; %>
+                  <span class="badge" style="color:<%= sc %>;border-color:<%= sc %>"><%= order.status %></span>
+                </td>
+
+                <td style="padding:14px 16px;font-size:12px;color:var(--muted-fg)">
+                  <%= new Date(order.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) %>
+                </td>
+
+                <td style="padding:14px 16px;font-size:12px;color:var(--fg);max-width:180px">
+                  <% if (order.shippingAddress) { %>
+                  <div style="display:flex;align-items:flex-start;gap:4px">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span style="word-break:break-word"><%= order.shippingAddress %></span>
+                  </div>
+                  <% } else { %>
+                  <span style="color:var(--muted-fg)">—</span>
+                  <% } %>
+                </td>
+
+                <td style="padding:14px 16px">
+                  <% if (['confirmed','shipped','delivered'].includes(order.status)) { %>
+                  <button class="btn btn-ghost btn-sm" style="color:#D97706;font-size:12px;border:1px solid #D97706"
+                    onclick="refundOrder('<%= order._id %>')">↩ Refund</button>
+                  <% } else { %>
+                  <span style="color:var(--muted-fg);font-size:12px">—</span>
+                  <% } %>
+                </td>
+              </tr>
+              <% }); %>
+              <% if (orders.length === 0) { %>
+              <tr><td colspan="9" style="padding:60px;text-align:center;color:var(--muted-fg)">
+                <div style="font-size:40px;margin-bottom:12px">📋</div>
+                <div style="font-size:16px;font-weight:600">No orders yet</div>
+              </td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script src="/js/app.js"></script>
+  <script>
+    function showTab(tab) {
+      document.getElementById('panelListings').style.display = tab === 'listings' ? '' : 'none';
+      document.getElementById('panelOrders').style.display   = tab === 'orders'   ? '' : 'none';
+      document.getElementById('tabListings').className = tab === 'listings' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      document.getElementById('tabOrders').className   = tab === 'orders'   ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+    }
+
+    async function refundOrder(orderId) {
+      if (!confirm('Issue a refund for this order? This will mark it as refunded and restore the item listing.')) return;
+      try {
+        const res = await fetch('/admin/deal/' + orderId + '/refund', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.success) {
+          SwapifyUI.toast('Order refunded successfully ✓', 'success');
+          setTimeout(function() { location.reload(); }, 800);
+        } else {
+          SwapifyUI.toast('Refund failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+      } catch (e) {
+        SwapifyUI.toast('Network error. Please try again.', 'error');
+      }
+    }
+
+    // Live filter for deals table
+    var dealSearch = document.getElementById('dealSearch');
+    var dealAvailFilter = document.getElementById('dealAvailFilter');
+
+    function applyDealFilters() {
+      var q  = dealSearch ? dealSearch.value.toLowerCase() : '';
+      var av = dealAvailFilter ? dealAvailFilter.value : '';
+      document.querySelectorAll('.deal-row').forEach(function(row) {
+        var matchQ  = !q  || row.dataset.title.includes(q) || row.dataset.owner.includes(q);
+        var matchAv = !av || row.dataset.available === av;
+        row.style.display = (matchQ && matchAv) ? '' : 'none';
+      });
+    }
+
+    if (dealSearch) dealSearch.addEventListener('input', applyDealFilters);
+    if (dealAvailFilter) dealAvailFilter.addEventListener('change', applyDealFilters);
+  </script>
+</body>
+</html>

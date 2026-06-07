@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Skills Approval — Swapify Admin</title>
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+<%- include('../partials/admin-navbar', { activePage: 'skills' }) %>
+
+  <section class="section" style="padding-top:32px">
+    <div class="container">
+      <div class="flex justify-between items-center" style="margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div><h1 style="font-size:28px;font-weight:700;margin-bottom:4px">Skills Approval Panel</h1><p style="color:var(--muted-fg)" id="skillCount"></p></div>
+        <div style="display:flex;gap:8px">
+          <select id="filterStatus" class="input" style="max-width:160px;appearance:none">
+            <option value="">All Skills</option>
+            <option value="active">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-3 gap-6" id="skillsGrid"></div>
+      <div id="skillsEmpty" style="display:none"><div class="empty-state"><div class="empty-state-icon">🧠</div><h3>No skills found</h3><p>Adjust your filter to see more.</p></div></div>
+    </div>
+  </section>
+
+  <!-- Inject real MongoDB skill data -->
+  <script>
+  window.__DB_SKILLS = <%- JSON.stringify(skills.map(function(s){ return {
+    id:        String(s._id),
+    offers:    s.title,
+    requests:  s.wantsInExchange || 'Open to exchange',
+    ownerName: s.creator ? s.creator.username : 'Unknown',
+    level:     s.level || 'any',
+    location:  s.itemLocation || 'Online',
+    status:    s.approvalStatus === 'approved' ? 'active' : s.approvalStatus
+  };})) %>;
+  </script>
+  <script src="/js/app.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!SwapifyAdmin.requireAdmin()) return;
+    if (window.__DB_SKILLS && window.__DB_SKILLS.length) {
+      localStorage.setItem('swapify_skills', JSON.stringify(window.__DB_SKILLS));
+    }
+
+    function render(skills) {
+      var grid = document.getElementById('skillsGrid');
+      var empty = document.getElementById('skillsEmpty');
+      document.getElementById('skillCount').textContent = skills.length + ' skill' + (skills.length !== 1 ? 's' : '');
+      grid.innerHTML = '';
+      empty.style.display = skills.length ? 'none' : 'block';
+      skills.forEach(function(s) {
+        var isApproved = s.status === 'active';
+        var isRejected = s.status === 'rejected';
+        var statusLabel = isApproved ? 'Approved' : isRejected ? 'Rejected' : 'Pending';
+        var statusColor = isApproved ? 'var(--success)' : isRejected ? '#D97706' : 'var(--primary)';
+        var card = document.createElement('div');
+        card.className = 'card card-body';
+        card.style.cssText = 'border-top:4px solid ' + statusColor;
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">' +
+            '<div><div style="font-weight:700;font-size:16px;margin-bottom:4px">' + escapeHtml(s.offers) + '</div><div style="font-size:13px;color:var(--muted-fg)">Wants: ' + escapeHtml(s.requests) + '</div></div>' +
+            '<span class="badge" style="color:' + statusColor + ';border-color:' + statusColor + ';flex-shrink:0">' + statusLabel + '</span>' +
+          '</div>' +
+          '<div style="font-size:13px;color:var(--muted-fg);margin-bottom:4px">Creator: <strong>' + escapeHtml(s.ownerName) + '</strong></div>' +
+          '<div style="font-size:13px;color:var(--muted-fg);margin-bottom:16px">Level: ' + escapeHtml(s.level) + ' · ' + escapeHtml(s.location) + '</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+            '<form method="POST" action="/admin/skills/' + escapeHtml(s.id) + '/approve" style="display:inline">' +
+              '<button type="submit" class="btn btn-primary btn-sm"' + (isApproved ? ' disabled' : '') + '>Approve</button>' +
+            '</form>' +
+            '<form method="POST" action="/admin/skills/' + escapeHtml(s.id) + '/reject" style="display:inline">' +
+              '<button type="submit" class="btn btn-outline btn-sm"' + (isRejected ? ' disabled' : '') + '>Reject</button>' +
+            '</form>' +
+            '<button class="btn btn-ghost btn-sm" style="color:#ff6b6b" data-action="delete-skill" data-sid="' + escapeHtml(s.id) + '" data-stitle="' + escapeHtml(s.offers) + '">Delete</button>' +
+          '</div>';
+        grid.appendChild(card);
+      });
+    }
+
+    function getFiltered() {
+      var all = window.__DB_SKILLS || [];
+      var f = document.getElementById('filterStatus').value;
+      if (!f) return all;
+      return all.filter(function(s) {
+        if (f==='active')   return s.status === 'active';
+        if (f==='rejected') return s.status === 'rejected';
+        if (f==='pending')  return !s.status || s.status === 'pending';
+        return true;
+      });
+    }
+
+    render(getFiltered());
+
+    /* Show toast based on ?action= query param then clean URL */
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var action = params.get('action');
+      if (action === 'approved') SwapifyUI.toast('Skill approved ✓', 'success');
+      if (action === 'rejected') SwapifyUI.toast('Skill rejected', 'info');
+      if (action === 'deleted')  SwapifyUI.toast('Skill deleted', 'success');
+      if (action) window.history.replaceState({}, '', '/admin/skills');
+    })();
+
+    /* Delete skill via modal */
+    document.addEventListener('click', function(e) {
+      var tgt = e.target.closest('[data-action="delete-skill"]');
+      if (!tgt) return;
+      var sid    = tgt.dataset.sid;
+      var stitle = tgt.dataset.stitle;
+      var bodyHtml = '<p style="font-size:14px;color:var(--muted-fg);line-height:1.6">Delete skill <strong>' + escapeHtml(stitle) + '</strong>? This action cannot be undone.</p>';
+      var footerHtml = '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+        '<button class="btn btn-ghost" onclick="SwapifyUI.closeModal()">Cancel</button>' +
+        '<button class="btn btn-ghost" onclick="confirmDeleteSkill(\'' + escapeHtml(sid) + '\')" style="color:#ef4444;border-color:#ef4444">Delete Skill</button>' +
+        '</div>';
+      SwapifyUI.showModal('Delete Skill', bodyHtml, footerHtml);
+    });
+
+    window.confirmDeleteSkill = function(sid) {
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/admin/skills/' + sid + '/delete';
+      document.body.appendChild(form);
+      SwapifyUI.closeModal();
+      form.submit();
+    };
+
+    document.getElementById('filterStatus').addEventListener('change', function() { render(getFiltered()); });
+  });
+  </script>
+</body>
+</html>

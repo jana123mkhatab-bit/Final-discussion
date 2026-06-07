@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Users Management — Swapify Admin</title>
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+<%- include('../partials/admin-navbar', { activePage: 'users' }) %>
+
+  <section class="section" style="padding-top:32px">
+    <div class="container">
+      <div class="flex justify-between items-center" style="margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div><h1 style="font-size:28px;font-weight:700;margin-bottom:4px">Users Management</h1><p style="color:var(--muted-fg)" id="userCount"></p></div>
+        <input type="text" class="input" id="userSearch" placeholder="Search users..." style="max-width:260px">
+      </div>
+      <div class="card" style="overflow:hidden">
+        <table style="width:100%;border-collapse:collapse" id="usersTable">
+          <thead><tr style="border-bottom:2px solid var(--border);background:var(--muted)">
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">User</th>
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Email</th>
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Role</th>
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Status</th>
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Actions</th>
+          </tr></thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/app.js"></script>
+  <script>
+  window.__DB_USERS = <%- JSON.stringify(users.map(function(u){ return {
+    id: String(u._id),
+    name: u.username,
+    email: u.email,
+    role: u.role || 'user',
+    status: u.isBanned ? 'banned' : 'active',
+    location: u.location || '',
+    avatar: u.profileImage || ''
+  };})) %>;
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!SwapifyAdmin.requireAdmin()) return;
+    var allUsers = window.__DB_USERS;
+
+    function getAvatar(u) {
+      return u.avatar || '/img/stock_pfp.jpg';
+    }
+
+    function statusBadge(s) {
+      if (s === 'banned')    return '<span class="badge" style="color:#ef4444;border-color:#ef4444">Banned</span>';
+      if (s === 'suspended') return '<span class="badge" style="color:#D97706;border-color:#D97706">Suspended</span>';
+      return '<span class="badge" style="color:var(--success);border-color:var(--success)">Active</span>';
+    }
+
+    function render(users) {
+      var tbody = document.getElementById('usersBody');
+      document.getElementById('userCount').textContent = users.length + ' user' + (users.length !== 1 ? 's' : '');
+      tbody.innerHTML = '';
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--muted-fg)">No users found.</td></tr>';
+        return;
+      }
+      users.forEach(function(u) {
+        var tr = document.createElement('tr');
+        tr.style.cssText = 'border-bottom:1px solid var(--border);transition:background .2s';
+        tr.onmouseenter = function(){tr.style.background='var(--hover-surface)';};
+        tr.onmouseleave = function(){tr.style.background='';};
+        var isCurrentAdmin = u.role === 'admin';
+        var actionsHtml = '';
+        if (isCurrentAdmin) {
+          actionsHtml = '<span style="color:var(--muted-fg);font-size:13px">Protected</span>';
+        } else {
+          actionsHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+          if (u.status === 'banned') {
+            actionsHtml +=
+              '<form method="POST" action="/admin/users/' + escapeHtml(u.id) + '/unban" style="display:inline">' +
+                '<button type="submit" class="btn btn-ghost btn-sm" style="color:var(--success);border-color:var(--success)">Unban</button>' +
+              '</form>';
+          } else {
+            actionsHtml +=
+              '<button class="btn btn-ghost btn-sm" data-action="ban" data-uid="' + escapeHtml(u.id) + '" data-uname="' + escapeHtml(u.name) + '">Ban</button>';
+          }
+          actionsHtml +=
+            '<button class="btn btn-ghost btn-sm" style="color:#ef4444" data-action="delete" data-uid="' + escapeHtml(u.id) + '" data-uname="' + escapeHtml(u.name) + '" data-uemail="' + escapeHtml(u.email) + '">Delete</button>' +
+          '</div>';
+        }
+
+        tr.innerHTML =
+          '<td style="padding:14px 16px"><div style="display:flex;align-items:center;gap:12px"><img src="' + escapeHtml(getAvatar(u)) + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover"><div><div style="font-weight:600;font-size:14px">' + escapeHtml(u.name) + '</div><div style="font-size:12px;color:var(--muted-fg)">' + escapeHtml(u.location||'') + '</div></div></div></td>' +
+          '<td style="padding:14px 16px;font-size:14px;color:var(--muted-fg)">' + escapeHtml(u.email) + '</td>' +
+          '<td style="padding:14px 16px">' + (u.role==='admin' ? '<span class="badge badge-primary">admin</span>' : '<span class="badge badge-outline">user</span>') + '</td>' +
+          '<td style="padding:14px 16px">' + statusBadge(u.status) + '</td>' +
+          '<td style="padding:14px 16px">' + actionsHtml + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    render(allUsers);
+
+    /* Show toast based on ?action= query param then clean URL */
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var action = params.get('action');
+      if (action === 'banned')   SwapifyUI.toast('User banned successfully', 'success');
+      if (action === 'unbanned') SwapifyUI.toast('User unbanned successfully', 'success');
+      if (action === 'deleted')  SwapifyUI.toast('User deleted successfully', 'success');
+      if (action) window.history.replaceState({}, '', '/admin/users');
+    })();
+
+    /* Ban button click handler - open modal for reason */
+    document.addEventListener('click', function(e) {
+      var tgt = e.target.closest('[data-action]');
+      if (!tgt) return;
+      var action = tgt.dataset.action;
+      var uid    = tgt.dataset.uid;
+      var uname  = tgt.dataset.uname;
+
+      if (action === 'ban') {
+        e.preventDefault();
+        // Show modal with reason input
+        var bodyHtml = '<div style="display:flex;flex-direction:column;gap:12px">' +
+          '<p style="color:var(--muted-fg);font-size:14px">You are about to ban <strong>' + escapeHtml(uname) + '</strong>. Please provide a reason:</p>' +
+          '<textarea id="banReason" class="input" placeholder="e.g., Repeated policy violations, fraudulent behavior..." style="min-height:100px;resize:vertical;font-family:inherit;font-size:14px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--fg)"></textarea>' +
+          '</div>';
+        var footerHtml = '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+          '<button class="btn btn-ghost" onclick="SwapifyUI.closeModal()">Cancel</button>' +
+          '<button class="btn btn-ghost" onclick="confirmBan(\'' + escapeHtml(uid) + '\')" style="color:#ef4444;border-color:#ef4444">Ban User</button>' +
+          '</div>';
+        SwapifyUI.showModal('Ban User', bodyHtml, footerHtml);
+        setTimeout(function() {
+          var textarea = document.getElementById('banReason');
+          if (textarea) textarea.focus();
+        }, 100);
+      }
+
+      if (action === 'delete') {
+        e.preventDefault();
+        var uemail = tgt.dataset.uemail;
+        var bodyHtml = '<div style="font-size:14px;color:var(--muted-fg);line-height:1.6">' +
+          '<p>You are about to <strong style="color:#ef4444">permanently delete</strong> this account:</p>' +
+          '<ul style="margin:8px 0 0 20px">' +
+          '<li><strong>' + escapeHtml(uname) + '</strong></li>' +
+          '<li style="font-size:12px;color:var(--muted-fg)">' + escapeHtml(uemail) + '</li>' +
+          '</ul>' +
+          '<p style="margin-top:12px">This action cannot be undone.</p>' +
+          '</div>';
+        var footerHtml = '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+          '<button class="btn btn-ghost" onclick="SwapifyUI.closeModal()">Cancel</button>' +
+          '<button class="btn btn-ghost" onclick="confirmDeleteUser(\'' + escapeHtml(uid) + '\')" style="color:#ef4444;border-color:#ef4444">Delete Permanently</button>' +
+          '</div>';
+        SwapifyUI.showModal('Delete User', bodyHtml, footerHtml);
+      }
+    });
+
+    /* Confirm ban action */
+    window.confirmBan = function(uid) {
+      var reasonInput = document.getElementById('banReason');
+      var reason = reasonInput ? reasonInput.value.trim() : '';
+      if (!reason) {
+        SwapifyUI.toast('Please provide a reason for banning', 'warning');
+        return;
+      }
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/admin/users/' + uid + '/ban';
+      var reasonField = document.createElement('input');
+      reasonField.type = 'hidden';
+      reasonField.name = 'reason';
+      reasonField.value = reason;
+      form.appendChild(reasonField);
+      document.body.appendChild(form);
+      SwapifyUI.closeModal();
+      form.submit();
+    };
+
+    /* Confirm delete action */
+    window.confirmDeleteUser = function(uid) {
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/admin/users/' + uid + '/delete';
+      document.body.appendChild(form);
+      SwapifyUI.closeModal();
+      form.submit();
+    };
+
+    /* Live search */
+    document.getElementById('userSearch').addEventListener('input', function() {
+      var q = this.value.toLowerCase();
+      var filtered = window.__DB_USERS.filter(function(u) {
+        return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.location||'').toLowerCase().includes(q);
+      });
+      render(filtered);
+    });
+  });
+  </script>
+</body>
+</html>

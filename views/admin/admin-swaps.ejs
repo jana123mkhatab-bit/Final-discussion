@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Swap Monitoring — Swapify Admin</title>
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+<%- include('../partials/admin-navbar', { activePage: 'swaps' }) %>
+
+  <section class="section" style="padding-top:32px">
+    <div class="container">
+      <div class="flex justify-between items-center" style="margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div><h1 style="font-size:28px;font-weight:700;margin-bottom:4px">Swap Monitoring</h1><p style="color:var(--muted-fg)" id="swapCount"></p></div>
+        <select id="filterStatus" class="input" style="max-width:180px;appearance:none">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="accepted">Accepted</option>
+          <option value="rejected">Cancelled</option>
+        </select>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="border-bottom:2px solid var(--border);background:var(--muted)">
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">ID</th>
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">From</th>
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">To</th>
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Skill</th>
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Status</th>
+            <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Actions</th>
+          </tr></thead>
+          <tbody id="swapsBody"></tbody>
+        </table>
+      </div>
+      <div id="swapsEmpty" style="display:none"><div class="empty-state"><div class="empty-state-icon">🔁</div><h3>No swaps found</h3></div></div>
+    </div>
+  </section>
+
+  <!-- Inject real MongoDB swap data into the client-side store -->
+  <script>
+  window.__DB_SWAPS = <%- JSON.stringify(swaps.map(function(s){ return {
+    id:        String(s._id),
+    fromName:  s.requester ? s.requester.username : 'Unknown',
+    toName:    s.receiver  ? s.receiver.username  : 'Unknown',
+    skillName: s.offeredSkill   ? s.offeredSkill.title   : (s.requestedSkill ? s.requestedSkill.title : '—'),
+    status:    s.status,
+    flagged:   !!s.flagged,
+    createdAt: new Date(s.createdAt).getTime()
+  };})) %>;
+  </script>
+  <script src="/js/app.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!SwapifyAdmin.requireAdmin()) return;
+    // Seed the store with live DB data on every page load
+    if (window.__DB_SWAPS && window.__DB_SWAPS.length) {
+      localStorage.setItem('swapify_swaps', JSON.stringify(window.__DB_SWAPS));
+    }
+
+    function statusColor(s) { return {pending:'#D97706',accepted:'var(--success)',rejected:'var(--muted-fg)'}[s]||'var(--fg)'; }
+
+    function render(swaps) {
+      var tbody = document.getElementById('swapsBody');
+      var empty = document.getElementById('swapsEmpty');
+      document.getElementById('swapCount').textContent = swaps.length + ' swap' + (swaps.length!==1?'s':'');
+      tbody.innerHTML = '';
+      empty.style.display = swaps.length ? 'none' : 'block';
+      swaps.forEach(function(sw) {
+        var ago = Math.round((Date.now()-sw.createdAt)/60000);
+        var t = ago<60?ago+'m ago':ago<1440?Math.round(ago/60)+'h ago':Math.round(ago/1440)+'d ago';
+        var sc = statusColor(sw.status);
+        var tr = document.createElement('tr');
+        tr.style.cssText = 'border-bottom:1px solid var(--border);transition:background .2s';
+        tr.onmouseenter=function(){tr.style.background='var(--hover-surface)';};
+        tr.onmouseleave=function(){tr.style.background='';};
+        tr.innerHTML =
+          '<td style="padding:14px 16px;font-size:12px;color:var(--muted-fg)">' + escapeHtml(sw.id) + '</td>' +
+          '<td style="padding:14px 16px;font-size:14px;font-weight:600">' + escapeHtml(sw.fromName) + '</td>' +
+          '<td style="padding:14px 16px;font-size:14px">' + escapeHtml(sw.toName) + '</td>' +
+          '<td style="padding:14px 16px;font-size:14px;color:var(--primary)">' + escapeHtml(sw.skillName) + '</td>' +
+          '<td style="padding:14px 16px"><div style="display:flex;align-items:center;gap:8px"><span class="badge" style="color:'+sc+';border-color:'+sc+'">' + sw.status + '</span>' + (sw.flagged?'<span title="Flagged">🚩</span>':'') + '<span style="font-size:11px;color:var(--muted-fg)">'+t+'</span></div></td>' +
+          '<td style="padding:14px 16px"><div style="display:flex;gap:8px;flex-wrap:wrap">' +
+            (sw.status!=='rejected'?'<button class="btn btn-ghost btn-sm" data-action="cancel" data-sid="'+sw.id+'" style="color:#ef4444">Cancel</button>':'') +
+            '<button class="btn btn-ghost btn-sm" data-action="' + (sw.flagged ? 'unflag' : 'flag') + '" data-sid="' + sw.id + '" style="color:' + (sw.flagged ? '#3b82f6' : '#D97706') + '">' + (sw.flagged ? 'Flagged' : 'Flag') + '</button>' +
+          '</div></td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getFiltered() {
+      var all = window.__DB_SWAPS;
+      var f = document.getElementById('filterStatus').value;
+      return f ? all.filter(function(sw){return sw.status===f;}) : all;
+    }
+
+    render(getFiltered());
+    document.getElementById('filterStatus').addEventListener('change', function(){render(getFiltered());});
+
+    document.getElementById('swapsBody').addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      var sid = btn.dataset.sid;
+      if (btn.dataset.action==='cancel') {
+        if (!confirm('Cancel this swap?')) return;
+        fetch('/admin/swaps/' + sid + '/hard-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+              if (data.success) {
+              var sw = window.__DB_SWAPS.find(function(x){return x.id===sid;});
+              if (sw) sw.status = 'rejected';
+              SwapifyUI.toast('Swap Cancelled — This swap has been cancelled by an administrator.', 'success');
+              render(getFiltered());
+            } else {
+              SwapifyUI.toast(data.error || 'Failed to cancel swap.', 'error');
+            }
+          })
+          .catch(function() { SwapifyUI.toast('Failed to cancel swap. Network error.', 'error'); });
+      } else if (btn.dataset.action==='flag') {
+        fetch('/admin/swaps/' + sid + '/flag', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+          .then(function(r){ return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              var sw = window.__DB_SWAPS.find(function(x){return x.id===sid;});
+              if (sw) sw.flagged = true;
+              SwapifyUI.toast('Swap flagged 🚩', 'warning');
+              render(getFiltered());
+            }
+          })
+          .catch(function() { SwapifyUI.toast('Failed to flag swap', 'error'); });
+      } else if (btn.dataset.action==='unflag') {
+        fetch('/admin/swaps/' + sid + '/unflag', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+          .then(function(r){ return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              var sw = window.__DB_SWAPS.find(function(x){return x.id===sid;});
+              if (sw) sw.flagged = false;
+              SwapifyUI.toast('Swap unflagged ✓', 'success');
+              render(getFiltered());
+            }
+          })
+          .catch(function() { SwapifyUI.toast('Failed to unflag swap', 'error'); });
+      }
+    });
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Object Listings — Swapify Admin</title>
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+<%- include('../partials/admin-navbar', { activePage: 'objects' }) %>
+
+
+  <section class="section" style="padding-top:32px">
+    <div class="container">
+
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1 style="font-size:28px;font-weight:700;margin-bottom:4px">📦 Object Listings</h1>
+          <p style="color:var(--muted-fg)">
+            Items listed for <strong>barter swap</strong> on the /objects page —
+            <strong><%= objects.length %></strong> listing<%= objects.length !== 1 ? 's' : ''%>
+          </p>
+        </div>
+        <a href="/objects" class="btn btn-outline btn-sm" target="_blank">View Public Page ↗</a>
+      </div>
+
+      <!-- Filter bar -->
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+        <input type="text" id="searchInput" class="input" placeholder="Search by title or owner…" style="max-width:300px">
+        <select id="conditionFilter" class="input" style="max-width:180px;appearance:none">
+          <option value="">All Conditions</option>
+          <option value="New">New</option>
+          <option value="Like New">Like New</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Used">Used</option>
+        </select>
+        <select id="availFilter" class="input" style="max-width:180px;appearance:none">
+          <option value="">All Availability</option>
+          <option value="true">Available</option>
+          <option value="false">Unavailable</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="card" style="overflow:hidden">
+        <table style="width:100%;border-collapse:collapse" id="objectsTable">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);background:var(--muted)">
+              <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Item</th>
+              <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Owner</th>
+              <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Wants in Exchange</th>
+              <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Condition</th>
+              <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Points</th>
+              <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Approval</th>
+              <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-fg)">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="objectsBody">
+            <% objects.forEach(function(obj) { %>
+            <tr class="object-row"
+                data-title="<%= (obj.title || '').toLowerCase() %>"
+                data-owner="<%= obj.creator ? (obj.creator.username || '').toLowerCase() : '' %>"
+                data-condition="<%= obj.condition || '' %>"
+                data-available="<%= obj.isAvailable %>"
+                style="border-bottom:1px solid var(--border);transition:background .2s"
+                onmouseenter="this.style.background='var(--hover-surface)'"
+                onmouseleave="this.style.background=''">
+
+              <!-- Item -->
+              <td style="padding:14px 16px;max-width:220px">
+                <div style="font-weight:600;font-size:14px;margin-bottom:2px"><%= obj.title %></div>
+                <div style="font-size:12px;color:var(--muted-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px"><%= obj.description %></div>
+                <% if (obj.subCategory) { %>
+                  <span style="font-size:11px;color:var(--primary);font-weight:600"><%= obj.subCategory %></span>
+                <% } %>
+              </td>
+
+              <!-- Owner -->
+              <td style="padding:14px 16px">
+                <% if (obj.creator) { %>
+                  <div style="font-weight:600;font-size:14px"><%= obj.creator.username %></div>
+                  <div style="font-size:12px;color:var(--muted-fg)"><%= obj.creator.email %></div>
+                <% } else { %>
+                  <span style="color:var(--muted-fg);font-size:13px">Deleted user</span>
+                <% } %>
+              </td>
+
+              <!-- Wants -->
+              <td style="padding:14px 16px;font-size:13px;color:var(--fg)">
+                <%= obj.wantsInExchange || '—' %>
+              </td>
+
+              <!-- Condition -->
+              <td style="padding:14px 16px">
+                <% if (obj.condition) { %>
+                  <span class="badge badge-outline" style="font-size:11px"><%= obj.condition %></span>
+                <% } else { %>
+                  <span style="color:var(--muted-fg);font-size:13px">—</span>
+                <% } %>
+              </td>
+
+              <!-- Points -->
+              <td style="padding:14px 16px;font-size:14px;font-weight:700;color:var(--primary)">
+                <%= obj.pointsValue || 0 %> pts
+              </td>
+
+              <!-- Approval Status -->
+              <td style="padding:14px 16px">
+                <% var approval = obj.approvalStatus || 'approved'; %>
+                <% if (approval === 'approved') { %>
+                  <span class="badge" style="color:var(--success);border-color:var(--success)">✅ Approved</span>
+                <% } else if (approval === 'rejected') { %>
+                  <span class="badge" style="color:#ef4444;border-color:#ef4444">❌ Rejected</span>
+                <% } else { %>
+                  <span class="badge" style="color:#f59e0b;border-color:#f59e0b">⏳ Pending</span>
+                <% } %>
+              </td>
+
+              <!-- Actions -->
+              <td style="padding:14px 16px">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                  <a href="/item-details/<%= obj._id %>" target="_blank" class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--muted-fg)">View</a>
+                  <% if ((obj.approvalStatus || 'approved') !== 'approved') { %>
+                  <form method="POST" action="/admin/objects/<%= obj._id %>/approve" style="display:inline">
+                    <button type="submit" class="btn btn-primary btn-sm" style="font-size:12px">Approve</button>
+                  </form>
+                  <% } %>
+                  <% if ((obj.approvalStatus || 'approved') !== 'rejected') { %>
+                  <form method="POST" action="/admin/objects/<%= obj._id %>/reject" style="display:inline">
+                    <button type="submit" class="btn btn-outline btn-sm" style="font-size:12px;color:#f59e0b;border-color:#f59e0b">Reject</button>
+                  </form>
+                  <% } %>
+                  <button type="button"
+                    class="btn btn-ghost btn-sm"
+                    style="color:#ff6b6b;font-size:12px"
+                    onclick="confirmDeleteObject('<%= obj._id %>', '<%= (obj.title || '').replace(/\'/g, "\\'" ) %>')">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <% }); %>
+            <% if (objects.length === 0) { %>
+            <tr><td colspan="7" style="padding:60px;text-align:center;color:var(--muted-fg)">
+              <div style="font-size:40px;margin-bottom:12px">📦</div>
+              <div style="font-size:16px;font-weight:600">No object listings yet</div>
+            </td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Live filter
+    var searchInput    = document.getElementById('searchInput');
+    var conditionFilter = document.getElementById('conditionFilter');
+    var availFilter    = document.getElementById('availFilter');
+
+    function applyFilters() {
+      var q   = searchInput.value.toLowerCase();
+      var cond = conditionFilter.value;
+      var av   = availFilter.value;
+      document.querySelectorAll('.object-row').forEach(function(row) {
+        var matchQ    = !q    || row.dataset.title.includes(q) || row.dataset.owner.includes(q);
+        var matchCond = !cond || row.dataset.condition === cond;
+        var matchAv   = !av   || row.dataset.available === av;
+        row.style.display = (matchQ && matchCond && matchAv) ? '' : 'none';
+      });
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    conditionFilter.addEventListener('change', applyFilters);
+    availFilter.addEventListener('change', applyFilters);
+
+    /* Toast from ?action= query param */
+    (function() {
+      var p = new URLSearchParams(window.location.search);
+      var action = p.get('action');
+      if (action === 'deleted')  { SwapifyUI.toast('Object deleted successfully ✓', 'success'); }
+      if (action === 'approved') { SwapifyUI.toast('Object approved — owner notified ✓', 'success'); }
+      if (action === 'rejected') { SwapifyUI.toast('Object rejected — owner notified', 'info'); }
+      if (action) window.history.replaceState({}, '', '/admin/objects');
+    })();
+  </script>
+
+  <script>
+  function confirmDeleteObject(objId, objTitle) {
+    var bodyHtml =
+      '<div style="display:flex;flex-direction:column;gap:14px">' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(239,68,68,.1);border-radius:8px;border:1px solid rgba(239,68,68,.3)">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+          '<span style="color:#ef4444;font-weight:600;font-size:14px">This action is permanent and cannot be undone.</span>' +
+        '</div>' +
+        '<p style="color:var(--muted-fg);font-size:14px">You are about to permanently delete the object:</p>' +
+        '<div style="background:var(--hover-surface,rgba(255,255,255,.05));padding:12px 16px;border-radius:8px;font-weight:700;font-size:15px">' + objTitle + '</div>' +
+      '</div>';
+    var footerHtml =
+      '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+        '<button class="btn btn-ghost" onclick="SwapifyUI.closeModal()">Cancel</button>' +
+        '<button class="btn btn-ghost" onclick="executeDeleteObject(\'' + objId + '\')" style="color:#ef4444;border:1px solid #ef4444;font-weight:600">Delete Object</button>' +
+      '</div>';
+    SwapifyUI.showModal('Delete Object', bodyHtml, footerHtml);
+  }
+
+  function executeDeleteObject(objId) {
+    SwapifyUI.closeModal();
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/items/' + objId + '/delete';
+    document.body.appendChild(form);
+    form.submit();
+  }
+  </script>
+</body>
+</html>

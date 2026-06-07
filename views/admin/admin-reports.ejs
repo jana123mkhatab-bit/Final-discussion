@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Reports — Swapify Admin</title>
+  <link rel="stylesheet" href="/css/main.css?v=2026052318">
+</head>
+<body>
+<%- include('../partials/admin-navbar', { activePage: 'reports' }) %>
+
+  <section class="section" style="padding-top:32px">
+    <div class="container" style="max-width:900px">
+      <div class="flex justify-between items-center" style="margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div><h1 style="font-size:28px;font-weight:700;margin-bottom:4px">Reports Management</h1><p style="color:var(--muted-fg)" id="reportCount"></p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="filterStatus" class="input" style="max-width:160px;appearance:none"><option value="">All</option><option value="open">Open</option><option value="resolved">Resolved</option></select>
+        </div>
+      </div>
+      <div id="reportsList"></div>
+      <div id="reportsEmpty" style="display:none"><div class="empty-state"><div class="empty-state-icon">🚨</div><h3>No reports</h3><p>The community is behaving well!</p></div></div>
+    </div>
+  </section>
+
+  <!-- Inject real MongoDB report data -->
+  <script>
+  window.__DB_REPORTS = <%- JSON.stringify(reports.map(function(r){ return {
+    id:            String(r._id),
+    reporterName:  r.reporter      ? r.reporter.username      : 'Unknown',
+    targetName:    r.reportedUser  ? r.reportedUser.username  : null,
+    itemTitle:     r.reportedItem  ? r.reportedItem.title     : null,
+    skillTitle:    r.reportedSkill ? r.reportedSkill.title    : null,
+    reason:        r.reason,
+    status:        r.status,
+    createdAt:     new Date(r.createdAt).getTime()
+  };})) %>;
+  </script>
+  <script src="/js/app.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!SwapifyAdmin.requireAdmin()) return;
+
+    var dbReports = window.__DB_REPORTS || [];
+
+    function render() {
+      var f = document.getElementById('filterStatus').value;
+      var reports = f ? dbReports.filter(function(r){return r.status===f;}) : dbReports;
+      var list = document.getElementById('reportsList');
+      var empty = document.getElementById('reportsEmpty');
+      document.getElementById('reportCount').textContent = reports.length + ' report' + (reports.length!==1?'s':'');
+      list.innerHTML = '';
+      empty.style.display = reports.length ? 'none' : 'block';
+
+      reports.forEach(function(r) {
+        var ago = Math.round((Date.now()-r.createdAt)/60000);
+        var t = ago<60?ago+'m ago':ago<1440?Math.round(ago/60)+'h ago':Math.round(ago/1440)+'d ago';
+        var isOpen = r.status === 'open';
+        var subject = r.targetName ? 'User: <strong>' + escapeHtml(r.targetName) + '</strong>'
+                    : r.itemTitle  ? 'Item: <strong>'  + escapeHtml(r.itemTitle)  + '</strong>'
+                    : r.skillTitle ? 'Skill: <strong>' + escapeHtml(r.skillTitle) + '</strong>'
+                    : '<em>Unknown subject</em>';
+        var div = document.createElement('div');
+        div.className = 'card card-body';
+        div.style.marginBottom = '16px';
+        div.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">' +
+            '<div>' +
+              '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
+                '<span class="badge" style="color:' + (isOpen?'#D97706':'var(--muted-fg)') + ';border-color:' + (isOpen?'#D97706':'var(--border)') + '">' + r.status + '</span>' +
+                '<span style="font-size:12px;color:var(--muted-fg)">' + t + '</span>' +
+              '</div>' +
+              '<p style="font-size:15px;font-weight:600;margin-bottom:4px">' + escapeHtml(r.reason||'No reason given') + '</p>' +
+              '<p style="font-size:13px;color:var(--muted-fg);margin-bottom:0">Reporter: <strong>' + escapeHtml(r.reporterName) + '</strong> · ' + subject + '</p>' +
+            '</div>' +
+            (isOpen ?
+              '<div style="display:flex;gap:8px;flex-shrink:0">' +
+                '<form method="POST" action="/admin/reports/' + escapeHtml(r.id) + '/resolve" style="display:inline">' +
+                  '<input type="hidden" name="action" value="dismiss">' +
+                  '<button type="submit" class="btn btn-ghost btn-sm">Dismiss</button>' +
+                '</form>' +
+                '<form method="POST" action="/admin/reports/' + escapeHtml(r.id) + '/resolve" style="display:inline">' +
+                  '<input type="hidden" name="action" value="resolve">' +
+                  '<button type="submit" class="btn btn-primary btn-sm">Resolve</button>' +
+                '</form>' +
+                '<a href="/admin/reports/' + escapeHtml(r.id) + '/chat" class="btn btn-outline btn-sm" target="_blank">Review Chat</a>' +
+              '</div>'
+              : '<span style="font-size:13px;color:var(--muted-fg);padding:4px 0">Status: ' + escapeHtml(r.status) + '</span>') +
+          '</div>';
+        list.appendChild(div);
+      });
+    }
+
+    render();
+
+    /* Show toast based on ?action= query param then clean URL */
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var action = params.get('action');
+      if (action === 'resolved')  SwapifyUI.toast('Report resolved ✓', 'success');
+      if (action === 'dismissed') SwapifyUI.toast('Report dismissed', 'info');
+      if (action) window.history.replaceState({}, '', '/admin/reports');
+    })();
+
+    document.getElementById('filterStatus').addEventListener('change', render);
+  });
+  </script>
+</body>
+</html>
