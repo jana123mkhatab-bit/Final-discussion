@@ -1,0 +1,44 @@
+{
+  "name": "web_project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FatmaAshraf5/Web_Project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/FatmaAshraf5/Web_Project/issues"
+  },
+  "homepage": "https://github.com/FatmaAshraf5/Web_Project#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-mongo": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.6.1",
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "mongodb": "^7.2.0",
+    "mongoose": "^9.6.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^8.0.10",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.4.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.1.0"
+  }
+}

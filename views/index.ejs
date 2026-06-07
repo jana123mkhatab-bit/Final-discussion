@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swapify — Swap Skills. Trade Smarter. Live Better.</title>
+  <meta name="description"
+    content="The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals. Join thousands swapping daily.">
+  <meta name="keywords" content="swap, trade, skills, community, marketplace, deals">
+  <link rel="stylesheet" href="/css/home.css?v=2026052318">
+  <link rel="stylesheet" href="/css/liquid-ether.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: { preflight: false },
+    }
+  </script>
+  <script>
+    (function () {
+      try {
+        if (window.sessionStorage && sessionStorage.getItem('swapifyIntroSeen') === '1') {
+          document.documentElement.classList.add('intro-skip');
+        }
+      } catch (err) {
+        /* no-op */
+      }
+    })();
+  </script>
+  <script>
+    window.addEventListener('error', function (e) {
+      const div = document.createElement('div');
+      div.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#ef4444;color:#fff;padding:16px 24px;z-index:999999;font-family:monospace;font-size:14px;line-height:1.5;box-shadow:0 4px 12px rgba(0,0,0,0.15);word-break:break-all;';
+      div.innerHTML = '<strong>Frontend Error:</strong> ' + e.message + '<br><small>at ' + e.filename + ':' + e.lineno + ':' + e.colno + '</small>';
+      document.body.appendChild(div);
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      const div = document.createElement('div');
+      div.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#f59e0b;color:#fff;padding:16px 24px;z-index:999999;font-family:monospace;font-size:14px;line-height:1.5;box-shadow:0 4px 12px rgba(0,0,0,0.15);word-break:break-all;';
+      div.innerHTML = '<strong>Unhandled Promise Rejection:</strong> ' + e.reason;
+      document.body.appendChild(div);
+    });
+    window.process = { env: { NODE_ENV: 'production' } };
+  </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "framer-motion": "https://esm.sh/framer-motion@10.16.4?external=react,react-dom",
+        "htm": "https://esm.sh/htm@3.1.1"
+      }
+    }
+  </script>
+  <style>
+    .avatar-stack .avatar-link {
+      margin-left: -12px;
+      position: relative;
+      border-radius: 50%;
+      transition: none;
+      display: inline-block;
+      text-decoration: none;
+      cursor: default;
+    }
+
+    .avatar-stack .avatar-link:first-child {
+      margin-left: 0;
+    }
+
+    .avatar-stack .avatar-link:hover {
+      z-index: 10;
+      transform: none;
+    }
+
+    .avatar-stack .avatar-link img,
+    .avatar-stack .avatar-link .avatar {
+      margin-left: 0 !important;
+    }
+
+    .avatar-stack .avatar-link:hover img,
+    .avatar-stack .avatar-link:hover .avatar {
+      transform: none !important;
+    }
+
+    /* 3D Stack Container styles */
+    .stack-container {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      height: 520px;
+      margin: 2rem auto;
+      perspective: 1200px;
+      transform-style: preserve-3d;
+      overflow: visible;
+    }
+
+    .card-rotate {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      will-change: transform;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .passive-card {
+      cursor: default;
+      pointer-events: none;
+      /* Crucial so background cards don't steal mouse events */
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "framer-motion": "https://esm.sh/framer-motion@10.16.4",
+        "htm": "https://esm.sh/htm@3.1.1"
+      }
+    }
+  </script>
+</head>
+
+<body>
+
+  <%- include('partials/navbar') %>
+
+  <!-- ========== HERO SECTION ========== -->
+  <section class="hero" id="heroSection" aria-label="Hero banner" style="position:relative; overflow:hidden;">
+    <div class="hero-bg" aria-hidden="true" style="position:absolute; inset:0; z-index:0; pointer-events:none;">
+      <div class="hero-bg-gradient"></div>
+      <div class="hero-glow-1"
+        style="position:absolute; top:-100px; right:-100px; width:650px; height:650px; opacity:0.85; pointer-events:none; z-index:0;">
+      </div>
+      <div class="hero-glow-2"
+        style="position:absolute; bottom:-100px; left:-100px; width:550px; height:550px; opacity:0.75; pointer-events:none; z-index:0;">
+      </div>
+      <div id="heroCosmicGalaxy"
+        style="position:absolute; width:100%; height:100%; top:0; left:0; z-index:1; opacity:1.0;"></div>
+    </div>
+    <div class="container hero-content">
+      <div class="fade-in">
+        <div class="hero-badge">
+          <span class="pulse" aria-hidden="true"></span>
+          Join a growing network of swappers
+        </div>
+        <h1>Swap Skills. Trade Smarter. <span class="gradient-text">Live Better.</span></h1>
+        <p class="hero-desc">Exchange skills, trade items, or grab amazing half-price deals from your local community.
+          Less waste, more sharing.</p>
+        <div class="hero-ctas">
+          <a href="#how-it-works" class="btn btn-primary btn-lg btn-glow" id="heroCTAPrimary">
+            Start Swapping
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </a>
+          <a href="/deals" class="btn btn-outline btn-lg" id="heroCTASecondary" style="backdrop-filter:blur(8px)">Browse
+            Deals</a>
+        </div>
+        <div class="hero-social-proof">
+          <div class="avatar-stack" aria-hidden="false">
+            <span class="avatar-link" aria-hidden="false"><img
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200"
+              class="avatar" alt="Sarah Jenkins"></span>
+            <span class="avatar-link" aria-hidden="false"><img
+              src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?crop=entropy&cs=tinysrgb&fit=facearea&facepad=2&w=256&h=256&q=80"
+              class="avatar" alt="Carlos Martinez"></span>
+            <span class="avatar-link" aria-hidden="false"><img
+              src="https://i.pravatar.cc/150?img=11" class="avatar" alt="Miguel O'Hara"></span>
+            <span class="avatar-link" aria-hidden="false"><img
+              src="https://i.pravatar.cc/150?img=12" class="avatar" alt="Alex Mercer"></span>
+            <span class="avatar-link" aria-hidden="false">
+              <div class="avatar"
+              style="background:var(--gradient-main);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;border:2px solid var(--bg)"
+              aria-hidden="true">+2k</div>
+            </span>
+          </div>
+          <span class="text-sm font-medium" style="color:var(--muted-fg)">Active members swapping daily</span>
+        </div>
+      </div>
+      <!-- Hero visual: orbital animation (user-node avatars removed per spec) -->
+      <div class="hero-visual" aria-hidden="true">
+        <div id="networkGlobe" class="hero-globe"></div>
+        <div class="orbit orbit-1"></div>
+        <div class="orbit orbit-2"></div>
+        <div class="floating-icon" style="--x-offset: -0.40; --y-offset: -0.40;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+          </svg>
+        </div>
+        <div class="floating-icon" style="--x-offset: 0.42; --y-offset: 0.35;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+            <circle cx="12" cy="13" r="3" />
+          </svg>
+        </div>
+        <div class="floating-icon" style="--x-offset: 0.40; --y-offset: -0.40;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="M7 7h10" />
+            <path d="M7 12h10" />
+            <path d="M7 17h10" />
+          </svg>
+        </div>
+        <div class="floating-icon" style="--x-offset: -0.27; --y-offset: 0.27;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 3L4 7l4 4" />
+            <path d="M4 7h16" />
+            <path d="M16 21l4-4-4-4" />
+            <path d="M20 17H4" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wave: Hero → How It Works -->
+  <div class="wave-divider wave-from-hero" aria-hidden="true">
+    <svg viewBox="0 0 1440 72" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,36 C240,72 480,0 720,36 C960,72 1200,0 1440,36 L1440,72 L0,72 Z" />
+    </svg>
+  </div>
+
+  <!-- ========== HOW IT WORKS ========== -->
+  <section class="section section-white" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <h2>How Swapify Works</h2>
+        <p>Join the movement of reducing waste and sharing resources with your local community.</p>
+      </div>
+      <div class="grid grid-3 gap-8">
+        <a href="/skills" class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 14h2a2 2 0 1 0 0-4h-3c-1.1 0-2 .9-2 2v3a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-1" />
+              <path
+                d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+            </svg>
+          </div>
+          <h3>Swap Skills</h3>
+          <p>Exchange knowledge with others. Teach what you know, learn what you don't.</p>
+          <span class="feature-link">Explore <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg></span>
+        </a>
+        <a href="/objects" class="feature-card fade-in fade-in-delay-1">
+          <div class="feature-icon" style="background:var(--secondary)">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+            </svg>
+          </div>
+          <h3>Swap Objects</h3>
+          <p>Trade items you no longer need. Find something you've been looking for.</p>
+          <span class="feature-link">Explore <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg></span>
+        </a>
+        <a href="/deals" class="feature-card fade-in fade-in-delay-2">
+          <div class="feature-icon" style="background:var(--indigo)">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.801 10A10 10 0 1 1 17 3.335" />
+              <path d="m9.5 11.5 5-5" />
+              <circle cx="11" cy="11" r="1" />
+              <circle cx="14" cy="14" r="1" />
+            </svg>
+          </div>
+          <h3>Half Price Deals</h3>
+          <p>Sell items for affordable prices instead of wasting them. Great deals wait.</p>
+          <span class="feature-link">Explore <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wave: How It Works → Recommended -->
+  <div class="wave-divider wave-into-bg" aria-hidden="true">
+    <svg viewBox="0 0 1440 56" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,28 C360,56 720,0 1080,28 C1260,42 1380,14 1440,28 L1440,56 L0,56 Z" />
+    </svg>
+  </div>
+
+  <!-- ========== RECOMMENDED SWAPS ========== -->
+  <section class="section" id="recommendedSection" style="position:relative; overflow:hidden; padding:32px 0;">
+    <!-- Immersive background glow blobs similar to the hero section -->
+    <div class="hero-glow-1"
+      style="position:absolute; top:-100px; right:-100px; width:650px; height:650px; opacity:0.85; pointer-events:none; z-index:0;">
+    </div>
+    <div class="hero-glow-2"
+      style="position:absolute; bottom:-100px; left:-100px; width:550px; height:550px; opacity:0.75; pointer-events:none; z-index:0;">
+    </div>
+
+    <!-- Background Three.js Globe spreading over the entire rectangular section -->
+    <div id="recommendedGlobe"
+      style="position:absolute; width:100%; height:100%; top:0; left:0; z-index:5; opacity:1.0;">
+    </div>
+
+    <div class="container" style="position:relative; z-index:10; overflow:visible;">
+      <div class="flex items-center justify-between" style="margin-bottom:20px;flex-wrap:wrap;gap:16px;">
+        <div>
+          <h2 style="font-size:clamp(24px,4vw,36px);font-weight:700;margin-bottom:8px">Recommended for you</h2>
+          <p style="color:var(--muted-fg);font-size:18px">Fresh swaps and deals in your area.</p>
+        </div>
+      </div>
+
+      <!-- Container centering the orbits and the React root stack -->
+      <div
+        style="position:relative; width:100%; display:flex; justify-content:center; align-items:center; overflow:visible;">
+        <!-- Orbit lines matching the hero section, spinning dynamically (faster) -->
+        <div class="orbit orbit-1"
+          style="position:absolute; width:380px; height:380px; border:1px dashed rgba(124,58,237,0.22); border-radius:50%; z-index:0; pointer-events:none; animation: spin 25s linear infinite;">
+        </div>
+        <div class="orbit orbit-2"
+          style="position:absolute; width:480px; height:480px; border:1px dashed rgba(124,58,237,0.14); border-radius:50%; z-index:0; pointer-events:none; animation: spin 35s linear infinite reverse;">
+        </div>
+
+        <!-- React 360 Stack Container -->
+        <div id="recommended-react-root"
+          style="position:relative; z-index:10; display:flex; justify-content:center; align-items:center; overflow:visible; width:100%; min-height:400px;">
+        </div>
+      </div>
+
+      <div style="margin-top:32px;text-align:center;display:none" id="viewAllMobile">
+        <a href="/objects" class="btn btn-outline w-full">View all recommendations</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wave: Recommended → Live Activity -->
+  <div class="wave-divider wave-into-purple" aria-hidden="true">
+    <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,0 C180,80 360,20 540,50 C720,80 900,10 1080,45 C1260,75 1380,20 1440,40 L1440,80 L0,80 Z" />
+    </svg>
+  </div>
+
+  <!-- ========== LIVE ACTIVITY FEED ========== -->
+  <section class="section-purple community-banner" aria-label="Live activity feed">
+    <div class="pattern" aria-hidden="true">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse">
+            <circle cx="20" cy="20" r="2" fill="currentColor" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#dots)" />
+      </svg>
+    </div>
+    <div class="container text-center" style="position:relative;z-index:1">
+      <span class="badge"
+        style="background:rgba(255,255,255,.2);color:#fff;margin-bottom:24px;padding:6px 16px;font-size:14px">
+        <span class="activity-live-dot" aria-hidden="true"></span>
+        Live Activity
+      </span>
+      <h2 style="font-size:clamp(28px,5vw,48px);font-weight:700;margin-bottom:32px">See what's happening right now</h2>
+      <!-- JS renders dynamic activity cards here -->
+      <div id="activityFeed" aria-label="Live activity feed" aria-live="polite">
+        <!-- skeleton shown until JS loads -->
+        <div class="community-card skeleton-activity" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wave: Live Activity → Footer -->
+  <div class="wave-divider wave-into-footer" aria-hidden="true">
+    <svg viewBox="0 0 1440 72" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,36 C120,72 300,0 480,36 C660,72 840,0 1020,36 C1200,72 1350,18 1440,36 L1440,72 L0,72 Z" />
+    </svg>
+  </div>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer" id="footerSection" style="position: relative; overflow: hidden;">
+    <div class="footer-bg" aria-hidden="true" style="position: absolute; inset: 0; z-index: 0; pointer-events: none;">
+      <div class="hero-glow-1"
+        style="position:absolute; top:-100px; right:-100px; width:650px; height:650px; opacity:0.85; pointer-events:none; z-index:0;">
+      </div>
+      <div class="hero-glow-2"
+        style="position:absolute; bottom:-100px; left:-100px; width:550px; height:550px; opacity:0.75; pointer-events:none; z-index:0;">
+      </div>
+      <div id="footerCosmicGalaxy"
+        style="position:absolute; width:100%; height:100%; top:0; left:0; z-index:1; opacity:1.0;"></div>
+    </div>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo" style="margin-bottom:8px" aria-label="Swapify Home">
+            <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" aria-hidden="true">
+                <path d="M8 3L4 7l4 4" />
+                <path d="M4 7h16" />
+                <path d="M16 21l4-4-4-4" />
+                <path d="M20 17H4" />
+              </svg></div>
+            <span class="logo-text"><span>Swapify</span></span>
+          </a>
+          <p>The cozy community marketplace where you can swap skills, trade items, and grab amazing half-price deals.
+          </p>
+          <div class="footer-social">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
+              aria-label="Follow Swapify on Facebook" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                aria-hidden="true">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+              </svg>
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Follow Swapify on X"
+              class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                aria-hidden="true">
+                <path d="M18 6L6 18" />
+                <path d="M6 6L18 18" />
+              </svg>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+              aria-label="Follow Swapify on Instagram" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                aria-hidden="true">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg>
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
+              aria-label="Follow Swapify on LinkedIn" class="social-link">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                aria-hidden="true">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                <rect width="4" height="12" x="2" y="9" />
+                <circle cx="4" cy="4" r="2" />
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>About Swapify</h4>
+          <ul>
+            <li><a href="/about">About Swapify</a></li>
+            <li><a href="/our-story">Our Story</a></li>
+            <li><a href="/how-it-works">How it Works</a></li>
+            <li><a href="/sustainability">Sustainability</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="/guidelines">Guidelines</a></li>
+            <li><a href="/success-stories">Success Stories</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help Center</h4>
+          <ul>
+            <li><a href="/help-center">Help Center</a></li>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/contact">Contact Support</a></li>
+            <li><a href="/trust-safety">Trust &amp; Safety</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Swapify. All rights reserved.</p>
+        <div class="footer-tagline">
+          <span>Less waste. More sharing.</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2"
+            aria-hidden="true">
+            <path
+              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========== MOBILE BOTTOM NAV ========== -->
+  <nav class="bottom-nav" id="bottomNav" aria-label="Mobile navigation">
+    <a href="/" class="active" aria-label="Home" aria-current="page">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        aria-hidden="true">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="/skills" aria-label="Swap Skills">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        aria-hidden="true">
+        <path d="M8 3L4 7l4 4" />
+        <path d="M4 7h16" />
+        <path d="M16 21l4-4-4-4" />
+        <path d="M20 17H4" />
+      </svg>
+      <span>Skills</span>
+    </a>
+    <a href="/add" class="add-btn" aria-label="Add listing">
+      <div class="add-btn-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          aria-hidden="true">
+          <path d="M5 12h14" />
+          <path d="M12 5v14" />
+        </svg>
+      </div>
+    </a>
+    <a href="/messages" aria-label="Messages">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        aria-hidden="true">
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z" />
+      </svg>
+      <span>Messages</span>
+    </a>
+    <a href="/profile" aria-label="Profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        aria-hidden="true">
+        <circle cx="12" cy="8" r="5" />
+        <path d="M20 21a8 8 0 1 0-16 0" />
+      </svg>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <!-- ========== ITEM DETAIL MODAL ========== -->
+  <div class="modal-overlay" id="itemModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal" id="modalContent">
+      <div class="modal-header">
+        <h2 id="modalTitle">Item Details</h2>
+        <button class="btn btn-ghost btn-icon modal-close" id="modalCloseBtn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- JS renders here -->
+      </div>
+      <div class="modal-footer" id="modalFooter">
+        <!-- JS renders here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== USER PROFILE MODAL ========== -->
+  <div class="modal-overlay" id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+    <div class="modal" id="profileModalContent">
+      <div class="modal-header">
+        <h2 id="profileModalTitle">User Profile</h2>
+        <button class="btn btn-ghost btn-icon profile-modal-close" id="profileModalCloseBtn"
+          aria-label="Close profile modal">&times;</button>
+      </div>
+      <div class="modal-body" id="profileModalBody">
+        <!-- JS renders here -->
+      </div>
+      <div class="modal-footer" id="profileModalFooter">
+        <!-- JS renders here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared engine first, then home-specific logic -->
+  <script src="https://unpkg.com/lenis@1.1.16/dist/lenis.min.js" defer></script>
+  <script src="/js/app.js" defer></script>
+  <script src="/js/home.js" defer></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/htm/dist/htm.js"></script>
+  <script src="/js/recommended-stack.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script>
+    (function () {
+      function createGlobe(elementId, colorBase, colorGlow, colorNodes, showSphere) {
+        var mountElement = document.getElementById(elementId);
+        if (!mountElement || mountElement.dataset.globeInit || !window.THREE) return;
+
+        var width = mountElement.clientWidth;
+        var height = mountElement.clientHeight;
+        if (!width || !height) return;
+
+        mountElement.dataset.globeInit = '1';
+
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+        camera.position.z = 4;
+
+        var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x000000, 0);
+        mountElement.appendChild(renderer.domElement);
+
+        var globeGroup = new THREE.Group();
+        scene.add(globeGroup);
+
+        if (showSphere) {
+          var globeGeometry = new THREE.SphereGeometry(1.2, 64, 64);
+          var globeMaterial = new THREE.MeshBasicMaterial({
+            color: colorBase,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.25
+          });
+          globeGroup.add(new THREE.Mesh(globeGeometry, globeMaterial));
+
+          var glowMaterial = new THREE.MeshBasicMaterial({
+            color: colorGlow,
+            transparent: true,
+            opacity: 0.08
+          });
+          globeGroup.add(new THREE.Mesh(new THREE.SphereGeometry(1.18, 64, 64), glowMaterial));
+
+          var nodeCount = 500;
+          var positions = [];
+          for (var i = 0; i < nodeCount; i++) {
+            var theta = Math.random() * Math.PI * 2;
+            var phi = Math.acos(Math.random() * 2 - 1);
+            var radius = 1.23;
+            positions.push(
+              radius * Math.sin(phi) * Math.cos(theta),
+              radius * Math.sin(phi) * Math.sin(theta),
+              radius * Math.cos(phi)
+            );
+          }
+
+          var nodeGeometry = new THREE.BufferGeometry();
+          nodeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+          var nodeMaterial = new THREE.PointsMaterial({
+            color: colorNodes,
+            size: 0.02,
+            transparent: true,
+            opacity: 0.9
+          });
+          globeGroup.add(new THREE.Points(nodeGeometry, nodeMaterial));
+
+          var lineMaterial = new THREE.LineBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.25
+          });
+          for (var j = 0; j < 250; j++) {
+            var p1 = Math.floor(Math.random() * nodeCount) * 3;
+            var p2 = Math.floor(Math.random() * nodeCount) * 3;
+            var linePoints = [
+              new THREE.Vector3(positions[p1], positions[p1 + 1], positions[p1 + 2]),
+              new THREE.Vector3(positions[p2], positions[p2 + 1], positions[p2 + 2])
+            ];
+            var lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
+            globeGroup.add(new THREE.Line(lineGeometry, lineMaterial));
+          }
+        }
+
+        var outerGeometry = new THREE.BufferGeometry();
+        var outerPositions = [];
+        var starCount = showSphere ? 200 : 700;
+        for (var k = 0; k < starCount; k++) {
+          outerPositions.push(
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10
+          );
+        }
+        outerGeometry.setAttribute('position', new THREE.Float32BufferAttribute(outerPositions, 3));
+        var outerMaterial = new THREE.PointsMaterial({
+          color: 0xffffff,
+          size: 0.015,
+          transparent: true,
+          opacity: 0.7
+        });
+        var outerParticles = new THREE.Points(outerGeometry, outerMaterial);
+        scene.add(outerParticles);
+
+        var mouseX = 0;
+        var mouseY = 0;
+        var isHovered = false;
+        function handleMouseMove(event) {
+          isHovered = true;
+          var rect = mountElement.getBoundingClientRect();
+          var x = (event.clientX - rect.left) / rect.width - 0.5;
+          var y = (event.clientY - rect.top) / rect.height - 0.5;
+          mouseX = x * 2;
+          mouseY = y * 2;
+        }
+        function handleMouseLeave() {
+          isHovered = false;
+        }
+        mountElement.addEventListener('mousemove', handleMouseMove);
+        mountElement.addEventListener('mouseleave', handleMouseLeave);
+
+        function updateSize() {
+          var rect = mountElement.getBoundingClientRect();
+          var w = rect.width;
+          var h = rect.height;
+          if (!w || !h) return;
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        }
+
+        var resizeObserver = null;
+        if (window.ResizeObserver) {
+          resizeObserver = new ResizeObserver(updateSize);
+          resizeObserver.observe(mountElement);
+        } else {
+          window.addEventListener('resize', updateSize);
+        }
+
+        var currentRotationY = 0;
+        var currentRotationX = 0;
+        var animationFrameId = 0;
+        function animate() {
+          animationFrameId = requestAnimationFrame(animate);
+          if (isHovered) {
+            var targetY = mouseX * 0.8;
+            var targetX = mouseY * 0.5;
+            currentRotationY += (targetY - currentRotationY) * 0.08;
+            currentRotationX += (targetX - currentRotationX) * 0.08;
+          } else {
+            currentRotationY += 0.005;
+            currentRotationX += (0 - currentRotationX) * 0.08;
+          }
+          globeGroup.rotation.y = currentRotationY;
+          globeGroup.rotation.x = currentRotationX;
+          outerParticles.rotation.y += showSphere ? 0.0005 : 0.0015;
+          renderer.render(scene, camera);
+        }
+
+        animate();
+      }
+
+      function createCosmicGalaxy(containerId, sectionId, interactive) {
+        var container = document.getElementById(containerId);
+        var targetSection = document.getElementById(sectionId);
+        if (!container || !targetSection) return;
+
+        var scene, camera, renderer;
+        var galaxyGeometry, galaxyPoints, galaxyMaterial;
+        var nebulaGas, nebulaMaterial;
+
+        var config = {
+          starsCount: 40000,       // Cleaner, less crowded star count
+          size: 0.22,              // Smaller, less intense sparkles
+          radius: interactive ? 110 : 160, // Spheroid radius (wider for non-interactive)
+          flatteningY: 0.35,       // Flatness factor to squash on Y axis
+          insideColor: '#ffffff',
+          outsideColor: '#d8b4fe',
+          secondaryColor: '#22d3ee',
+          // Custom drift speeds for X, Y, Z for non-interactive
+          rotSpeedX: interactive ? 0 : 0.0001 + Math.random() * 0.00015,
+          rotSpeedY: interactive ? 0.0006 : 0.0002 + Math.random() * 0.0002,
+          rotSpeedZ: interactive ? 0 : (Math.random() - 0.5) * 0.0001,
+          turbulenceActive: true
+        };
+
+        var targetXRot = 0.45;
+        var targetYRot = 0;
+        var currentXRot = 0.45;
+        var currentYRot = 0;
+
+        var isDragging = false;
+        var previousMousePosition = { x: 0, y: 0 };
+        var dragRotation = { x: 0, y: 0 };
+
+        var mouse = { x: 0, y: 0 };
+        var isMouseOverSection = false;
+
+        function createGlowTexture(colorStr, secondaryColorStr) {
+          var canvas = document.createElement('canvas');
+          canvas.width = 128;
+          canvas.height = 128;
+          var ctx = canvas.getContext('2d');
+
+          var gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+          gradient.addColorStop(0, '#ffffff');
+          gradient.addColorStop(0.12, '#ffffff');
+          gradient.addColorStop(0.28, colorStr);
+          if (secondaryColorStr) {
+            gradient.addColorStop(0.55, secondaryColorStr);
+          }
+          gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(64, 64, 64, 0, Math.PI * 2);
+          ctx.fill();
+
+          return new THREE.CanvasTexture(canvas);
+        }
+
+        function initGalaxy() {
+          var width = container.clientWidth;
+          var height = container.clientHeight;
+          if (!width || !height) return;
+
+          scene = new THREE.Scene();
+
+          camera = new THREE.PerspectiveCamera(52, width / height, 0.1, 1000);
+          camera.position.set(0, 42, 95);
+          camera.lookAt(0, -5, 0);
+
+          renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+          renderer.setSize(width, height);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setClearColor(0x000000, 0);
+
+          container.innerHTML = '';
+          container.appendChild(renderer.domElement);
+
+          generateCosmos();
+
+          if (interactive) {
+            targetSection.addEventListener('mousemove', handleMouseMove);
+            targetSection.addEventListener('mouseleave', handleMouseLeave);
+            targetSection.addEventListener('mouseenter', handleMouseEnter);
+            targetSection.addEventListener('mousedown', handleMouseDown);
+
+            targetSection.addEventListener('touchstart', handleTouchStart, { passive: true });
+            targetSection.addEventListener('touchmove', handleTouchMove, { passive: true });
+            targetSection.addEventListener('touchend', handleTouchEnd);
+
+            window.addEventListener('mousemove', handleGlobalMouseMove);
+            window.addEventListener('mouseup', handleGlobalMouseUp);
+          }
+
+          if (window.ResizeObserver) {
+            var ro = new ResizeObserver(function () { handleResize(); });
+            ro.observe(container);
+          } else {
+            window.addEventListener('resize', handleResize);
+          }
+        }
+
+        function generateCosmos() {
+          galaxyGeometry = new THREE.BufferGeometry();
+
+          var positions = new Float32Array(config.starsCount * 3);
+          var colors = new Float32Array(config.starsCount * 3);
+          var randomOffsets = new Float32Array(config.starsCount * 3);
+
+          var colorCore = new THREE.Color(config.insideColor);
+          var colorOut = new THREE.Color(config.outsideColor);
+          var colorAlt = new THREE.Color(config.secondaryColor);
+
+          for (var i = 0; i < config.starsCount; i++) {
+            var i3 = i * 3;
+
+            // Distribute stars uniformly in a squashed sphere (oblate spheroid)
+            var theta = Math.random() * Math.PI * 2;
+            var phi = Math.acos(Math.random() * 2 - 1);
+            var r = Math.pow(Math.random(), 0.6) * config.radius;
+
+            var x = r * Math.sin(phi) * Math.cos(theta);
+            var y = r * Math.sin(phi) * Math.sin(theta) * config.flatteningY;
+            var z = r * Math.cos(phi);
+
+            positions[i3 + 0] = x;
+            positions[i3 + 1] = y;
+            positions[i3 + 2] = z;
+
+            var blendedColor = colorCore.clone();
+            var rand = Math.random();
+            if (rand < 0.45) {
+              blendedColor.lerp(colorOut, Math.random());
+            } else if (rand < 0.85) {
+              blendedColor.lerp(colorAlt, Math.random());
+            }
+
+            colors[i3 + 0] = blendedColor.r;
+            colors[i3 + 1] = blendedColor.g;
+            colors[i3 + 2] = blendedColor.b;
+
+            randomOffsets[i3 + 0] = x;
+            randomOffsets[i3 + 1] = y;
+            randomOffsets[i3 + 2] = z;
+          }
+
+          galaxyGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          galaxyGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+          galaxyGeometry.setAttribute('randomOffsets', new THREE.BufferAttribute(randomOffsets, 3));
+
+          galaxyMaterial = new THREE.PointsMaterial({
+            size: config.size,
+            sizeAttenuation: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            vertexColors: true,
+            map: createGlowTexture(config.outsideColor, config.secondaryColor),
+            transparent: true,
+            opacity: 0.8
+          });
+
+          galaxyPoints = new THREE.Points(galaxyGeometry, galaxyMaterial);
+          scene.add(galaxyPoints);
+
+          var gasCount = Math.floor(config.starsCount * 0.15);
+          var gasGeometry = new THREE.BufferGeometry();
+          var gasPos = new Float32Array(gasCount * 3);
+          var gasColors = new Float32Array(gasCount * 3);
+
+          for (var j = 0; j < gasCount; j++) {
+            var j3 = j * 3;
+            var theta = Math.random() * Math.PI * 2;
+            var phi = Math.acos(Math.random() * 2 - 1);
+            var r = Math.pow(Math.random(), 0.8) * config.radius * 0.8;
+
+            var gx = r * Math.sin(phi) * Math.cos(theta);
+            var gy = r * Math.sin(phi) * Math.sin(theta) * config.flatteningY;
+            var gz = r * Math.cos(phi);
+
+            gasPos[j3 + 0] = gx;
+            gasPos[j3 + 1] = gy;
+            gasPos[j3 + 2] = gz;
+
+            if (j % 2 === 0) {
+              gasColors[j3 + 0] = 0.1;
+              gasColors[j3 + 1] = 0.35;
+              gasColors[j3 + 2] = 0.75;
+            } else {
+              gasColors[j3 + 0] = 0.35;
+              gasColors[j3 + 1] = 0.1;
+              gasColors[j3 + 2] = 0.65;
+            }
+          }
+
+          gasGeometry.setAttribute('position', new THREE.BufferAttribute(gasPos, 3));
+          gasGeometry.setAttribute('color', new THREE.BufferAttribute(gasColors, 3));
+
+          nebulaMaterial = new THREE.PointsMaterial({
+            size: config.size * 6.0,
+            sizeAttenuation: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            vertexColors: true,
+            map: createGlowTexture('#06b6d4', '#9333ea'),
+            transparent: true,
+            opacity: 0.22
+          });
+
+          nebulaGas = new THREE.Points(gasGeometry, nebulaMaterial);
+          scene.add(nebulaGas);
+        }
+
+        function handleMouseDown(e) {
+          isDragging = true;
+          previousMousePosition = {
+            x: e.clientX,
+            y: e.clientY
+          };
+        }
+
+        function handleMouseMove(e) {
+          var rect = targetSection.getBoundingClientRect();
+          var x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          var y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+          mouse.x = x;
+          mouse.y = y;
+
+          targetYRot = x * 0.4;
+          targetXRot = 0.45 + (y * 0.3);
+        }
+
+        function handleTouchStart(e) {
+          if (e.touches.length === 1) {
+            isDragging = true;
+            previousMousePosition = {
+              x: e.touches[0].clientX,
+              y: e.touches[0].clientY
+            };
+          }
+        }
+
+        function handleTouchMove(e) {
+          if (e.touches.length === 1) {
+            var rect = targetSection.getBoundingClientRect();
+            var x = ((e.touches[0].clientX - rect.left) / rect.width) * 2 - 1;
+            var y = -((e.touches[0].clientY - rect.top) / rect.height) * 2 + 1;
+
+            mouse.x = x;
+            mouse.y = y;
+
+            targetYRot = x * 0.4;
+            targetXRot = 0.45 + (y * 0.3);
+
+            if (isDragging) {
+              var deltaMove = {
+                x: e.touches[0].clientX - previousMousePosition.x,
+                y: e.touches[0].clientY - previousMousePosition.y
+              };
+              dragRotation.y += deltaMove.x * 0.008;
+              dragRotation.x += deltaMove.y * 0.008;
+
+              previousMousePosition = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY
+              };
+            }
+          }
+        }
+
+        function handleTouchEnd() {
+          isDragging = false;
+          handleMouseLeave();
+        }
+
+        function handleMouseEnter() {
+          isMouseOverSection = true;
+        }
+
+        function handleMouseLeave() {
+          isMouseOverSection = false;
+          targetYRot = 0;
+          targetXRot = 0.45;
+          mouse.x = 0;
+          mouse.y = 0;
+        }
+
+        function handleResize() {
+          if (!container || !renderer || !camera) return;
+          var w = container.clientWidth;
+          var h = container.clientHeight;
+          if (!w || !h) return;
+
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        }
+
+        function handleGlobalMouseMove(e) {
+          if (!isDragging) return;
+
+          var deltaMove = {
+            x: e.clientX - previousMousePosition.x,
+            y: e.clientY - previousMousePosition.y
+          };
+
+          dragRotation.y += deltaMove.x * 0.005;
+          dragRotation.x += deltaMove.y * 0.005;
+
+          previousMousePosition = {
+            x: e.clientX,
+            y: e.clientY
+          };
+        }
+
+        function handleGlobalMouseUp() {
+          isDragging = false;
+        }
+
+        var isVisible = false;
+        if (window.IntersectionObserver) {
+          var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              isVisible = entry.isIntersecting;
+            });
+          }, { threshold: 0.01 });
+          observer.observe(container);
+        } else {
+          isVisible = true;
+        }
+
+        function animateCosmos() {
+          requestAnimationFrame(animateCosmos);
+
+          if (!isVisible) return;
+
+          if (interactive) {
+            currentXRot += (targetXRot - currentXRot) * 0.04;
+            currentYRot += (targetYRot - currentYRot) * 0.04;
+
+            if (galaxyPoints) {
+              galaxyPoints.rotation.y += 0.0006 + (dragRotation.y * 0.05);
+              galaxyPoints.rotation.x = (currentXRot - 0.45) + (dragRotation.x * 0.05);
+              galaxyPoints.rotation.z = currentYRot * 0.6;
+            }
+
+            if (nebulaGas) {
+              nebulaGas.rotation.y += (0.0006 * 0.72) + (dragRotation.y * 0.05);
+              nebulaGas.rotation.x = (currentXRot - 0.45) + (dragRotation.x * 0.05);
+              nebulaGas.rotation.z = currentYRot * 0.6;
+            }
+
+            dragRotation.x *= 0.95;
+            dragRotation.y *= 0.95;
+          } else {
+            if (galaxyPoints) {
+              galaxyPoints.rotation.x += config.rotSpeedX;
+              galaxyPoints.rotation.y += config.rotSpeedY;
+              galaxyPoints.rotation.z += config.rotSpeedZ;
+            }
+            if (nebulaGas) {
+              nebulaGas.rotation.x += config.rotSpeedX * 0.8;
+              nebulaGas.rotation.y += config.rotSpeedY * 0.8;
+              nebulaGas.rotation.z += config.rotSpeedZ * 0.8;
+            }
+          }
+
+          if (config.turbulenceActive && galaxyGeometry) {
+            var positions = galaxyGeometry.attributes.position.array;
+            var offsets = galaxyGeometry.attributes.randomOffsets.array;
+            var len = positions.length / 3;
+            var time = Date.now() * 0.0022;
+
+            for (var i = 0; i < len; i++) {
+              var i3 = i * 3;
+              var waveFactor = positions[i3] * 0.05;
+              var ripple = Math.sin(time - waveFactor) * 0.15;
+
+              var amplification = interactive && isMouseOverSection ? (1.8 + Math.abs(mouse.y) * 2.5) : 0.8;
+              positions[i3 + 1] = offsets[i3 + 1] + (ripple * amplification);
+            }
+            galaxyGeometry.attributes.position.needsUpdate = true;
+          }
+
+          renderer.render(scene, camera);
+        }
+
+        initGalaxy();
+        animateCosmos();
+      }
+
+      function initGlobes() {
+        createGlobe('networkGlobe', 0xaa44ff, 0xbb66ff, 0x44ddff, true);
+        createCosmicGalaxy('recommendedGlobe', 'recommendedSection', false);
+        createCosmicGalaxy('heroCosmicGalaxy', 'heroSection', false);
+        createCosmicGalaxy('footerCosmicGalaxy', 'footerSection', false);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initGlobes);
+      } else {
+        initGlobes();
+      }
+    })();
+  </script>
+</body>
+
+</html>

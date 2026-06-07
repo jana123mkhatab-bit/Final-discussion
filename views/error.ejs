@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= status %> Error | Swapify</title>
+  <style>
+    body { margin:0; font-family: system-ui, sans-serif; background:#0f0f1a; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh; }
+    .box { text-align:center; padding:40px; max-width:600px; }
+    h1 { font-size:80px; margin:0; color:#ef4444; }
+    p  { font-size:18px; color:#aaa; margin:16px 0 32px; }
+    a  { color:#7C3AED; font-weight:700; text-decoration:none; font-size:18px; }
+    a:hover { text-decoration:underline; }
+    .msg { background:#1a1a2e; border:1px solid #ef4444; border-radius:8px; padding:16px; font-family:monospace; font-size:14px; color:#f87171; text-align:left; word-break:break-word; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1><%= status %></h1>
+    <p>Something went wrong on our end.</p>
+    <div class="msg"><%= message %></div>
+    <br/>
+    <a href="/">← Back to Swapify</a>
+  </div>
+</body>
+</html>
