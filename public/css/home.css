@@ -1,0 +1,816 @@
+/* ============================================================
+   style.css — Swapify Home Page Styles
+   Imports shared styles, adds home-specific enhancements
+   ============================================================ */
+
+@import url('main.css?v=2026052318');
+
+/* ===== SMOOTH SCROLLING ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ===== INTRO OVERLAY ===== */
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b0f1a;
+  overflow: hidden;
+  transition: opacity 0.5s ease;
+}
+.intro-skip .intro-overlay {
+  display: none;
+}
+.intro-overlay.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.intro-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(124,58,237,0.35), transparent 45%),
+    radial-gradient(circle at 70% 80%, rgba(37,99,235,0.3), transparent 50%),
+    rgba(8,10,22,0.55);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  z-index: 1;
+}
+.intro-overlay.is-blurred::after {
+  opacity: 1;
+}
+.intro-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: none;
+  transform: scale(1);
+  transition: filter 0.8s ease, transform 0.8s ease;
+}
+.intro-overlay.is-blurred .intro-video {
+  filter: blur(10px) brightness(0.65) saturate(1.2);
+  transform: scale(1.03);
+}
+.intro-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: #fff;
+  max-width: 680px;
+  padding: 0 24px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.intro-content.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.intro-typing {
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  min-height: 1.5em;
+  line-height: 1.2;
+  border-right: 2px solid rgba(255,255,255,0.8);
+  padding-right: 6px;
+  animation: caret-blink 0.8s steps(2, start) infinite;
+}
+@keyframes caret-blink {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: rgba(255,255,255,0.85); }
+}
+.intro-button {
+  margin-top: 28px;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.intro-button.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+body.intro-lock {
+  overflow: hidden;
+}
+
+/* ===== SMOOTH SCROLLING ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ===== ACTIVITY FEED LIVE DOT ===== */
+.activity-live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  margin-right: 6px;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4);
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  0%  { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+  100%{ box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+/* ===== SKELETON CARD ===== */
+.skeleton-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--card);
+  min-height: 340px;
+  position: relative;
+  background: linear-gradient(90deg, var(--muted) 25%, var(--hover-surface) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+/* ===== SKELETON ACTIVITY ===== */
+.skeleton-activity {
+  min-height: 90px;
+  border-radius: var(--radius-lg);
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.1);
+  animation: skeleton-loading 1.5s infinite;
+  background-size: 200% 100%;
+}
+@keyframes skeleton-loading {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== RECOMMENDED SCROLL STACK ===== */
+.scroll-stack-scroller {
+  position: relative;
+  width: 100%;
+  height: min(80vh, 720px);
+  overflow-y: auto;
+  overflow-x: visible;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+.scroll-stack-inner {
+  padding: 20vh 2rem 50rem;
+  min-height: 100vh;
+}
+.scroll-stack-list {
+  max-width: 940px;
+  margin: 0 auto;
+}
+.scroll-stack-list .skeleton-card {
+  margin: 30px 0;
+  min-height: 320px;
+}
+.scroll-stack-card {
+  transform-origin: top center;
+  will-change: transform, filter;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  margin: 0;
+  position: relative;
+}
+.scroll-stack-card.item-card {
+  height: auto;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.scroll-stack-end {
+  width: 100%;
+  height: 1px;
+}
+.scroll-stack-card.item-card:hover {
+  transform: none;
+}
+
+/* ===== ACTIVITY FEED CARD ===== */
+.activity-card {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: inline-flex;
+  text-align: left;
+  max-width: 560px;
+  width: 100%;
+  gap: 16px;
+  align-items: flex-start;
+  cursor: default;
+  transition: none;
+  margin: 0 auto;
+}
+.activity-card:hover {
+  background: rgba(255,255,255,0.12);
+  transform: none;
+  box-shadow: var(--shadow-xl);
+}
+.activity-card img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.5);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.activity-card-content p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #fff;
+}
+.activity-card-content .time {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+}
+.activity-user-name {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.activity-item-name {
+  color: #93c5fd;
+  font-weight: 700;
+}
+.activity-nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  border: none;
+  cursor: default;
+  transition: none;
+  padding: 0;
+}
+.activity-dot.active {
+  background: #fff;
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* ===== MODAL ITEM DETAIL ===== */
+.modal-item-img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+.modal-item-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.modal-item-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--muted-fg);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.modal-item-meta span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.modal-item-desc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--fg);
+  margin-bottom: 20px;
+}
+.modal-item-wanted {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.modal-item-wanted .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 4px;
+}
+.modal-item-wanted .value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.modal-owner-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: rgba(124,58,237,0.05);
+  border: 1px solid rgba(124,58,237,0.1);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.modal-owner-row:hover {
+  background: rgba(124,58,237,0.1);
+}
+.modal-owner-row img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--soft-purple);
+}
+.modal-owner-info h4 {
+  font-size: 16px;
+  font-weight: 700;
+}
+.modal-owner-info p {
+  font-size: 13px;
+  color: var(--muted-fg);
+}
+.modal-owner-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--success);
+  font-weight: 600;
+}
+.modal-owner-online::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+/* ===== ERROR STATE (friendly UI) ===== */
+.error-state {
+  text-align: center;
+  padding: 40px 24px;
+}
+.error-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+.error-state h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--fg);
+}
+.error-state p {
+  color: var(--muted-fg);
+  margin-bottom: 20px;
+}
+
+/* ===== SOCIAL LINK HOVER ===== */
+.footer-social a.social-link {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-fg);
+  transition: all var(--transition);
+  border: 1px solid var(--border);
+}
+.footer-social a.social-link:hover {
+  background: var(--gradient-main);
+  color: #fff;
+  border-color: transparent;
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ===== HERO CTA enhanced hover ===== */
+#heroCTAPrimary {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#heroCTAPrimary:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 16px 40px rgba(124,58,237,0.45);
+}
+#heroCTASecondary {
+  transition: all 0.3s ease;
+}
+#heroCTASecondary:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* ===== ITEM CARD ENHANCED HOVER ===== */
+.item-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.item-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 50px rgba(124,58,237,0.18);
+  border-color: rgba(124,58,237,0.25);
+}
+
+/* ===== RATING STAR ===== */
+.item-card-rating svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+/* ===== LOADING OVERLAY ===== */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+.dark .loading-overlay {
+  background: rgba(18,24,38,0.8);
+}
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin-loader 0.7s linear infinite;
+}
+@keyframes spin-loader { to { transform: rotate(360deg); } }
+
+/* ===== PROFILE MODAL ===== */
+.profile-modal-cover {
+  height: 120px;
+  background: var(--gradient-hero);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin: -24px -24px 0;
+  position: relative;
+}
+.profile-modal-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 4px solid var(--card);
+  object-fit: cover;
+  position: absolute;
+  bottom: -40px;
+  left: 24px;
+  box-shadow: var(--shadow-md);
+}
+.profile-modal-info {
+  margin-top: 48px;
+}
+.profile-modal-info h3 {
+  font-size: 20px;
+  font-weight: 700;
+}
+.profile-modal-info p {
+  font-size: 14px;
+  color: var(--muted-fg);
+  margin-top: 4px;
+}
+.profile-modal-stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--muted);
+  border-radius: var(--radius-md);
+}
+.profile-stat {
+  flex: 1;
+  text-align: center;
+}
+.profile-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.profile-stat-label {
+  font-size: 12px;
+  color: var(--muted-fg);
+  margin-top: 2px;
+}
+.profile-badge-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--success);
+  font-weight: 600;
+  margin-top: 6px;
+}
+.profile-badge-online::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: live-pulse 1.8s infinite;
+}
+
+/* ===== FADE-IN ENTRANCE ===== */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-in-delay-1 { transition-delay: 0.1s; }
+.fade-in-delay-2 { transition-delay: 0.2s; }
+.fade-in-delay-3 { transition-delay: 0.3s; }
+
+/* In the scroll stack, JS owns transforms; keep fade-in as opacity only */
+.scroll-stack-card.fade-in {
+  transform: none;
+  transition: opacity 0.5s ease;
+}
+.scroll-stack-card.fade-in.visible {
+  transform: none;
+}
+
+/* ===== RESPONSIVE TWEAKS ===== */
+@media (max-width: 1200px) {
+  .activity-card { max-width: 480px; }
+}
+@media (max-width: 768px) {
+  .scroll-stack-scroller { height: min(70vh, 640px); }
+  .scroll-stack-inner { padding: 16vh 1rem 40rem; }
+  .activity-card { padding: 16px; gap: 12px; }
+  .activity-card img { width: 40px; height: 40px; }
+  .modal-item-img { height: 180px; }
+}
+@media (max-width: 480px) {
+  .activity-card-content p { font-size: 14px; }
+  .modal-owner-row { flex-wrap: wrap; }
+}
+
+/* ===== NO-RED OVERRIDES ===== */
+/* Replace every red/error accent with indigo/amber — no #EF4444 anywhere */
+
+/* Notification dot: indigo instead of red */
+.notification-dot {
+  background: #7C3AED !important;
+  box-shadow: 0 0 0 2px #7C3AED22 !important;
+}
+
+/* Error badge: amber instead of red */
+.badge-error,
+.badge-danger {
+  background: rgba(245,158,11,0.12) !important;
+  color: #D97706 !important;
+  border-color: rgba(245,158,11,0.3) !important;
+}
+
+/* Form invalid / error input border */
+.input:invalid,
+.input.invalid,
+.input.error,
+.form-error {
+  border-color: #D97706 !important;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.15) !important;
+}
+
+/* Error text */
+.error-text,
+.text-error,
+.text-danger,
+[style*="color:red"],
+[style*="color:#EF4444"],
+[style*="color: red"],
+[style*="color: #EF4444"] {
+  color: #D97706 !important;
+}
+
+/* Destructive / delete buttons */
+.btn-danger,
+.btn-destructive {
+  background: linear-gradient(135deg, #D97706, #B45309) !important;
+  color: #fff !important;
+  border: none !important;
+}
+.btn-danger:hover,
+.btn-destructive:hover {
+  background: linear-gradient(135deg, #B45309, #92400E) !important;
+  box-shadow: 0 8px 24px rgba(217,119,6,0.35) !important;
+}
+
+/* Any inline red used in trust-safety or guidelines accent borders */
+[style*="border-left:4px solid var(--error)"],
+[style*="border-top:4px solid var(--error)"],
+[style*="border-color:var(--error)"] {
+  border-color: #D97706 !important;
+}
+
+/* CSS variable override for --error across this page */
+:root {
+  --error: #D97706;
+  --error-soft: rgba(245,158,11,0.12);
+}
+
+/* =====================================================
+   SECTION WAVE DIVIDERS
+   Each divider sits between two sections.
+   - Wrapper background = color of the section ABOVE
+   - SVG path fill      = color of the section BELOW
+   ===================================================== */
+.wave-divider {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;      /* eliminate any inline whitespace gap */
+  position: relative;
+  z-index: 4;          /* above section content, below header */
+  margin-bottom: -2px; /* seal 1-pixel aliasing gaps */
+}
+.wave-divider svg {
+  display: block;
+  width: 100%;
+}
+
+/* ── 0. Hero (dark gradient) ➜ How-It-Works (white/--card) ── */
+.wave-from-hero {
+  background: transparent;   /* hero section owns its own bg */
+  height: 72px;
+  margin-top: -72px;         /* overlap last 72px of the hero */
+  position: relative;
+  z-index: 3;
+  pointer-events: none;
+}
+.wave-from-hero svg { height: 72px; }
+.wave-from-hero path { fill: var(--card); }
+.dark .wave-from-hero path { fill: var(--card); }
+
+/* ── 1. How-It-Works (white/--card) ➜ Recommended (--bg) ── */
+/* Very subtle curve — the two whites are close but distinct  */
+.wave-into-bg {
+  background: var(--card);
+  height: 56px;
+}
+.wave-into-bg svg { height: 56px; }
+.wave-into-bg path { fill: var(--bg); }
+/* Dark mode: card→bg is also a subtle step */
+.dark .wave-into-bg  { background: var(--card); }
+.dark .wave-into-bg path { fill: var(--bg); }
+
+/* ── 2. Recommended (--bg) ➜ Live Activity Feed (purple) ── */
+/* The most jarring jump — needs the most dramatic wave       */
+.wave-into-purple {
+  background: var(--bg);
+  height: 80px;
+}
+.wave-into-purple svg { height: 80px; }
+.wave-into-purple path { fill: #7C3AED; } /* exact start of gradient-main (#7C3AED → #2563EB) */
+.dark .wave-into-purple { background: var(--bg); }
+.dark .wave-into-purple path { fill: #6d28d9; }
+
+/* Prevent community-banner from clipping the footer wave overlap */
+.section-purple.community-banner { overflow: visible; }
+
+/* ── 3. Live Activity Feed (purple) ➜ Footer (--card) ────── */
+.wave-into-footer {
+  background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+  height: 72px;
+  margin-bottom: 0;
+  margin-top: -2px;
+  position: relative;
+  z-index: 2;
+}
+.wave-into-footer svg { height: 72px; }
+.wave-into-footer path { fill: var(--card); }
+.dark .wave-into-footer { background: linear-gradient(135deg, #4c1d95 0%, #1e3a8a 100%); }
+.dark .wave-into-footer path { fill: var(--card); }
+
+/* =====================================================
+   SECTION BACKGROUND RHYTHM — enforce tier rules
+   Tier 1 (.section)       = var(--bg)
+   Tier 2 (.section-white) = var(--card)
+   Tier 3 (.section-purple) = gradient-main (unchanged)
+   ===================================================== */
+.section        { background: var(--bg); }
+.section-white  { background: var(--card); }
+
+/* Hero glow blobs: boost opacity so they're actually visible */
+.hero .hero-glow-1 {
+  background: radial-gradient(circle, rgba(124,58,237,.22), transparent);
+  filter: blur(70px);
+}
+.hero .hero-glow-2 {
+  background: radial-gradient(circle, rgba(37,99,235,.18), transparent);
+  filter: blur(70px);
+}
+
+/* Cosmic Background Styling for Hero and Footer */
+#heroSection, #footerSection {
+  background-color: #02040a !important;
+  color: #f8fafc !important;
+}
+
+#heroSection .hero-bg-gradient {
+  display: none !important; /* Hide default light background gradient */
+}
+
+/* Force light text color in Hero to ensure readability on dark cosmic bg */
+#heroSection h1 {
+  color: #ffffff !important;
+}
+
+#heroSection .hero-desc {
+  color: #94a3b8 !important;
+}
+
+#heroSection .hero-badge {
+  background: rgba(124, 58, 237, 0.15) !important;
+  border: 1px solid rgba(124, 58, 237, 0.3) !important;
+  color: #d8b4fe !important;
+}
+
+#heroSection .hero-social-proof span {
+  color: #94a3b8 !important;
+}
+
+/* Footer cosmic text contrast overrides */
+#footerSection {
+  border-top: 1px solid #1e293b !important;
+}
+
+#footerSection .footer-brand p {
+  color: #94a3b8 !important;
+}
+
+#footerSection .footer-col h4 {
+  color: #ffffff !important;
+}
+
+#footerSection .footer-col a {
+  color: #94a3b8 !important;
+}
+
+#footerSection .footer-col a:hover {
+  color: #c084fc !important;
+}
+
+#footerSection .footer-bottom {
+  border-top: 1px solid #1e293b !important;
+  color: #64748b !important;
+}
+
+#footerSection .footer-social a {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border: 1px solid #1e293b !important;
+}
+
+#footerSection .footer-social a:hover {
+  background: #7c3aed !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.5) !important;
+}
+
+/* Update section waves bordering the cosmic zones */
+.wave-into-footer path {
+  fill: #02040a !important;
+}
+.dark .wave-into-footer path {
+  fill: #02040a !important;
+}
+
