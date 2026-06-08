@@ -621,13 +621,15 @@
       approvalStatus: sk.approvalStatus
     }}),
     purchases: (purchaseHistory || []).map(function(d){ return {
-      id:            String(d._id),
-      itemName:      d.item ? d.item.title : 'Deleted item',
-      itemImg:       (d.item && d.item.images && d.item.images[0]) ? d.item.images[0] : '/img/placeholder.jpg',
-      amount:        d.amount,
-      paymentMethod: d.paymentMethod,
-      status:        d.status,
-      createdAt:     d.createdAt
+      id:             String(d._id),
+      itemName:       d.item ? d.item.title : 'Deleted item',
+      itemImg:        (d.item && d.item.images && d.item.images[0]) ? d.item.images[0] : '/img/placeholder.jpg',
+      amount:         d.amount,
+      quantity:       d.quantity || 1,
+      paymentMethod:  d.paymentMethod,
+      status:         d.status,
+      shippingAddress: d.shippingAddress || '',
+      createdAt:      d.createdAt
     }})
   }) %></script>
   <script>
@@ -920,7 +922,7 @@
          PURCHASE HISTORY & WALLET (owner only)
       ════════════════════════════════════════════════════ */
       if (isMe) {
-        var history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
+        var history = window.__SERVER_PROFILE.purchases || [];
 
         var histTab = document.getElementById('tab-history');
         if (histTab) {
@@ -929,9 +931,8 @@
           } else {
             var hHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><h2 style="font-size:24px;font-weight:700">Purchase History</h2><div style="font-size:14px;color:var(--muted-fg)">Showing all orders</div></div><div style="display:flex;flex-direction:column;gap:16px">';
             history.slice().reverse().forEach(function (order) {
-              var d = new Date(order.date).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+              var d = new Date(order.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
               var m = order.paymentMethod === 'card' ? 'Credit/Debit Card' : (order.paymentMethod === 'points' ? 'Swapify Points' : 'Cash on Delivery');
-              var pl = order.paymentPlan === 'split' ? '50% Split' : 'Full Payment';
 
               var itemsListHtml = '';
               if (order.items && Array.isArray(order.items) && order.items.length > 0) {
@@ -961,7 +962,7 @@
                 '<img src="' + order.itemImg + '" alt="' + order.itemName + '" style="width:90px;height:90px;border-radius:var(--radius-sm);object-fit:cover">' +
                 '<div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:4px;align-items:flex-start"><h3 style="font-weight:700;font-size:16px">' + order.itemName + '</h3><span class="badge" style="background:rgba(16,185,129,.1);color:var(--success);border:1px solid var(--success)">' + order.status + '</span></div>' +
                 '<p style="font-size:13px;color:var(--muted-fg);margin-bottom:12px">Order ID: ' + order.id + ' • ' + d + '</p>' +
-                '<div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><span style="background:var(--muted);padding:4px 8px;border-radius:4px"><strong>Total:</strong> $' + order.totalPrice.toFixed(2) + '</span><span style="background:var(--muted);padding:4px 8px;border-radius:4px"><strong>Method:</strong> ' + m + ' (' + pl + ')</span><span style="background:var(--muted);padding:4px 8px;border-radius:4px"><strong>Qty:</strong> ' + order.qty + '</span></div>' +
+                '<div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><span style="background:var(--muted);padding:4px 8px;border-radius:4px"><strong>Total:</strong> $' + (order.amount || 0).toFixed(2) + '</span><span style="background:var(--muted);padding:4px 8px;border-radius:4px"><strong>Method:</strong> ' + m + '</span><span style="background:var(--muted);padding:4px 8px;border-radius:4px"><strong>Qty:</strong> ' + (order.quantity || 1) + '</span></div>' +
                 addrHtml +
                 itemsListHtml +
                 '</div></div>';
@@ -1241,12 +1242,12 @@
           } else {
             var rrHtml = '<div style="display:flex;flex-direction:column;gap:12px">';
             history.slice().reverse().slice(0, 5).forEach(function (order) {
-              var d = new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              var d = new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
               var m = order.paymentMethod === 'card' ? 'Card' : (order.paymentMethod === 'points' ? 'Points' : 'COD');
               rrHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card)">' +
                 '<div style="display:flex;gap:16px;align-items:center"><div style="width:44px;height:44px;background:rgba(124,58,237,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--primary)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>' +
                 '<div><div style="font-weight:700;font-size:15px;margin-bottom:2px">' + order.itemName + '</div><div style="font-size:13px;color:var(--muted-fg)">' + d + ' • ' + m + ' • ' + order.status + '</div></div></div>' +
-                '<div style="font-weight:800;color:var(--primary);font-size:16px">-$' + order.totalPrice.toFixed(2) + '</div></div>';
+                '<div style="font-weight:800;color:var(--primary);font-size:16px">-$' + (order.amount || 0).toFixed(2) + '</div></div>';
             });
             rrHtml += '</div>';
             recentCont.innerHTML = rrHtml;
